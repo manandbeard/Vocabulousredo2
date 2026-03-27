@@ -2,7 +2,12 @@
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+MetaSRS Learning Platform — a full-stack SRS (Spaced Repetition System) web app for teachers and students. Teachers can create classes, manage decks of flashcards, and view analytics on student retention. Students can study due cards and track their learning progress.
+
+## Demo Accounts
+
+- Teacher: ID=1 (Ms. Carter) — access via Teacher View in sidebar
+- Student: ID=2 (Alex Rivera) — access via "Switch to Student" button in sidebar
 
 ## Stack
 
