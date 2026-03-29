@@ -17,6 +17,9 @@ import StudentDashboard from "./pages/student/StudentDashboard";
 import StudentStudy from "./pages/student/StudentStudy";
 import StudentProgress from "./pages/student/StudentProgress";
 
+// Public Pages
+import BuildingInPublic from "./pages/BuildingInPublic";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -47,6 +50,9 @@ function Router() {
       <Route path="/student" component={StudentDashboard} />
       <Route path="/student/study" component={StudentStudy} />
       <Route path="/student/progress" component={StudentProgress} />
+
+      {/* Public Pages */}
+      <Route path="/build" component={BuildingInPublic} />
       
       <Route component={NotFound} />
     </Switch>
