@@ -1,8 +1,11 @@
+import { SynapticWeb } from "../synaptic-web/SynapticWeb";
+
 export function MinimalistHero() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900 font-['Inter']">
-      <div className="max-w-4xl mx-auto px-8 py-32">
-        {/* Minimal headline */}
+    <div className="min-h-screen bg-white text-slate-900 font-['Inter'] relative">
+      <SynapticWeb />
+      <div className="max-w-4xl mx-auto px-8 py-32 relative z-10">
+        {/* Minimal headline with enhanced readability on animated background */}
         <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-8">Learning Science</p>
         
         <h1 className="text-6xl font-light leading-tight mb-8">
