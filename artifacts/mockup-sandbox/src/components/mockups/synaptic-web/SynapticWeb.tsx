@@ -53,6 +53,10 @@ export function SynapticWeb() {
 
     const width = window.innerWidth;
     const height = window.innerHeight;
+    
+    // Set canvas resolution
+    canvas.width = width;
+    canvas.height = height;
 
     dotsRef.current = Array.from({ length: CONFIG.dotCount }).map((_, i) => ({
       x: Math.random() * width,
@@ -216,11 +220,12 @@ export function SynapticWeb() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 -z-10"
+      className="fixed inset-0"
       style={{
         width: "100%",
         height: "100%",
         display: "block",
+        zIndex: -1,
       }}
     />
   );

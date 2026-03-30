@@ -2,7 +2,7 @@ import { SynapticWeb } from "../synaptic-web/SynapticWeb";
 
 export function MinimalistHero() {
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-['Inter'] relative">
+    <div className="min-h-screen bg-white text-slate-900 font-['Inter']">
       <SynapticWeb />
       <div className="max-w-4xl mx-auto px-8 py-32 relative z-10">
         {/* Minimal headline with enhanced readability on animated background */}

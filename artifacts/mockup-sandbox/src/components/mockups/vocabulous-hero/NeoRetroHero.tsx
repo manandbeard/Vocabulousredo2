@@ -35,3 +35,5 @@ export function NeoRetroHero() {
         </div>
       </div>
     </div>
+  );
+}
