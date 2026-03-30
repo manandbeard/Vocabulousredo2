@@ -1,0 +1,46 @@
+{
+  "theme": "neo_brutalist_arcade",
+  "background": {
+    "color": "#050505",
+    "grid": {
+      "visible": true,
+      "lineColor": "#222222",
+      "thickness": 2,
+      "cellSize": 50
+    }
+  },
+  "animations": [
+    {
+      "id": "forgetting_decay",
+      "type": "path_animation",
+      "stroke": "#00FF41",
+      "strokeWidth": 4,
+      "points": "dynamic",
+      "behavior": {
+        "decayRate": 0.5,
+        "recoverySpike": "ease-in-out",
+        "glitchEffect": true
+      }
+    },
+    {
+      "id": "knowledge_blocks",
+      "type": "3d_float",
+      "count": 12,
+      "geometry": "box",
+      "material": {
+        "color": "#FFD700",
+        "border": "#000000",
+        "borderWidth": 5
+      },
+      "physics": {
+        "floatIntensity": 1.2,
+        "rotationSpeed": 0.05
+      }
+    }
+  ],
+  "interactivity": {
+    "onHover": "accelerate_speed",
+    "onClick": "trigger_recovery_spike",
+    "onScroll": "parallax_shift"
+  }
+}
