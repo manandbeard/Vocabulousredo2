@@ -3,12 +3,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const Slide1 = lazy(() => import("./pitch/Slide1"));
 const Slide2 = lazy(() => import("./pitch/Slide2"));
+const SlideEngine = lazy(() => import("./pitch/SlideEngine"));
 const Slide3 = lazy(() => import("./pitch/Slide3"));
 const Slide4 = lazy(() => import("./pitch/Slide4"));
 const Slide5 = lazy(() => import("./pitch/Slide5"));
 const Slide6 = lazy(() => import("./pitch/Slide6"));
 
-const slides = [Slide1, Slide2, Slide3, Slide4, Slide5, Slide6];
+const slides = [Slide1, Slide2, SlideEngine, Slide3, Slide4, Slide5, Slide6];
 
 export default function PitchDeck() {
   const [currentSlide, setCurrentSlide] = useState(0);
