@@ -5,7 +5,7 @@ export default function SlideEngine() {
         <h2 className="text-6xl font-light text-slate-900 mb-8 tracking-wide">
           Meta-Learned Spaced Retrieval
         </h2>
-        <p className="text-lg font-light text-slate-600 leading-relaxed mb-16 max-w-3xl">
+        <p className="font-light text-slate-600 mb-16 max-w-3xl text-[23px]">
           A Python-based adaptive scheduler that predicts recall. It targets a 60-80% "desirable difficulty" recall probability, surfacing words from The Crucible automatically during the Fahrenheit 451 unit.
         </p>
 
