@@ -17,6 +17,6 @@ router.use(decksRouter);
 router.use(cardsRouter);
 router.use(reviewsRouter);
 router.use(analyticsRouter);
-router.use("/api/changelog", changelogRouter);
+router.use("/changelog", changelogRouter);
 
 export default router;

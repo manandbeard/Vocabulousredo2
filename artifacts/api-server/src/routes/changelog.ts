@@ -1,126 +1,117 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
-import { changelogEntriesTable } from "@workspace/db/schema";
-import { eq } from "drizzle-orm";
+import { execSync } from "child_process";
 
 const router = Router();
 
-// In-memory cache for changelog (60 second TTL)
-let changelogCache: any = null;
+const REPO_ROOT = execSync("git rev-parse --show-toplevel").toString().trim();
+
+const SKIP_PATTERNS = [
+  /^visual edit$/i,
+  /^published your app$/i,
+  /^separate text/i,
+];
+
+function shouldSkip(subject: string): boolean {
+  return SKIP_PATTERNS.some((p) => p.test(subject.trim()));
+}
+
+interface ChangelogEntry {
+  id: string;
+  commitHash: string;
+  title: string;
+  description: string;
+  date: string;
+  status: "shipped";
+  tags: string[];
+}
+
+function inferTags(subject: string): string[] {
+  const lower = subject.toLowerCase();
+  const tags: string[] = [];
+  if (lower.includes("fix") || lower.includes("bug") || lower.includes("error")) tags.push("bugfix");
+  if (lower.includes("add") || lower.includes("create") || lower.includes("new") || lower.includes("build")) tags.push("feature");
+  if (lower.includes("update") || lower.includes("refactor") || lower.includes("improve") || lower.includes("change")) tags.push("improvement");
+  if (lower.includes("design") || lower.includes("ui") || lower.includes("style") || lower.includes("theme") || lower.includes("color") || lower.includes("layout")) tags.push("design");
+  if (lower.includes("api") || lower.includes("route") || lower.includes("endpoint") || lower.includes("server") || lower.includes("backend")) tags.push("backend");
+  if (lower.includes("analytics") || lower.includes("dashboard") || lower.includes("data")) tags.push("analytics");
+  if (lower.includes("pitch") || lower.includes("slide") || lower.includes("deck")) tags.push("pitch-deck");
+  if (tags.length === 0) tags.push("update");
+  return tags;
+}
+
+let cache: ChangelogEntry[] | null = null;
 let cacheTimestamp = 0;
-const CACHE_TTL = 60000; // 60 seconds
+const CACHE_TTL = 60_000;
 
-const isAdmin = (req: any) => {
-  const user = req.user?.name || "Anonymous";
-  return user === "Nathan Helland";
-};
+function loadFromGit(): ChangelogEntry[] {
+  const raw = execSync(
+    `git log --pretty=format:"%H|%aI|%s|%b|||END|||" HEAD`,
+    { cwd: REPO_ROOT, maxBuffer: 4 * 1024 * 1024 }
+  ).toString();
 
-// GET /api/changelog - Public endpoint with 60s server-side cache
-router.get("/", async (req, res) => {
+  const blocks = raw.split("|||END|||").map((b) => b.trim()).filter(Boolean);
+
+  const entries: ChangelogEntry[] = [];
+
+  for (const block of blocks) {
+    const firstPipe = block.indexOf("|");
+    const secondPipe = block.indexOf("|", firstPipe + 1);
+    const thirdPipe = block.indexOf("|", secondPipe + 1);
+
+    if (firstPipe === -1 || secondPipe === -1 || thirdPipe === -1) continue;
+
+    const hash = block.slice(0, firstPipe);
+    const date = block.slice(firstPipe + 1, secondPipe);
+    const subject = block.slice(secondPipe + 1, thirdPipe);
+    const bodyRaw = block.slice(thirdPipe + 1).trim();
+
+    if (shouldSkip(subject)) continue;
+
+    const bodyLines = bodyRaw
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(
+        (l) =>
+          l &&
+          !l.startsWith("Replit-") &&
+          !l.startsWith("Co-authored-by:") &&
+          !l.startsWith("Signed-off-by:")
+      );
+
+    const description =
+      bodyLines.length > 0
+        ? bodyLines.slice(0, 3).join(" ")
+        : subject;
+
+    entries.push({
+      id: hash.slice(0, 8),
+      commitHash: hash,
+      title: subject,
+      description,
+      date,
+      status: "shipped",
+      tags: inferTags(subject),
+    });
+  }
+
+  return entries;
+}
+
+router.get("/", (_req, res) => {
   try {
     const now = Date.now();
-    
-    if (changelogCache && now - cacheTimestamp < CACHE_TTL) {
-      return res.json(changelogCache);
+    if (cache && now - cacheTimestamp < CACHE_TTL) {
+      return res.json(cache);
     }
 
-    const entries = await db.select().from(changelogEntriesTable).orderBy(changelogEntriesTable.taskNumber);
-    
-    changelogCache = entries;
+    const entries = loadFromGit();
+    cache = entries;
     cacheTimestamp = now;
-    
+
     res.json(entries);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch changelog" });
-  }
-});
-
-// POST /api/changelog - Create new entry (admin only)
-router.post("/", async (req, res) => {
-  try {
-    if (!isAdmin(req)) {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
-
-    const { title, status, whatAndWhy, doneLooksLike } = req.body;
-
-    if (!title || !status || !whatAndWhy || !doneLooksLike) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    if (!["pending", "in-progress", "shipped"].includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
-    }
-
-    const result = await db
-      .insert(changelogEntriesTable)
-      .values({
-        title,
-        status,
-        whatAndWhy,
-        doneLooksLike,
-        taskNumber: Date.now(),
-      })
-      .returning();
-
-    changelogCache = null;
-    res.status(201).json(result[0]);
-  } catch (error) {
-    res.status(400).json({ error: "Failed to create changelog entry" });
-  }
-});
-
-// PUT /api/changelog/:id - Update entry (admin only)
-router.put("/:id", async (req, res) => {
-  try {
-    if (!isAdmin(req)) {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
-
-    const id = parseInt(req.params.id);
-    const { title, status, whatAndWhy, doneLooksLike } = req.body;
-
-    if (status && !["pending", "in-progress", "shipped"].includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
-    }
-
-    const updateData: any = {};
-    if (title) updateData.title = title;
-    if (status) updateData.status = status;
-    if (whatAndWhy) updateData.whatAndWhy = whatAndWhy;
-    if (doneLooksLike) updateData.doneLooksLike = doneLooksLike;
-    updateData.updatedAt = new Date();
-
-    const result = await db
-      .update(changelogEntriesTable)
-      .set(updateData)
-      .where(eq(changelogEntriesTable.id, id))
-      .returning();
-
-    changelogCache = null;
-    res.json(result[0]);
-  } catch (error) {
-    res.status(400).json({ error: "Failed to update changelog entry" });
-  }
-});
-
-// DELETE /api/changelog/:id - Delete entry (admin only)
-router.delete("/:id", async (req, res) => {
-  try {
-    if (!isAdmin(req)) {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
-
-    const id = parseInt(req.params.id);
-    
-    await db
-      .delete(changelogEntriesTable)
-      .where(eq(changelogEntriesTable.id, id));
-
-    changelogCache = null; // Invalidate cache
-    res.status(204).send();
-  } catch (error) {
-    res.status(400).json({ error: "Failed to delete changelog entry" });
+  } catch (err) {
+    console.error("Changelog git error:", err);
+    res.status(500).json({ error: "Failed to load changelog from git history" });
   }
 });
 
