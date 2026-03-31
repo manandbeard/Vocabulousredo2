@@ -18,6 +18,7 @@ import StudentStudy from "./pages/student/StudentStudy";
 import StudentProgress from "./pages/student/StudentProgress";
 
 // Public Pages
+import Landing from "./pages/Landing";
 import BuildingInPublic from "./pages/BuildingInPublic";
 
 const queryClient = new QueryClient({
@@ -29,15 +30,18 @@ const queryClient = new QueryClient({
   },
 });
 
-function RootRedirect() {
+function Root() {
   const { role } = useRole();
-  return <Redirect to={role === "teacher" ? "/teacher" : "/student"} />;
+  if (role) {
+    return <Redirect to={role === "teacher" ? "/teacher" : "/student"} />;
+  }
+  return <Landing />;
 }
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={RootRedirect} />
+      <Route path="/" component={Root} />
       
       {/* Teacher Routes */}
       <Route path="/teacher" component={TeacherDashboard} />
