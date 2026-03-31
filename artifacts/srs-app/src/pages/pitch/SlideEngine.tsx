@@ -40,7 +40,7 @@ export default function SlideEngine() {
         <h2 className="text-6xl font-light text-slate-900 mb-4 tracking-wide">
           Meta-Learned Spaced Retrieval
         </h2>
-        <p className="text-lg font-light text-slate-600 leading-relaxed text-left mb-4">
+        <p className="text-lg font-light text-slate-600 leading-relaxed text-left mb-[40px]">
           The solution is Vocabulous, a Python-based adaptive scheduler that predicts recall when it's needed most. It targets a 60-80% "desirable difficulty" recall probability, resurfacing words from previously learned content automatically. The engine calculates the current recall probability for every word in the user's history and returns the items most at risk of being forgotten.
         </p>
         <p className="text-lg font-light text-slate-600 leading-relaxed text-left mt-[-15px] mb-[-15px]">
