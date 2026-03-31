@@ -42,7 +42,7 @@ export default function Slide2() {
           <text x="20" y="150" fontSize="12" fill="#64748b" textAnchor="end" fontWeight="300">
             30%
           </text>
-          <text x="200" y="110" fontSize="13" fill="#e11d48" fontWeight="500" textAnchor="middle">
+          <text x="200" y="70" fontSize="18" fill="#e11d48" fontWeight="500" textAnchor="middle">
             70% Lost
           </text>
         </svg>
