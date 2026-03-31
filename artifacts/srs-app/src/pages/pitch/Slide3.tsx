@@ -57,7 +57,7 @@ export default function Slide3() {
                 <h3 className="font-semibold text-slate-900 mb-3 transition-all duration-300 shimmer-text scale-110 text-[25px]">
                   {pillar.title}
                 </h3>
-                <p className="text-sm font-light text-slate-600 leading-relaxed">
+                <p className="text-sm font-light text-slate-600 leading-relaxed border-t-[0px] border-r-[0px] border-b-[0px] border-l-[0px] ml-[-6px] mr-[-6px]">
                   {pillar.desc}
                 </p>
               </div>
