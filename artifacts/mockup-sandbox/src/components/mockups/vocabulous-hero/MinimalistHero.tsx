@@ -9,14 +9,13 @@ export function MinimalistHero() {
         <p className="text-slate-700 uppercase tracking-widest mb-8 text-[24px] font-bold">Vocabulous²</p>
         
         <h1 className="text-8xl font-light leading-tight mb-8">
-          Never forget what<br />
           <span className="font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
-            matters most
+            Make learning stick, not slip away.
           </span>
         </h1>
 
         <p className="text-xl text-slate-600 max-w-2xl mb-12 leading-relaxed font-light">
-          The forgetting curve is real. 70% of new information disappears within 24 hours. Vocabulous uses spacing effects, retrieval practice, and adaptive difficulty to ensure long-term retention.
+          Vocabulous uses science‑backed spaced retrieval and adaptive review to help users actually remember what they learn across content.
         </p>
 
         {/* Minimal CTA */}
@@ -43,18 +42,31 @@ export function MinimalistHero() {
           ))}
         </div>
 
-        {/* Three pillars minimal */}
+        {/* Key Benefits */}
         <div>
-          <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-12">Three Core Principles</p>
-          <div className="grid grid-cols-3 gap-12">
+          <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-12">Key Benefits</p>
+          <div className="grid grid-cols-2 gap-12">
             {[
-              { name: "Spacing", desc: "Distributed, short bursts break cramming. Memory consolidates over time." },
-              { name: "Retrieval", desc: "Active recall forces the brain to work. This strengthens retention permanently." },
-              { name: "Calibration", desc: "AI adjusts difficulty to maintain 60-80% recall. The sweet spot for learning." },
-            ].map((pillar) => (
-              <div key={pillar.name}>
-                <h3 className="font-semibold text-lg mb-3 text-slate-900">{pillar.name}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{pillar.desc}</p>
+              { 
+                name: "Built on real learning science", 
+                desc: "Vocabulous is grounded in decades of research showing that spacing and retrieval practice dramatically improve long‑term retention in math, science, languages, and more." 
+              },
+              { 
+                name: "Short, powerful practice", 
+                desc: "Students complete quick review bursts that are automatically spaced over time, giving them the right question at the right moment—just as they're on the verge of forgetting." 
+              },
+              { 
+                name: "Adaptive for every learner", 
+                desc: "As students respond, Vocabulous adjusts what appears next and when, personalizing the path so stronger students stay challenged and those who need support get targeted, timely review." 
+              },
+              { 
+                name: "Actionable insight for teachers", 
+                desc: "Every retrieval attempt doubles as low‑stakes assessment, so teachers can see at a glance which ideas are solid, which are fading, and where to intervene next." 
+              },
+            ].map((benefit) => (
+              <div key={benefit.name}>
+                <h3 className="font-semibold text-lg mb-3 text-slate-900">{benefit.name}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{benefit.desc}</p>
               </div>
             ))}
           </div>
