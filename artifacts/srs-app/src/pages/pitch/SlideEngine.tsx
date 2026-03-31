@@ -40,7 +40,9 @@ export default function SlideEngine() {
         <h2 className="text-6xl font-light text-slate-900 mb-4 tracking-wide">
           Meta-Learned Spaced Retrieval
         </h2>
-        <p className="text-lg font-light text-slate-600 leading-relaxed">A Python-based adaptive scheduler that predicts recall. It targets a 60-80% "desirable difficulty" recall probability, surfacing words from previously learned content automatically during newer content. The engine calculates the current recall probability for every word in the student's history and returns the "k" items most at risk of being forgotten.</p>
+        <p className="text-lg font-light text-slate-600 leading-relaxed text-left">A Python-based adaptive scheduler that predicts recall. It targets a 60-80% "desirable difficulty" recall probability, surfacing words from previously learned content automatically during review of new content. 
+
+        The engine calculates the current recall probability for every word in the student's history and returns the "k" items most at risk of being forgotten. See how it works below:</p>
       </div>
       {/* Main Diagram Container */}
       <div className="relative w-full max-w-6xl flex justify-between items-center px-12 z-10 h-64 mb-12">
