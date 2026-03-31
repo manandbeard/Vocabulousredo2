@@ -1,6 +1,6 @@
 export default function Slide1({ onNext }: { onNext?: () => void }) {
   return (
-    <div className="w-full h-screen flex flex-col items-center justify-center px-8">
+    <div className="w-full h-screen flex flex-col items-center justify-center px-8 pl-[-1px] pr-[-1px]">
       <div className="max-w-2xl text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
         <h1 className="text-8xl font-light text-transparent bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text mb-6">
           VOCABULOUS
