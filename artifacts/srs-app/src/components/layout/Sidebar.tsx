@@ -8,6 +8,7 @@ import {
   BrainCircuit,
   Library,
   Rocket,
+  Presentation,
   ArrowLeftRight
 } from "lucide-react";
 import { useRole } from "@/hooks/use-role";
@@ -70,6 +71,15 @@ export function Sidebar() {
           )}>
             <Rocket className={cn("h-4 w-4 flex-shrink-0", location === "/build" ? "text-blue-600" : "text-slate-400")} />
             Building in Public
+          </Link>
+          <Link href="/pitch" className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150 mt-2",
+            location === "/pitch"
+              ? "bg-slate-100 text-slate-900"
+              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+          )}>
+            <Presentation className={cn("h-4 w-4 flex-shrink-0", location === "/pitch" ? "text-blue-600" : "text-slate-400")} />
+            Pitch Deck
           </Link>
         </div>
       </nav>
