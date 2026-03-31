@@ -1,0 +1,82 @@
+Act as a Senior Frontend Engineer and Lead UI/UX Designer. Create a web-based, interactive presentation deck for my app "Vocabulous" at the route /pitch.
+
+PROJECT CONTEXT:
+Vocabulous is a science-of-learning spaced retrieval app that integrates a Python-based meta-learning scheduler with a Next.js frontend to automate the "Do-Now" vocabulary routines in high school ELA classrooms.
+
+TECH & ARCHITECTURE:
+Build this deck using Next.js. Implement a slide-based layout (using a library like Framer Motion for slide transitions, or a clean vertical-snap scroll). The user must be able to navigate using keyboard arrows or minimalist on-screen click targets. Utilise React.lazy / Suspense for each slide component.
+
+STRICT DESIGN SYSTEM: MINIMALIST
+
+Style: Clean, elegant, typography-focused, with maximum whitespace. Restrained design language.
+
+Colors: Minimal palette. Use slate grays, soft off-whites (bg-slate-50), and subtle, sophisticated text gradients (slate to soft silver) for primary headers. Use delicate 1-pixel slate-200 lines for visual separation.
+
+Typography: Light weights (font-light), elegant sans-serif, precise hierarchy, and generous tracking-wide for headers.
+
+Animation: Use subtle opacity fades (0 to 1) and very slight Y-axis translations (4px) to move between slides or bring elements into view. No jarring transitions.
+
+CRITICAL LAYOUT RULE:
+Whenever you generate or render UI mockups, visual placeholders, data visualizations, or graphic components, always provide full-bleed digital layouts. Never include device frames, computer monitors, phone chassis, or physical background environments. The design should be perfectly flat, 2D, and fill the entire 16:9 frame on a plain canvas.
+
+SLIDE CONTENT REQUIREMENTS:
+
+Slide 1: Title / The Hook
+
+Header (Gradient Text): VOCABULOUS
+
+Subtitle: Because attention is fragile.
+
+Action: A delicate, minimalist outline button that reads "Begin".
+
+Whitespace: 80% whitespace on a pure off-white canvas.
+
+Slide 2: The Problem
+
+Header: The Forgetting Curve
+
+Content: Students lose 70% of new information within 24 hours. Cramming creates the illusion of mastery, but long-term retention is near zero.
+
+Full-Bleed Visual: A plain, soft off-white digital canvas filling the entire screen. A single, thin slate-gray SVG line graph starts at 100% and drops sharply in a curve to 30%. Text labels ("24 Hours", "70% Lost") appear in a tiny, light-weight font directly on the canvas near the line. No graph axis boxes or monitors.
+
+Slide 3: The Solution
+
+Header: Make Learning Stick.
+
+Content: A three-pillar breakdown using light-weight icons with a thin strokeWidth={1.5}:
+
+Spaced Practice: mathematically timed reviews.
+
+Active Retrieval: effortful recall, not passive restudy.
+
+Adaptive Scheduler: A Python-based engine that learns the unique half-life of your memory.
+
+Slide 4: Classroom Experience
+
+Header: Automated spiral review.
+
+Full-Bleed UI Mockup: A stark white, edge-to-edge digital canvas. Centered in the frame is a single word in elegant, thin-weight slate gray typography: "PRODIGIOUS". Below it, a single delicate slate-200 horizontal line. Background is 90% whitespace. Text layout only, no browser frames or phone borders.
+
+Slide 5: Buildathon Progress (Week Two)
+
+Header: Agent 4 Buildathon: Minimalist MVP
+
+Content: The core "Memory Engine" is live.
+
+Visual: A simple stat display using bold, gradient text:
+
+60–80% target recall
+
+3–5 min daily burst
+
+PostgreSQL database tracking latency
+
+Slide 6: The Ask / Next Steps
+
+Header: Enter The Lab
+
+Call to Action Button (Gradient): "View the PoC (/lab)" linking to the /lab route.
+
+Footer: Forge ahead with the Replit Agent. Week Two complete.
+
+Use Tailwind CSS for precise typography control (tracking-wide, font-light,
