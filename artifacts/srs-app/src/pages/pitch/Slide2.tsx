@@ -21,9 +21,7 @@ export default function Slide2() {
         <h2 className="text-6xl font-light text-slate-900 mb-12 tracking-wide">
           The Forgetting Curve
         </h2>
-        <p className="text-lg font-light text-slate-600 leading-relaxed mb-16 max-w-2xl">
-          Students lose 70% of new information within 24 hours. Cramming creates the illusion of mastery, but long-term retention is near zero.
-        </p>
+        <p className="text-lg font-light text-slate-600 leading-relaxed mb-16 max-w-2xl">Students lose 70% of new information within 24 hours. Cramming creates the illusion of mastery, but long-term retention is near zero. Managing retrieval practice manually is an impossible chore for educators.</p>
         
         {/* SVG Forgetting Curve */}
         <svg className="w-full h-48 max-w-2xl" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet">
