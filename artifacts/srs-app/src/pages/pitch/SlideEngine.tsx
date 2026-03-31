@@ -25,7 +25,7 @@ export default function SlideEngine() {
   };
 
   return (
-    <div className="relative w-full h-screen bg-slate-50 flex flex-col items-center justify-center font-['Inter'] overflow-hidden">
+    <div className="w-full h-screen bg-white flex flex-col items-center justify-center px-8 font-['Inter'] overflow-hidden">
       <style>{`
         @keyframes float-packet {
           0%, 100% { transform: translateY(0px); }
@@ -36,32 +36,18 @@ export default function SlideEngine() {
         }
       `}</style>
 
-      {/* Header */}
-      <div className="absolute top-16 left-16">
-        <h2 className="text-3xl font-light tracking-wide text-slate-900">Meta-Learned Spaced Retrieval</h2>
-        <p className="text-slate-500 font-light mt-2 tracking-wide text-sm">Visualizing the recordReview API</p>
-      </div>
-
-      {/* Interactive Controls */}
-      <div className="absolute bottom-16 flex gap-6">
-        <button 
-          onClick={() => simulateFlow(true)}
-          disabled={flowState !== 'idle'}
-          className="px-6 py-3 border border-green-300 text-green-700 font-light tracking-wide hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
-        >
-          ✓ Correct Recall
-        </button>
-        <button 
-          onClick={() => simulateFlow(false)}
-          disabled={flowState !== 'idle'}
-          className="px-6 py-3 border border-red-300 text-red-700 font-light tracking-wide hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
-        >
-          ✗ Memory Lapse
-        </button>
+      {/* Header and Description */}
+      <div className="mb-12 text-center max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <h2 className="text-6xl font-light text-slate-900 mb-4 tracking-wide">
+          Meta-Learned Spaced Retrieval
+        </h2>
+        <p className="text-lg font-light text-slate-600 leading-relaxed">
+          A Python-based adaptive scheduler that predicts recall. It targets a 60-80% "desirable difficulty" recall probability, surfacing words from The Crucible automatically during the Fahrenheit 451 unit.
+        </p>
       </div>
 
       {/* Main Diagram Container */}
-      <div className="relative w-full max-w-6xl flex justify-between items-center px-12 z-10 h-64">
+      <div className="relative w-full max-w-6xl flex justify-between items-center px-12 z-10 h-64 mb-12">
         
         {/* Background SVG Connectors */}
         <svg className="absolute inset-0 w-full h-full -z-10 pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }}>
@@ -116,8 +102,26 @@ export default function SlideEngine() {
 
       </div>
 
+      {/* Interactive Controls */}
+      <div className="flex gap-6 mb-8">
+        <button 
+          onClick={() => simulateFlow(true)}
+          disabled={flowState !== 'idle'}
+          className="px-6 py-3 border border-green-300 text-green-700 font-light tracking-wide hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+        >
+          ✓ Correct Recall
+        </button>
+        <button 
+          onClick={() => simulateFlow(false)}
+          disabled={flowState !== 'idle'}
+          className="px-6 py-3 border border-red-300 text-red-700 font-light tracking-wide hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+        >
+          ✗ Memory Lapse
+        </button>
+      </div>
+
       {/* Status Indicator */}
-      <div className="absolute bottom-8 right-16 text-center">
+      <div className="text-center">
         <p className="text-xs text-slate-400 uppercase tracking-widest">
           {flowState === 'idle' && 'Ready for next simulation'}
           {flowState === 'api' && 'Processing API call...'}
