@@ -25,7 +25,7 @@ export default function SlideEngine() {
   };
 
   return (
-    <div className="w-full h-screen bg-white flex flex-col items-center justify-center px-8 font-['Inter'] overflow-hidden">
+    <div className="w-full h-screen flex flex-col items-center justify-center px-8 font-['Inter'] overflow-hidden">
       <style>{`
         @keyframes float-packet {
           0%, 100% { transform: translateY(0px); }

@@ -1,6 +1,6 @@
 export default function Slide2() {
   return (
-    <div className="w-full h-screen bg-white flex flex-col items-center justify-center px-8">
+    <div className="w-full h-screen flex flex-col items-center justify-center px-8">
       <style>{`
         @keyframes pulse-loss {
           0%, 100% { opacity: 0.6; }

@@ -35,11 +35,13 @@ export default function PitchDeck() {
 
   return (
     <div
-      className="w-screen h-screen bg-white overflow-hidden font-['Inter'] relative"
+      className="w-screen h-screen overflow-hidden font-['Inter'] relative"
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
-      <SynapticWeb />
+      <div className="absolute inset-0 z-0">
+        <SynapticWeb />
+      </div>
       <Suspense fallback={<div className="flex items-center justify-center w-full h-full text-slate-400">Loading...</div>}>
         <div className="relative z-10 w-full h-full">
           <CurrentSlide onNext={handleNext} />

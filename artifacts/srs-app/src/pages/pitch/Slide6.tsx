@@ -2,7 +2,7 @@ import { Link } from "wouter";
 
 export default function Slide6() {
   return (
-    <div className="w-full h-screen bg-white flex flex-col items-center justify-center px-8">
+    <div className="w-full h-screen flex flex-col items-center justify-center px-8">
       <div className="max-w-2xl text-center animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col items-center justify-center">
         <h2 className="text-6xl font-light text-slate-900 mb-12 tracking-wide">
           Enter The Lab

@@ -23,7 +23,7 @@ export default function Slide3() {
   const [hoverId, setHoverId] = useState<number | null>(null);
 
   return (
-    <div className="w-full h-screen bg-white flex flex-col items-center justify-center px-8">
+    <div className="w-full h-screen flex flex-col items-center justify-center px-8">
       <style>{`
         @keyframes shimmer {
           0%, 100% { text-shadow: none; }

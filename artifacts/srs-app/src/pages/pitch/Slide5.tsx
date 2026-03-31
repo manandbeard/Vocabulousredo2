@@ -20,7 +20,7 @@ export default function Slide5() {
   ];
 
   return (
-    <div className="w-full h-screen bg-white flex flex-col items-center justify-center px-8">
+    <div className="w-full h-screen flex flex-col items-center justify-center px-8">
       <div className="max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-700">
         <h2 className="text-6xl font-light text-slate-900 mb-8 tracking-wide">
           The Daily Do-Now
