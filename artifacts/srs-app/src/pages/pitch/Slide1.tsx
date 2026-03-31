@@ -1,4 +1,4 @@
-export default function Slide1() {
+export default function Slide1({ onNext }: { onNext?: () => void }) {
   return (
     <div className="w-full h-screen bg-white flex flex-col items-center justify-center px-8">
       <div className="max-w-2xl text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -8,7 +8,10 @@ export default function Slide1() {
         <p className="text-2xl font-light text-slate-500 tracking-wide mb-16">
           Because attention is fragile.
         </p>
-        <button className="px-8 py-3 border border-slate-400 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+        <button 
+          onClick={onNext}
+          className="px-8 py-3 border border-slate-400 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+        >
           Begin
         </button>
       </div>

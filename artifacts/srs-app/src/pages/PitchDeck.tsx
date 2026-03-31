@@ -39,7 +39,7 @@ export default function PitchDeck() {
       tabIndex={0}
     >
       <Suspense fallback={<div className="flex items-center justify-center w-full h-full text-slate-400">Loading...</div>}>
-        <CurrentSlide />
+        <CurrentSlide onNext={handleNext} />
       </Suspense>
 
       {/* Navigation */}
