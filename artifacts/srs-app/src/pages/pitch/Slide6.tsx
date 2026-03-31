@@ -7,9 +7,7 @@ export default function Slide6() {
         <h2 className="text-6xl font-light text-slate-900 mb-12 tracking-wide">Welcome to Vocabulous</h2>
 
         <Link href="/">
-          <button className="px-10 py-4 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium hover:shadow-lg transition-shadow mb-16">
-            View the PoC
-          </button>
+          <button className="px-10 py-4 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium hover:shadow-lg transition-shadow mb-16">Enter</button>
         </Link>
 
         <div className="border-t border-slate-200 pt-12 max-w-lg">
