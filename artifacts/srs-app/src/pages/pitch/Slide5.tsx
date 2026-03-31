@@ -25,9 +25,7 @@ export default function Slide5() {
         <h2 className="text-6xl font-light text-slate-900 mb-8 tracking-wide">
           The Daily Do-Now
         </h2>
-        <p className="text-lg font-light text-slate-600 leading-relaxed mb-16 max-w-3xl">
-          3–5 minute retrieval bursts. Differentiated support where struggling students see fragile words more often, and fast learners advance. Teachers get a live diagnostic heatmap of retention.
-        </p>
+        <p className="text-lg font-light text-slate-600 leading-relaxed mb-16 max-w-3xl">Using 3–5 minute retrieval bursts, differentiated support where struggling students see fragile words more often, and fast learners advance, teachers get a live diagnostic heatmap of retention.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {features.map((feature, i) => {
