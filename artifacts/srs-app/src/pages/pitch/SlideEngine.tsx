@@ -40,9 +40,12 @@ export default function SlideEngine() {
         <h2 className="text-6xl font-light text-slate-900 mb-4 tracking-wide">
           Meta-Learned Spaced Retrieval
         </h2>
-        <p className="text-lg font-light text-slate-600 leading-relaxed text-left mb-[-35px] mt-[0px] ml-[0px] mr-[6px]">The solution is Vocabulous, a Python-based adaptive scheduler that predicts recall when it's needed most. It targets a 60-80% "desirable difficulty" recall probability, resurfacing words from previously learned content automatically. The engine calculates the current recall probability for every word in the users's history and returns the items most at risk of being forgotten. 
-
-        Want to see it in action? Click "Correct Recall" or Memory Lapse" below. Try waiting longer to click and watch how it effects the recall probability. </p>
+        <p className="text-lg font-light text-slate-600 leading-relaxed text-left mb-4">
+          The solution is Vocabulous, a Python-based adaptive scheduler that predicts recall when it's needed most. It targets a 60-80% "desirable difficulty" recall probability, resurfacing words from previously learned content automatically. The engine calculates the current recall probability for every word in the user's history and returns the items most at risk of being forgotten.
+        </p>
+        <p className="text-lg font-light text-slate-600 leading-relaxed text-left">
+          Want to see it in action? Click "Correct Recall" or "Memory Lapse" below. Try waiting longer to click and watch how it affects the recall probability.
+        </p>
       </div>
       {/* Main Diagram Container */}
       <div className="relative w-full max-w-6xl flex justify-between items-center px-12 z-10 h-64 mb-12">
