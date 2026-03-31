@@ -1,5 +1,6 @@
 import { useState, Suspense, lazy } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { SynapticWeb } from "@/components/ui/synaptic-web";
 
 const Slide1 = lazy(() => import("./pitch/Slide1"));
 const Slide2 = lazy(() => import("./pitch/Slide2"));
@@ -34,16 +35,19 @@ export default function PitchDeck() {
 
   return (
     <div
-      className="w-screen h-screen bg-slate-50 overflow-hidden font-['Inter']"
+      className="w-screen h-screen bg-white overflow-hidden font-['Inter'] relative"
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
+      <SynapticWeb />
       <Suspense fallback={<div className="flex items-center justify-center w-full h-full text-slate-400">Loading...</div>}>
-        <CurrentSlide onNext={handleNext} />
+        <div className="relative z-10 w-full h-full">
+          <CurrentSlide onNext={handleNext} />
+        </div>
       </Suspense>
 
       {/* Navigation */}
-      <div className="fixed bottom-8 left-0 right-0 flex items-center justify-center gap-6">
+      <div className="fixed bottom-8 left-0 right-0 flex items-center justify-center gap-6 z-20">
         <button
           onClick={handlePrev}
           disabled={currentSlide === 0}
