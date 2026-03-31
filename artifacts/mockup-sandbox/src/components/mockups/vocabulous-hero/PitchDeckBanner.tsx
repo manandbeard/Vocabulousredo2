@@ -14,7 +14,7 @@ export function PitchDeckBanner() {
             </span>
           </h1>
 
-          <p className="text-2xl text-slate-600 mb-8 leading-relaxed font-light max-w-2xl mx-auto">
+          <p className="text-2xl text-slate-600 leading-relaxed font-light max-w-2xl mx-auto mb-[-130px]">
             Science-backed language learning platform powered by spaced repetition and adaptive difficulty
           </p>
         </div>
