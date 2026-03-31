@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 export type Role = "teacher" | "student";
 
@@ -11,7 +11,23 @@ interface RoleContextType {
 const RoleContext = createContext<RoleContextType | undefined>(undefined);
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role | null>(null);
+  const [role, setRole] = useState<Role | null>(() => {
+    // Initialize from localStorage if available
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("vocabulous_role");
+      return (stored as Role | null) || null;
+    }
+    return null;
+  });
+
+  // Save to localStorage whenever role changes
+  useEffect(() => {
+    if (role) {
+      localStorage.setItem("vocabulous_role", role);
+    } else {
+      localStorage.removeItem("vocabulous_role");
+    }
+  }, [role]);
 
   // Mock IDs for the demo: Teacher is 1, Student is 2
   const userId = role === "teacher" ? 1 : role === "student" ? 2 : null;
