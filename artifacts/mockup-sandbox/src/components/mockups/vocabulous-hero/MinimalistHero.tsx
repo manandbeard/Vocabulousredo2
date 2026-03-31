@@ -8,7 +8,7 @@ export function MinimalistHero() {
         {/* Minimal headline with enhanced readability on animated background */}
         <p className="text-slate-700 uppercase tracking-widest mb-8 text-[24px] font-bold">Vocabulous²</p>
         
-        <h1 className="font-light mb-8 text-[90px]">
+        <h1 className="font-light mb-8 text-[90px] leading-tight">
           <span className="font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
             Make learning stick, not slip away.
           </span>
