@@ -6,8 +6,8 @@ import { PlayCircle, Flame, Target, CheckCircle2, ChevronRight } from "lucide-re
 
 export default function StudentDashboard() {
   const { userId } = useRole();
-  const { data: classes, isLoading: classesLoading } = useListStudentClasses(userId);
-  const { data: analytics, isLoading: statsLoading } = useGetStudentAnalytics(userId);
+  const { data: classes, isLoading: classesLoading } = useListStudentClasses(userId || 2);
+  const { data: analytics, isLoading: statsLoading } = useGetStudentAnalytics(userId || 2);
 
   if (classesLoading || statsLoading) {
     return (

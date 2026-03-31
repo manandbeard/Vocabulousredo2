@@ -5,8 +5,8 @@ import { BookOpen, Users, Brain, AlertTriangle, ChevronRight } from "lucide-reac
 import { Link } from "wouter";
 
 export default function TeacherDashboard() {
-  const { userId } = useRole();
-  const { data: analytics, isLoading, error } = useGetTeacherAnalytics(userId);
+  const { userId, role, setRole } = useRole();
+  const { data: analytics, isLoading, error } = useGetTeacherAnalytics(userId || 1);
 
   if (isLoading) {
     return (
