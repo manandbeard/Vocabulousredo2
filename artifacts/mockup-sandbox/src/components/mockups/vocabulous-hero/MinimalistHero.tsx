@@ -6,7 +6,7 @@ export function MinimalistHero() {
       <SynapticWeb />
       <div className="max-w-4xl mx-auto px-8 py-32 relative z-10 pt-[55px] pb-[55px]">
         {/* Minimal headline with enhanced readability on animated background */}
-        <p className="text-lg font-semibold text-slate-700 uppercase tracking-widest mb-8">Vocabulous²</p>
+        <p className="text-slate-700 uppercase tracking-widest mb-8 text-[24px] font-bold">Vocabulous²</p>
         
         <h1 className="text-8xl font-light leading-tight mb-8">
           Never forget what<br />
