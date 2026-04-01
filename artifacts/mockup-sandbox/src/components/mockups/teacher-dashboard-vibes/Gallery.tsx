@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import WarmApproachable from "./WarmApproachable";
 import FormalProfessional from "./FormalProfessional";
 import PlayfulVibrant from "./PlayfulVibrant";
+import ModeratePlayful from "./ModeratePlayful";
 import DenseAnalytics from "./DenseAnalytics";
 import RelationalNetwork from "./RelationalNetwork";
 import CommandCenter from "./CommandCenter";
@@ -10,6 +11,7 @@ const variations = [
   { name: "Warm & Approachable", component: WarmApproachable, desc: "Earthy, nurturing, inviting" },
   { name: "Formal & Professional", component: FormalProfessional, desc: "Executive, refined, trustworthy" },
   { name: "Playful & Vibrant", component: PlayfulVibrant, desc: "Energetic, youth-forward, modern" },
+  { name: "Moderate Playful", component: ModeratePlayful, desc: "Fun & approachable, but refined" },
   { name: "Dense Analytics", component: DenseAnalytics, desc: "Information-heavy, comparison-focused" },
   { name: "Relational Network", component: RelationalNetwork, desc: "Spatial scatter plot, data relationships" },
   { name: "Command Center", component: CommandCenter, desc: "Mission control, alert-driven, zoned" }
