@@ -31,7 +31,8 @@ export function TopNav() {
     : [
         { label: "Dashboard", href: "/student", icon: Home },
         { label: "Study", href: "/student/study", icon: BrainCircuit },
-        { label: "Progress", href: "/student/progress", icon: TrendingUp },
+        { label: "Learning Lab", href: "/student/learning-lab", icon: TrendingUp },
+        { label: "Progress", href: "/student/progress", icon: BarChart3 },
       ];
 
   const infoItems = [

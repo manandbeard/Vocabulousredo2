@@ -1,18 +1,13 @@
-import { useState } from "react";
 import { useListStudentClasses, useGetStudentAnalytics } from "@workspace/api-client-react";
 import { useRole } from "@/hooks/use-role";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Link } from "wouter";
-import { Zap, TrendingUp, BookOpen, PlayCircle } from "lucide-react";
+import { PlayCircle, Flame, Target, CheckCircle2, ChevronRight, Activity } from "lucide-react";
 
 export default function StudentDashboard() {
   const { userId } = useRole();
   const { data: classes, isLoading: classesLoading } = useListStudentClasses(userId || 2);
   const { data: analytics, isLoading: statsLoading } = useGetStudentAnalytics(userId || 2);
-
-  const [complexity, setComplexity] = useState(5);
-  const [reviewStrategy, setReviewStrategy] = useState<"spaced" | "cramming" | "none">("spaced");
-  const [recallStrength, setRecallStrength] = useState(0.8);
 
   if (classesLoading || statsLoading) {
     return (
@@ -25,240 +20,101 @@ export default function StudentDashboard() {
   }
 
   const dueTotal = analytics?.deckProgress.reduce((sum, deck) => sum + deck.dueToday, 0) || 0;
-
-  const generateCurvePath = (strategy: "spaced" | "cramming" | "none", complexity: number) => {
-    if (strategy === "cramming") {
-      return "M 0 40 L 100 50 L 200 150 L 300 280 L 400 360 L 500 360 L 600 360 L 800 360";
-    } else if (strategy === "none") {
-      return "M 0 40 Q 150 200 800 360";
-    } else {
-      return "M 0 40 Q 100 80 200 120 L 200 40 Q 350 80 500 100 L 500 40 Q 650 60 800 70";
-    }
-  };
+  const firstName = analytics?.studentName.split(" ")[0] || "Student";
 
   return (
     <AppLayout>
-      <div className="max-w-7xl mx-auto font-['Inter']">
+      <div className="space-y-6 font-['Inter']">
         {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-5xl font-black tracking-tight text-slate-900 mb-4">
-            Memory Decay <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Simulator</span>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Student Dashboard</p>
+          <h1 className="text-4xl font-light text-slate-900">
+            Ready to learn,{" "}
+            <span className="font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
+              {firstName}?
+            </span>
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl">
-            Visualize the Ebbinghaus forgetting curve. See how spaced repetition helps flatten the curve and keep knowledge in your long-term memory.
+          <p className="mt-2 text-slate-500 font-light">
+            You have <span className="font-semibold text-slate-900">{dueTotal} cards</span> due for review today.
           </p>
         </div>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-12 gap-6">
-          {/* Chart Section */}
-          <div className="col-span-12 lg:col-span-8 bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">Memory Retention Over Time</h3>
-              <p className="text-sm text-slate-500">
-                Period: 30 Days | Complexity: {complexity === 5 ? "Moderate" : complexity < 5 ? "Simple" : "Advanced"} | Strategy: {reviewStrategy.toUpperCase()}
+        {/* Stats — bento row */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Hero dark card — streak */}
+          <div className="md:col-span-1 bg-slate-900 text-white rounded-3xl p-6 border border-slate-800 shadow-sm flex flex-col justify-center relative overflow-hidden">
+            <Activity className="absolute right-[-10%] bottom-[-20%] w-32 h-32 text-slate-800 opacity-50" />
+            <div className="relative z-10">
+              <p className="text-slate-400 text-xs font-medium mb-2 uppercase tracking-wider flex items-center gap-1">
+                <Flame className="w-3 h-3" /> Streak
               </p>
-            </div>
-
-            {/* SVG Chart */}
-            <div className="relative h-96 w-full mb-8">
-              <svg viewBox="0 0 800 400" className="w-full h-full" preserveAspectRatio="none">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <line
-                    key={`hgrid-${i}`}
-                    x1="0"
-                    x2="800"
-                    y1={360 - (80 * i)}
-                    y2={360 - (80 * i)}
-                    stroke="#e2e8f0"
-                    strokeDasharray="4"
-                    strokeWidth="1"
-                  />
-                ))}
-
-                <path
-                  d="M 0 40 Q 150 200 800 360"
-                  stroke="#cbd5e1"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeDasharray="6"
-                  opacity="0.5"
-                />
-
-                <path
-                  d={generateCurvePath(reviewStrategy, complexity)}
-                  stroke="#2563eb"
-                  strokeWidth="4"
-                  fill="none"
-                />
-
-                {reviewStrategy === "spaced" && (
-                  <>
-                    <defs>
-                      <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.1" />
-                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      d="M 0 40 Q 100 80 200 120 L 200 40 Q 350 80 500 100 L 500 40 Q 650 60 800 70 L 800 400 L 0 400 Z"
-                      fill="url(#grad1)"
-                    />
-                  </>
-                )}
-
-                {reviewStrategy === "spaced" && (
-                  <>
-                    <circle cx="200" cy="40" r="5" fill="#2563eb" />
-                    <circle cx="500" cy="40" r="5" fill="#2563eb" />
-                  </>
-                )}
-              </svg>
-
-              <div className="absolute bottom-0 left-0 w-full flex justify-between text-xs font-bold text-slate-500 uppercase tracking-widest px-4 pb-2">
-                {["Day 0", "Day 7", "Day 14", "Day 21", "Day 30"].map((label, i) => (
-                  <span key={i}>{label}</span>
-                ))}
-              </div>
-
-              <div className="absolute top-0 -left-12 h-full flex flex-col justify-between text-xs font-bold text-slate-500 uppercase tracking-widest py-2 pr-2">
-                <span>100%</span>
-                <span>50%</span>
-                <span>0%</span>
-              </div>
-            </div>
-
-            <div className="flex gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-600 rounded" />
-                <span className="text-slate-600">Your Learning</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 bg-slate-400" style={{ width: 12 }} />
-                <span className="text-slate-600">Without Review</span>
-              </div>
+              <p className="text-5xl font-bold tracking-tight">{analytics?.currentStreak || 0}</p>
+              <p className="text-slate-400 text-xs mt-1">days</p>
             </div>
           </div>
 
-          {/* Controls Section */}
-          <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
-            {/* Material Complexity */}
-            <div className="bg-slate-50 rounded-3xl border border-slate-200 p-6">
-              <div className="flex justify-between items-center mb-4">
-                <label className="text-sm font-bold text-slate-900">Material Complexity</label>
-                <span className="text-xs font-bold text-blue-600 uppercase">
-                  {complexity === 3 ? "Simple" : complexity === 5 ? "Moderate" : "Advanced"}
-                </span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="9"
-                value={complexity}
-                onChange={(e) => setComplexity(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <div className="flex justify-between text-xs text-slate-500 font-bold mt-3 uppercase tracking-widest">
-                <span>Simple</span>
-                <span>Academic</span>
-              </div>
-            </div>
+          <div className="md:col-span-1 bg-blue-50 rounded-3xl p-6 border border-blue-100 shadow-sm flex flex-col justify-center">
+            <p className="text-blue-600 text-xs font-medium mb-2 uppercase tracking-wider">Avg Retention</p>
+            <p className="text-4xl font-bold tracking-tight text-blue-900">
+              {analytics?.averageRetention ? `${(analytics.averageRetention * 100).toFixed(0)}%` : "N/A"}
+            </p>
+          </div>
 
-            {/* Review Strategy */}
-            <div className="bg-slate-50 rounded-3xl border border-slate-200 p-6">
-              <label className="text-sm font-bold text-slate-900 mb-4 block">Review Strategy</label>
-              <div className="grid grid-cols-3 gap-2">
-                {["cramming", "spaced", "none"].map((strategy) => (
-                  <button
-                    key={strategy}
-                    onClick={() => setReviewStrategy(strategy as "spaced" | "cramming" | "none")}
-                    className={`py-2 px-2 text-xs font-bold rounded-lg transition-all uppercase ${
-                      reviewStrategy === strategy
-                        ? strategy === "spaced"
-                          ? "bg-blue-600 text-white shadow-md"
-                          : "bg-slate-900 text-white shadow-md"
-                        : "border border-slate-300 text-slate-600 hover:border-slate-400"
-                    }`}
-                  >
-                    {strategy === "cramming" ? "Cramming" : strategy === "spaced" ? "Spaced" : "None"}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="md:col-span-1 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-center">
+            <p className="text-slate-500 text-xs font-medium mb-2 uppercase tracking-wider">Cards Mastered</p>
+            <p className="text-5xl font-bold tracking-tight text-slate-900">{analytics?.cardsMastered || 0}</p>
+          </div>
 
-            {/* Recall Strength */}
-            <div className="bg-slate-50 rounded-3xl border border-slate-200 p-6">
-              <div className="flex justify-between items-center mb-4">
-                <label className="text-sm font-bold text-slate-900">Recall Strength</label>
-                <span className="text-xs font-bold text-blue-600">{Math.round(recallStrength * 100)}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={Math.round(recallStrength * 100)}
-                onChange={(e) => setRecallStrength(Number(e.target.value) / 100)}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <div className="text-xs text-slate-500 mt-3">
-                {recallStrength >= 0.8 ? "✓ Excellent" : recallStrength >= 0.6 ? "→ Good" : "✗ Needs Work"}
-              </div>
+          {/* CTA card */}
+          <div className="md:col-span-1 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center gap-3">
+            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
+              <Target className="w-6 h-6 text-slate-400" />
             </div>
-
-            {/* Quick Stats */}
-            <div className="bg-white rounded-3xl border border-slate-200 p-6">
-              <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-widest">Your Stats</h4>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-slate-600">Retention Rate</span>
-                  <span className="ml-auto text-sm font-bold text-slate-900">
-                    {analytics?.averageRetention ? `${(analytics.averageRetention * 100).toFixed(0)}%` : "N/A"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <BookOpen className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-slate-600">Cards Learned</span>
-                  <span className="ml-auto text-sm font-bold text-slate-900">{analytics?.cardsMastered || 0}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Zap className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-slate-600">Streak</span>
-                  <span className="ml-auto text-sm font-bold text-slate-900">{analytics?.currentStreak || 0} days</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Study CTA */}
+            <p className="text-sm text-slate-500">{dueTotal} cards due today</p>
             <Link href="/student/study">
-              <button className="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-2xl font-bold transition-all shadow-sm flex items-center justify-center gap-2 group">
-                <PlayCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                Start Study Session
-              </button>
+              <span className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors cursor-pointer w-full justify-center">
+                <PlayCircle className="h-4 w-4" />
+                Start Session
+              </span>
             </Link>
           </div>
         </div>
 
         {/* Enrolled Classes */}
-        {classes && classes.length > 0 && (
-          <div className="mt-12">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">My Enrolled Classes</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {classes.map((cls) => (
-                <Link key={cls.id} href={`/student/study?classId=${cls.id}`}>
-                  <div className="bg-white border border-slate-200 rounded-3xl p-6 hover:border-slate-400 transition-colors group shadow-sm cursor-pointer">
-                    <div className="flex items-start justify-between mb-3">
-                      <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">{cls.subject}</span>
-                      <span className="px-2 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full">{cls.deckCount} decks</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">{cls.name}</h3>
-                    <p className="text-sm text-slate-500 font-light">Instructor: {cls.teacherName}</p>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">My Enrolled Classes</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {classes?.map((cls) => (
+              <div key={cls.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden hover:border-slate-400 transition-colors group shadow-sm">
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-1">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">{cls.subject}</span>
+                    <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-700 transition-colors" />
                   </div>
-                </Link>
-              ))}
-            </div>
+                  <h3 className="text-lg font-semibold text-slate-900 mt-2">{cls.name}</h3>
+                  <p className="text-sm text-slate-500 mt-1 font-light">Instructor: {cls.teacherName}</p>
+                </div>
+                <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+                  <span className="text-sm text-slate-500">
+                    <span className="font-semibold text-slate-900">{cls.deckCount}</span> Decks
+                  </span>
+                  <Link href={`/student/study?classId=${cls.id}`}>
+                    <span className="text-sm font-medium text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text cursor-pointer hover:opacity-70 transition-opacity">
+                      Study Now →
+                    </span>
+                  </Link>
+                </div>
+              </div>
+            ))}
+
+            {classes?.length === 0 && (
+              <div className="col-span-full bg-white border border-dashed border-slate-300 rounded-3xl p-12 text-center shadow-sm">
+                <CheckCircle2 className="mx-auto h-8 w-8 text-slate-300 mb-3" />
+                <p className="text-sm text-slate-500">You aren't enrolled in any classes yet.</p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </AppLayout>
   );
