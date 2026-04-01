@@ -120,9 +120,7 @@ export default function StudentDashboard() {
           </div>
 
           {/* Today's Goal — 5 cols */}
-          <div className="col-span-5 bg-white rounded-3xl border border-slate-200 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.12)] hover:shadow-[0_8px_32px_-4px_rgba(15,23,42,0.18)] hover:-translate-y-0.5 transition-all duration-200 p-6 flex flex-col justify-between relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 2) + 1)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-            <div className="absolute inset-0 bg-white/85" />
-            <div className="relative z-10">
+          <ShadowCard className="col-span-5 p-6 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
                 <BarChart2 className="w-3.5 h-3.5" /> Today's Goal
@@ -155,33 +153,30 @@ export default function StudentDashboard() {
                 <span className="text-[10px] text-slate-400">{dueTotal}</span>
               </div>
             </div>
-            </div>
-          </div>
+          </ShadowCard>
 
           {/* Retention + Mastered stacked */}
           <div className="col-span-4 grid grid-rows-2 gap-4">
-            <div className="bg-blue-50 rounded-3xl p-5 border border-blue-100 shadow-[0_4px_24px_-4px_rgba(37,99,235,0.14)] hover:shadow-[0_8px_32px_-4px_rgba(37,99,235,0.22)] hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-4 relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 2) + 4)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-              <div className="absolute inset-0 bg-blue-50/85" />
-              <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center shadow-sm shrink-0 relative z-10">
+            <div className="bg-blue-50 rounded-3xl p-5 border border-blue-100 shadow-[0_4px_24px_-4px_rgba(37,99,235,0.14)] hover:shadow-[0_8px_32px_-4px_rgba(37,99,235,0.22)] hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center shadow-sm shrink-0">
                 <Target className="w-5 h-5 text-blue-600" />
               </div>
-              <div className="relative z-10">
+              <div>
                 <p className="text-xs text-blue-600 uppercase tracking-wider font-semibold">Avg Retention</p>
                 <p className="text-3xl font-black text-blue-900 tracking-tight">
                   {retention !== null ? `${retention}%` : "—"}
                 </p>
               </div>
             </div>
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.12)] hover:shadow-[0_8px_32px_-4px_rgba(15,23,42,0.18)] hover:-translate-y-0.5 transition-all duration-200 p-5 flex items-center gap-4 relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 2) + 5)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-              <div className="absolute inset-0 bg-white/85" />
-              <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0 relative z-10">
+            <ShadowCard className="p-5 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-5 h-5 text-slate-600" />
               </div>
-              <div className="relative z-10">
+              <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Mastered</p>
                 <p className="text-3xl font-black text-slate-900 tracking-tight">{mastered}</p>
               </div>
-            </div>
+            </ShadowCard>
           </div>
         </div>
 
@@ -189,9 +184,7 @@ export default function StudentDashboard() {
         <div className="grid grid-cols-12 gap-4">
 
           {/* Study time placeholder */}
-          <div className="col-span-3 bg-white rounded-3xl border border-slate-200 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.12)] hover:shadow-[0_8px_32px_-4px_rgba(15,23,42,0.18)] hover:-translate-y-0.5 transition-all duration-200 p-6 relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 2) + 2)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-            <div className="absolute inset-0 bg-white/85" />
-            <div className="relative z-10">
+          <ShadowCard className="col-span-3 p-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" /> Study Time
             </p>
@@ -200,18 +193,15 @@ export default function StudentDashboard() {
             <div className="mt-4 pt-4 border-t border-slate-100">
               <p className="text-xs text-slate-400">Coming soon</p>
             </div>
-            </div>
-          </div>
+          </ShadowCard>
 
           {/* Up Next */}
-          <div className="col-span-5 bg-amber-50 rounded-3xl border border-amber-100 shadow-[0_4px_24px_-4px_rgba(245,158,11,0.16)] hover:shadow-[0_8px_32px_-4px_rgba(245,158,11,0.24)] hover:-translate-y-0.5 transition-all duration-200 p-6 relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 2) + 6)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-            <div className="absolute inset-0 bg-amber-50/85" />
-            <div className="relative z-10">
+          <div className="col-span-5 bg-amber-50 rounded-3xl border border-amber-100 shadow-[0_4px_24px_-4px_rgba(245,158,11,0.16)] hover:shadow-[0_8px_32px_-4px_rgba(245,158,11,0.24)] hover:-translate-y-0.5 transition-all duration-200 p-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-amber-600 mb-4 flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5" /> Up Next
             </p>
             {upNext ? (
-              <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center justify-between">
                 <div>
                   <p className="text-lg font-bold text-slate-900">{upNext.deckName}</p>
                   <p className="text-sm text-slate-500 mt-0.5">
@@ -225,9 +215,8 @@ export default function StudentDashboard() {
                 </Link>
               </div>
             ) : (
-              <p className="text-sm text-slate-500 relative z-10">All caught up! No cards due.</p>
+              <p className="text-sm text-slate-500">All caught up! No cards due.</p>
             )}
-            </div>
           </div>
 
           {/* Achievement card — real badge from DB */}

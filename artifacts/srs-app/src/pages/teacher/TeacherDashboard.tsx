@@ -141,9 +141,7 @@ export default function TeacherDashboard() {
           </div>
 
           {/* Class Engagement bar chart — 5 cols */}
-          <div className="col-span-5 bg-white rounded-3xl border border-slate-200 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.12)] hover:shadow-[0_8px_32px_-4px_rgba(15,23,42,0.18)] hover:-translate-y-0.5 transition-all duration-200 p-6 flex flex-col justify-between relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 1) + 1)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-            <div className="absolute inset-0 bg-white/85" />
-            <div className="relative z-10 w-full">
+          <ShadowCard className="col-span-5 p-6 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
                 <BarChart2 className="w-3.5 h-3.5" /> Class Engagement
@@ -176,31 +174,28 @@ export default function TeacherDashboard() {
                 <span className="text-[10px] text-slate-400">{analytics.totalStudents}</span>
               </div>
             </div>
-            </div>
-          </div>
+          </ShadowCard>
 
           {/* Retention + Total Reviews stacked — 4 cols */}
           <div className="col-span-4 grid grid-rows-2 gap-4">
-            <div className="bg-blue-50 rounded-3xl p-5 border border-blue-100 shadow-[0_4px_24px_-4px_rgba(37,99,235,0.14)] hover:shadow-[0_8px_32px_-4px_rgba(37,99,235,0.22)] hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-4 relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 1) + 4)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-              <div className="absolute inset-0 bg-blue-50/85" />
-              <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center shadow-sm shrink-0 relative z-10">
+            <div className="bg-blue-50 rounded-3xl p-5 border border-blue-100 shadow-[0_4px_24px_-4px_rgba(37,99,235,0.14)] hover:shadow-[0_8px_32px_-4px_rgba(37,99,235,0.22)] hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center shadow-sm shrink-0">
                 <TrendingUp className="w-5 h-5 text-blue-600" />
               </div>
-              <div className="relative z-10">
+              <div>
                 <p className="text-xs text-blue-600 uppercase tracking-wider font-semibold">Avg Retention</p>
                 <p className="text-3xl font-black text-blue-900 tracking-tight">{retention}</p>
               </div>
             </div>
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.12)] hover:shadow-[0_8px_32px_-4px_rgba(15,23,42,0.18)] hover:-translate-y-0.5 transition-all duration-200 p-5 flex items-center gap-4 relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 1) + 5)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-              <div className="absolute inset-0 bg-white/85" />
-              <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0 relative z-10">
+            <ShadowCard className="p-5 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0">
                 <BookOpen className="w-5 h-5 text-slate-600" />
               </div>
-              <div className="relative z-10">
+              <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Total Reviews</p>
                 <p className="text-3xl font-black text-slate-900 tracking-tight">{totalReviews.toLocaleString()}</p>
               </div>
-            </div>
+            </ShadowCard>
           </div>
         </div>
 
@@ -208,9 +203,7 @@ export default function TeacherDashboard() {
         <div className="grid grid-cols-12 gap-4">
 
           {/* Avg Study Time placeholder */}
-          <div className="col-span-3 bg-white rounded-3xl border border-slate-200 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.12)] hover:shadow-[0_8px_32px_-4px_rgba(15,23,42,0.18)] hover:-translate-y-0.5 transition-all duration-200 p-6 relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 1) + 2)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-            <div className="absolute inset-0 bg-white/85" />
-            <div className="relative z-10">
+          <ShadowCard className="col-span-3 p-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" /> Avg Study Time
             </p>
@@ -219,18 +212,15 @@ export default function TeacherDashboard() {
             <div className="mt-4 pt-4 border-t border-slate-100">
               <p className="text-xs text-slate-400">Coming soon</p>
             </div>
-            </div>
-          </div>
+          </ShadowCard>
 
           {/* Needs Attention — 5 cols */}
           {atRiskClasses.length > 0 ? (
-            <div className="col-span-5 bg-red-50 rounded-3xl border border-red-100 shadow-[0_4px_24px_-4px_rgba(220,38,38,0.14)] hover:shadow-[0_8px_32px_-4px_rgba(220,38,38,0.22)] hover:-translate-y-0.5 transition-all duration-200 p-6 relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 1) + 6)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-              <div className="absolute inset-0 bg-red-50/85" />
-              <div className="relative z-10">
+            <div className="col-span-5 bg-red-50 rounded-3xl border border-red-100 shadow-[0_4px_24px_-4px_rgba(220,38,38,0.14)] hover:shadow-[0_8px_32px_-4px_rgba(220,38,38,0.22)] hover:-translate-y-0.5 transition-all duration-200 p-6">
               <p className="text-xs font-semibold uppercase tracking-widest text-red-500 mb-4 flex items-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5" /> Needs Attention
               </p>
-              <div className="space-y-2.5 relative z-10">
+              <div className="space-y-2.5">
                 {atRiskClasses.slice(0, 3).map((cls) => (
                   <Link key={cls.classId} href={`/teacher/classes/${cls.classId}`}>
                     <div className="flex items-center justify-between bg-white/70 rounded-2xl px-3 py-2.5 cursor-pointer hover:bg-white transition-colors">
@@ -245,19 +235,17 @@ export default function TeacherDashboard() {
                   </Link>
                 ))}
               </div>
-              </div>
             </div>
           ) : (
-            <div className="col-span-5 bg-white rounded-3xl border border-slate-200 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.12)] hover:shadow-[0_8px_32px_-4px_rgba(15,23,42,0.18)] hover:-translate-y-0.5 transition-all duration-200 p-6 flex items-center gap-4 relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 1) + 6)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
-              <div className="absolute inset-0 bg-white/85" />
-              <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center relative z-10">
+            <ShadowCard className="col-span-5 p-6 flex items-center gap-4">
+              <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
                 <Users className="w-6 h-6 text-emerald-600" />
               </div>
-              <div className="relative z-10">
+              <div>
                 <p className="text-sm font-bold text-slate-900">All students on track</p>
                 <p className="text-xs text-slate-500 mt-0.5">No students are at risk across your classes.</p>
               </div>
-            </div>
+            </ShadowCard>
           )}
 
           {/* Class Milestone — real data from DB */}
