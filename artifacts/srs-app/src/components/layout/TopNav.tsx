@@ -79,43 +79,45 @@ export function TopNav() {
               );
             })}
 
-            {/* Info Dropdown */}
-            <div ref={infoRef} className="relative">
-              <button
-                onClick={() => setInfoOpen(!infoOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
-              >
-                <Info className="w-4 h-4" />
-                Info
-                <ChevronDown className={`w-4 h-4 transition-transform ${infoOpen ? "rotate-180" : ""}`} />
-              </button>
+            {/* Info Dropdown — Teacher only */}
+            {role === "teacher" && (
+              <div ref={infoRef} className="relative">
+                <button
+                  onClick={() => setInfoOpen(!infoOpen)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                >
+                  <Info className="w-4 h-4" />
+                  Info
+                  <ChevronDown className={`w-4 h-4 transition-transform ${infoOpen ? "rotate-180" : ""}`} />
+                </button>
 
-              {infoOpen && (
-                <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-md z-50">
-                  {infoItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = location === item.href;
-                    return (
-                      <button
-                        key={item.href}
-                        onClick={() => {
-                          navigate(item.href);
-                          setInfoOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                          isActive
-                            ? "bg-blue-50 text-blue-600"
-                            : "text-slate-700 hover:bg-slate-50"
-                        }`}
-                      >
-                        <Icon className="w-4 h-4" />
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                {infoOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-md z-50">
+                    {infoItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = location === item.href;
+                      return (
+                        <button
+                          key={item.href}
+                          onClick={() => {
+                            navigate(item.href);
+                            setInfoOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                            isActive
+                              ? "bg-blue-50 text-blue-600"
+                              : "text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
