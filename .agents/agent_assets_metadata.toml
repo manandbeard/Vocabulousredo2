@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "zGiOz-d77RXi7qK_lNjJP"
+uri = "file://artifacts/srs-app/public/images/card-bg-streak.png"
+type = "image"
+title = "dark neural brain card background"
+
+[[generated]]
+id = "I0HW0y19ZauvYUQKNisci"
+uri = "file://artifacts/srs-app/public/images/card-bg-award.png"
+type = "image"
+title = "golden achievement award card background"
