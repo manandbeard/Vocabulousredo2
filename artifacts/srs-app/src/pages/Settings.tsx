@@ -2,13 +2,16 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useRole } from "@/hooks/use-role";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetDueCardsQueryKey } from "@workspace/api-client-react";
 import { Mail, Lock, Bell, Target, Shield, LogOut, Camera, RotateCcw, AlertCircle, X } from "lucide-react";
 
 type SettingsTab = "account" | "security" | "notifications" | "preferences";
 
 export default function Settings() {
-  const { role } = useRole();
+  const { role, userId } = useRole();
   const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<SettingsTab>("account");
   const [displayName, setDisplayName] = useState("Alex Rivera");
   const [bio, setBio] = useState("Lifelong learner focused on vocabulary mastery and language precision.");
@@ -16,12 +19,28 @@ export default function Settings() {
   const [pushNotifications, setPushNotifications] = useState(false);
   const [twoFactor, setTwoFactor] = useState(true);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
-  const handleResetStudyProgress = () => {
-    // Reset the study progress for the day
-    localStorage.removeItem("dailyStudyProgress");
-    localStorage.removeItem("cardsStudiedToday");
-    setShowResetModal(false);
+  const handleResetStudyProgress = async () => {
+    setResetLoading(true);
+    try {
+      const response = await fetch(`/api/students/${userId}/reset-progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        // Invalidate the due-cards query to refetch
+        queryClient.invalidateQueries({ queryKey: getGetDueCardsQueryKey(userId) });
+        setShowResetModal(false);
+      } else {
+        console.error("Failed to reset progress");
+      }
+    } catch (err) {
+      console.error("Error resetting progress:", err);
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   const tabs = [
@@ -358,15 +377,24 @@ export default function Settings() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowResetModal(false)}
-                  className="flex-1 px-4 py-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-900 font-medium transition-colors"
+                  disabled={resetLoading}
+                  className="flex-1 px-4 py-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-900 font-medium transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleResetStudyProgress}
-                  className="flex-1 px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors"
+                  disabled={resetLoading}
+                  className="flex-1 px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Reset Progress
+                  {resetLoading ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      Resetting...
+                    </>
+                  ) : (
+                    "Reset Progress"
+                  )}
                 </button>
               </div>
             </div>

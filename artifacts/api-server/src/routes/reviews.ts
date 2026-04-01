@@ -186,4 +186,25 @@ router.get("/students/:studentId/reviews", async (req, res): Promise<void> => {
   res.json(ListStudentReviewsResponse.parse(reviews));
 });
 
+router.post("/students/:studentId/reset-progress", async (req, res): Promise<void> => {
+  const params = GetDueCardsParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const studentId = params.data.studentId;
+
+  // Reset all card states' nextReviewAt to today (so they appear as due cards again)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  await db
+    .update(cardStatesTable)
+    .set({ nextReviewAt: today })
+    .where(eq(cardStatesTable.studentId, studentId));
+
+  res.json({ success: true, message: "Study progress reset for today" });
+});
+
 export default router;
