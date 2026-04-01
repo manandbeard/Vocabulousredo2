@@ -14,8 +14,12 @@ import MobileHamburgerMenu from "../mobile-menu-solutions/MobileHamburgerMenu";
 import MobileScrollableTabs from "../mobile-menu-solutions/MobileScrollableTabs";
 import MobileStackedTabs from "../mobile-menu-solutions/MobileStackedTabs";
 import ComparisonView from "../mobile-menu-solutions/ComparisonView";
+import CardFlipVariations from "../card-flip-animations/CardFlipVariations";
 
 const variations = [
+  { category: "Card Flip Animations", items: [
+    { name: "Flip Variations", component: CardFlipVariations, desc: "8 different card flip animation styles to choose from" },
+  ] },
   { category: "Mobile Menu Solutions", items: [
     { name: "Comparison View", component: ComparisonView, desc: "All 3 solutions side-by-side with pros/cons" },
     { name: "Hamburger Menu", component: MobileHamburgerMenu, desc: "Drawer navigation with menu icon toggle" },
