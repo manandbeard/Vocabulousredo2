@@ -13,6 +13,7 @@ export const modules: ModuleMap = {
   "./components/mockups/landing-layouts/CinematicScreen.tsx": () => import("../components/mockups/landing-layouts/CinematicScreen.tsx"),
   "./components/mockups/landing-layouts/SplitScreenDock.tsx": () => import("../components/mockups/landing-layouts/SplitScreenDock.tsx"),
   "./components/mockups/student-dashboard/StudentDashboardExpanded.tsx": () => import("../components/mockups/student-dashboard/StudentDashboardExpanded.tsx"),
+  "./components/mockups/student-dashboard/TeacherDashboardExpanded.tsx": () => import("../components/mockups/student-dashboard/TeacherDashboardExpanded.tsx"),
   "./components/mockups/synaptic-web/SynapticWeb.tsx": () => import("../components/mockups/synaptic-web/SynapticWeb.tsx"),
   "./components/mockups/synaptic-web/SynapticWebDemo.tsx": () => import("../components/mockups/synaptic-web/SynapticWebDemo.tsx"),
   "./components/mockups/teacher-dashboard-vibes/AccessibilityFirst.tsx": () => import("../components/mockups/teacher-dashboard-vibes/AccessibilityFirst.tsx"),
