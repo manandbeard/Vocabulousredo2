@@ -10,8 +10,18 @@ import CommandCenter from "./CommandCenter";
 import ClarityFirst from "./ClarityFirst";
 import InteractionFirst from "./InteractionFirst";
 import AccessibilityFirst from "./AccessibilityFirst";
+import MobileHamburgerMenu from "../mobile-menu-solutions/MobileHamburgerMenu";
+import MobileScrollableTabs from "../mobile-menu-solutions/MobileScrollableTabs";
+import MobileStackedTabs from "../mobile-menu-solutions/MobileStackedTabs";
+import ComparisonView from "../mobile-menu-solutions/ComparisonView";
 
 const variations = [
+  { category: "Mobile Menu Solutions", items: [
+    { name: "Comparison View", component: ComparisonView, desc: "All 3 solutions side-by-side with pros/cons" },
+    { name: "Hamburger Menu", component: MobileHamburgerMenu, desc: "Drawer navigation with menu icon toggle" },
+    { name: "Scrollable Tabs", component: MobileScrollableTabs, desc: "Horizontal scroll with tab icons" },
+    { name: "Stacked Tabs", component: MobileStackedTabs, desc: "Full-width vertical tab buttons" },
+  ] },
   { category: "Emotional Tones", items: [
     { name: "Warm & Approachable", component: WarmApproachable, desc: "Earthy, nurturing, inviting" },
     { name: "Formal & Professional", component: FormalProfessional, desc: "Executive, refined, trustworthy" },
