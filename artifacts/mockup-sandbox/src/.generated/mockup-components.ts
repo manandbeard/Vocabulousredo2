@@ -2,6 +2,7 @@
 type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/card-flip-animations/CardFlipVariations.tsx": () => import("../components/mockups/card-flip-animations/CardFlipVariations.tsx"),
+  "./components/mockups/card-flip-animations/CardTransitionVariations.tsx": () => import("../components/mockups/card-flip-animations/CardTransitionVariations.tsx"),
   "./components/mockups/forgetting-curve/ForgettingCurveBackground.tsx": () => import("../components/mockups/forgetting-curve/ForgettingCurveBackground.tsx"),
   "./components/mockups/forgetting-curve/ForgettingCurveDemo.tsx": () => import("../components/mockups/forgetting-curve/ForgettingCurveDemo.tsx"),
   "./components/mockups/landing-layouts/BentoGrid.tsx": () => import("../components/mockups/landing-layouts/BentoGrid.tsx"),
