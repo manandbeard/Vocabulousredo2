@@ -143,7 +143,7 @@ export default function TeacherDashboard() {
           {/* Class Engagement bar chart — 5 cols */}
           <div className="col-span-5 bg-white rounded-3xl border border-slate-200 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.12)] hover:shadow-[0_8px_32px_-4px_rgba(15,23,42,0.18)] hover:-translate-y-0.5 transition-all duration-200 p-6 flex flex-col justify-between relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 1) + 1)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
             <div className="absolute inset-0 bg-white/85" />
-            <div className="relative z-10">
+            <div className="relative z-10 w-full">
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
                 <BarChart2 className="w-3.5 h-3.5" /> Class Engagement
@@ -177,6 +177,7 @@ export default function TeacherDashboard() {
               </div>
             </div>
             </div>
+          </div>
 
           {/* Retention + Total Reviews stacked — 4 cols */}
           <div className="col-span-4 grid grid-rows-2 gap-4">

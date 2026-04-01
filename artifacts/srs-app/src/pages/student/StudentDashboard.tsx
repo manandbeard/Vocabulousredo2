@@ -156,6 +156,7 @@ export default function StudentDashboard() {
               </div>
             </div>
             </div>
+          </div>
 
           {/* Retention + Mastered stacked */}
           <div className="col-span-4 grid grid-rows-2 gap-4">
@@ -200,6 +201,7 @@ export default function StudentDashboard() {
               <p className="text-xs text-slate-400">Coming soon</p>
             </div>
             </div>
+          </div>
 
           {/* Up Next */}
           <div className="col-span-5 bg-amber-50 rounded-3xl border border-amber-100 shadow-[0_4px_24px_-4px_rgba(245,158,11,0.16)] hover:shadow-[0_8px_32px_-4px_rgba(245,158,11,0.24)] hover:-translate-y-0.5 transition-all duration-200 p-6 relative overflow-hidden" style={{ backgroundImage: `url('${getRotatingImage((userId || 2) + 6)}')`, backgroundSize: "cover", backgroundPosition: "center" }}>
@@ -225,6 +227,7 @@ export default function StudentDashboard() {
             ) : (
               <p className="text-sm text-slate-500 relative z-10">All caught up! No cards due.</p>
             )}
+            </div>
           </div>
 
           {/* Achievement card — real badge from DB */}
