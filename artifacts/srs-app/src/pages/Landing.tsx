@@ -1,9 +1,16 @@
 import { useLocation } from "wouter";
 import { ArrowRight, Brain, Zap, Target, BarChart3, Clock, Users, Activity } from "lucide-react";
 import { SynapticWeb } from "@/components/ui/synaptic-web";
+import { useRole } from "@/hooks/use-role";
 
 export default function Landing() {
   const [, navigate] = useLocation();
+  const { setRole } = useRole();
+
+  const handleStartLearning = () => {
+    setRole("teacher");
+    navigate("/teacher");
+  };
 
   return (
     <div className="min-h-screen font-['Inter'] text-slate-900 p-4 md:p-8 flex items-center justify-center relative">
@@ -94,7 +101,7 @@ export default function Landing() {
             <h3 className="font-bold text-xl tracking-tight">Ready to start?</h3>
             <p className="text-sm text-slate-500 mb-2">Join students and teachers using spaced retrieval daily.</p>
             <button
-              onClick={() => navigate("/teacher")}
+              onClick={handleStartLearning}
               className="w-full py-4 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 group"
             >
               Start Learning
