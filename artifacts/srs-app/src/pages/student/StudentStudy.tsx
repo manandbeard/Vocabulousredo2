@@ -112,41 +112,51 @@ export default function StudentStudy() {
           </div>
         </div>
 
-        {/* Flashcard */}
-        <div className="relative h-[380px] w-full mt-10">
-          <AnimatePresence mode="wait">
+        {/* Flashcard — 3D bounce flip */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentCard.cardId}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="relative h-[380px] w-full mt-10"
+            style={{ perspective: "1200px" }}
+          >
             <motion.div
-              key={currentCard.cardId + (isFlipped ? "-back" : "-front")}
-              initial={{ rotateX: isFlipped ? -90 : 90, opacity: 0 }}
-              animate={{ rotateX: 0, opacity: 1 }}
-              exit={{ rotateX: isFlipped ? 90 : -90, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="absolute inset-0 w-full h-full"
+              animate={{ rotateY: isFlipped ? 180 : 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 18, mass: 1 }}
+              style={{ transformStyle: "preserve-3d", width: "100%", height: "100%", position: "relative" }}
             >
-              <div className="w-full h-full rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col p-10 items-center justify-center text-center">
-                {!isFlipped ? (
-                  <h2 className="text-3xl md:text-4xl font-bold leading-tight text-slate-900 tracking-tight">
-                    {currentCard.front}
-                  </h2>
-                ) : (
-                  <>
-                    <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-5 border-b border-slate-100 pb-2 inline-block px-4">
-                      Answer
-                    </div>
-                    <h2 className="text-2xl md:text-3xl font-medium leading-relaxed text-slate-900">
-                      {currentCard.back}
-                    </h2>
-                    {currentCard.hint && (
-                      <p className="mt-8 text-sm text-blue-600 bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
-                        Hint: {currentCard.hint}
-                      </p>
-                    )}
-                  </>
+              {/* Front face — question */}
+              <div
+                className="absolute inset-0 w-full h-full rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col p-10 items-center justify-center text-center"
+                style={{ backfaceVisibility: "hidden" }}
+              >
+                <h2 className="text-3xl md:text-4xl font-bold leading-tight text-slate-900 tracking-tight">
+                  {currentCard.front}
+                </h2>
+              </div>
+              {/* Back face — answer */}
+              <div
+                className="absolute inset-0 w-full h-full rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col p-10 items-center justify-center text-center"
+                style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+              >
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-5 border-b border-slate-100 pb-2 inline-block px-4">
+                  Answer
+                </div>
+                <h2 className="text-2xl md:text-3xl font-medium leading-relaxed text-slate-900">
+                  {currentCard.back}
+                </h2>
+                {currentCard.hint && (
+                  <p className="mt-8 text-sm text-blue-600 bg-blue-50 px-4 py-2 rounded-xl border border-blue-100">
+                    Hint: {currentCard.hint}
+                  </p>
                 )}
               </div>
             </motion.div>
-          </AnimatePresence>
-        </div>
+          </motion.div>
+        </AnimatePresence>
 
         {/* Actions */}
         <div className="mt-10 flex justify-center">
