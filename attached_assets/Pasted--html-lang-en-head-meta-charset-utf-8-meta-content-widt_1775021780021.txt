@@ -1,0 +1,370 @@
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#fff8f5",
+            "on-secondary-fixed": "#2e1500",
+            "surface-bright": "#fff8f5",
+            "on-primary": "#ffffff",
+            "primary-container": "#fc8b00",
+            "primary-fixed": "#ffdcc3",
+            "inverse-surface": "#3a2e25",
+            "tertiary": "#006590",
+            "primary": "#904d00",
+            "on-secondary-container": "#79491b",
+            "tertiary-container": "#00b3fc",
+            "on-primary-container": "#603100",
+            "on-tertiary": "#ffffff",
+            "on-background": "#241911",
+            "surface-container-low": "#fff1e9",
+            "surface-container-highest": "#f3dfd1",
+            "outline": "#897362",
+            "on-error-container": "#93000a",
+            "tertiary-fixed": "#c8e6ff",
+            "secondary-fixed": "#ffdcc2",
+            "surface-container": "#ffeadc",
+            "on-surface-variant": "#564334",
+            "surface-tint": "#904d00",
+            "secondary": "#855324",
+            "on-tertiary-fixed": "#001e2e",
+            "on-secondary": "#ffffff",
+            "primary-fixed-dim": "#ffb77c",
+            "on-tertiary-container": "#004260",
+            "background": "#fff8f5",
+            "surface-variant": "#f3dfd1",
+            "on-error": "#ffffff",
+            "error": "#ba1a1a",
+            "on-tertiary-fixed-variant": "#004c6e",
+            "inverse-on-surface": "#ffede3",
+            "on-surface": "#241911",
+            "outline-variant": "#ddc1ae",
+            "surface-dim": "#ead6c9",
+            "secondary-container": "#ffbb83",
+            "on-secondary-fixed-variant": "#693c0e",
+            "on-primary-fixed-variant": "#6e3900",
+            "inverse-primary": "#ffb77c",
+            "error-container": "#ffdad6",
+            "on-primary-fixed": "#2e1500",
+            "tertiary-fixed-dim": "#88ceff",
+            "secondary-fixed-dim": "#fcb980",
+            "surface-container-high": "#f9e4d7",
+            "surface-container-lowest": "#ffffff"
+          },
+          fontFamily: {
+            "headline": ["Inter"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #fff1e9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #ddc1ae;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-white">
+<!-- TopNavBar Implementation -->
+<nav class="fixed top-0 w-full z-50 bg-[#fcf9f8]/80 dark:bg-[#1b1b1c]/80 backdrop-blur-xl shadow-[0_32px_64px_-15px_rgba(27,27,28,0.06)] h-20 flex justify-between items-center px-8 max-w-full mx-auto">
+<div class="text-2xl font-black tracking-tighter text-[#fc8b00] font-inter">Vocabulous</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-[#fc8b00] font-bold border-b-2 border-[#fc8b00] pb-1 font-inter tracking-tight" href="#">Profile</a>
+<a class="text-[#444656] dark:text-[#c5c5d9] hover:text-[#fc8b00] transition-colors font-inter tracking-tight" href="#">Security</a>
+<a class="text-[#444656] dark:text-[#c5c5d9] hover:text-[#fc8b00] transition-colors font-inter tracking-tight" href="#">Notifications</a>
+<a class="text-[#444656] dark:text-[#c5c5d9] hover:text-[#fc8b00] transition-colors font-inter tracking-tight" href="#">Goals</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-[#f6f3f2] dark:hover:bg-[#e5e2e1]/10 rounded-lg transition-all active:opacity-80 scale-95 duration-200">
+<span class="material-symbols-outlined text-[#444656]" data-icon="help">help</span>
+</button>
+<button class="p-2 hover:bg-[#f6f3f2] dark:hover:bg-[#e5e2e1]/10 rounded-lg transition-all active:opacity-80 scale-95 duration-200">
+<span class="material-symbols-outlined text-[#fc8b00]" data-icon="settings">settings</span>
+</button>
+<div class="w-10 h-10 overflow-hidden rounded-full border-2 border-primary-container">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a thoughtful young scholar wearing minimalist glasses in a soft-lit library environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARj-nY4NOdxWFhUg66PoqIHzPJKXVpnLPVypgk6CDLOIbgyFLMwAriNU4UPUF5w3eg_rdOhqWEk3IhAdoG_gZOy6ljUKRA82D4ltwhbKbwAVmohExYjvQVfNiHWf1UrUhYQg3o3WK6cMkU7ymMIasyZn7ovJxEBjcbhbm8y2_ZFw2jQG16qDOAuN-qqMNIA50Kl9NZqHr0NFb6yWunmXgtvq8-ONqoLL7Ttdf-mWoGuWdn1Ugyvv__tp3pX3PyzgFX_du4h420aDLI"/>
+</div>
+</div>
+</nav>
+<div class="flex pt-20 min-h-screen">
+<!-- SideNavBar Implementation -->
+<aside class="hidden md:flex flex-col h-[calc(100vh-5rem)] w-64 fixed left-0 bg-[#f6f3f2] dark:bg-[#1b1b1c] py-8 z-40">
+<div class="px-6 mb-10">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm" data-icon="person">person</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface font-inter">The Curator</p>
+<p class="text-[10px] text-on-surface-variant font-medium">Mastery Level 12</p>
+</div>
+</div>
+<button class="w-full py-2 bg-gradient-to-r from-[#fc8b00] to-[#FF8D00] text-white text-xs font-bold tracking-widest transition-transform hover:translate-x-1 active:scale-95">
+          GO PREMIUM
+        </button>
+</div>
+<nav class="flex-1 px-0">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-[#fc8b00] font-bold border-r-4 border-[#fc8b00] bg-white dark:bg-[#2d2d2d] transition-transform duration-300 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="person">person</span>
+<span class="text-sm font-inter">Account</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-[#444656] dark:text-[#c5c5d9] hover:bg-[#e5e2e1] dark:hover:bg-[#444656] transition-transform duration-300 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="shield">shield</span>
+<span class="text-sm font-inter">Privacy</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-[#444656] dark:text-[#c5c5d9] hover:bg-[#e5e2e1] dark:hover:bg-[#444656] transition-transform duration-300 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="school">school</span>
+<span class="text-sm font-inter">Learning</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-[#444656] dark:text-[#c5c5d9] hover:bg-[#e5e2e1] dark:hover:bg-[#444656] transition-transform duration-300 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="payments">payments</span>
+<span class="text-sm font-inter">Subscription</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="px-6 mt-auto">
+<button class="flex items-center gap-3 w-full px-0 py-3 text-[#444656] hover:text-error transition-colors font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="logout">logout</span>
+<span class="text-sm font-inter">Sign Out</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 p-8 md:p-16 max-w-7xl mx-auto">
+<header class="mb-20">
+<h1 class="text-[3.5rem] font-black tracking-tight leading-none mb-4 text-on-surface font-headline">The Curator's Console.</h1>
+<p class="text-lg text-on-surface-variant max-w-2xl font-body">Refine your cognitive experience. Fine-tune your vocabulary acquisition parameters and notification matrix.</p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+<!-- Profile Settings (Bento Item) -->
+<section class="lg:col-span-7 bg-surface-container-lowest p-10 shadow-[0_32px_64px_-15px_rgba(27,27,28,0.06)] relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-9xl" data-icon="edit_note">edit_note</span>
+</div>
+<h2 class="text-2xl font-bold mb-10 flex items-center gap-3">
+<span class="w-1.5 h-6 bg-primary-container block"></span>
+            Profile Settings
+          </h2>
+<div class="flex flex-col md:flex-row gap-10 items-start">
+<div class="relative group/avatar">
+<div class="w-32 h-32 bg-surface-container-low overflow-hidden border-2 border-outline-variant/30 group-hover/avatar:border-primary-container transition-colors">
+<img alt="Avatar upload" class="w-full h-full object-cover grayscale group-hover/avatar:grayscale-0 transition-all duration-500" data-alt="close-up portrait of a thoughtful young scholar wearing minimalist glasses in a soft-lit library environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBWaY_EKJMYlU51B01ep9v02HE6hdjJikZBFKSCQuDRVWaJl9kPY_2fI5O5-Mq-rHiOKZRX517PrrXgfvGMrVqiSfCNgtDrwMWYGJGTUbnR_Km6aNi6jK89keLkgtuV21YPuzB5rMZfSzm1xJkZAXmQMWm-gTQDfwj-C0NrJu_nF2XOVH1JPJIkCRzDYI6hD_1o-JGIM8xfaLogL3YbTOl0SuQ2GMdyt3JRX-bV6HGE2C8xjJJ8e8XyxspqKggjJZnX6A98hulbD_z"/>
+</div>
+<button class="absolute -bottom-2 -right-2 bg-primary-container text-white p-2 shadow-lg hover:scale-110 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-sm" data-icon="photo_camera">photo_camera</span>
+</button>
+</div>
+<div class="flex-1 w-full space-y-6">
+<div class="space-y-1">
+<label class="text-[0.75rem] font-bold uppercase tracking-widest text-on-surface-variant">Display Name</label>
+<input class="w-full bg-surface-container-low border-0 border-b-2 border-transparent focus:border-primary-container focus:ring-0 text-lg font-medium p-3 transition-all" type="text" value="The Scholar"/>
+</div>
+<div class="space-y-1">
+<label class="text-[0.75rem] font-bold uppercase tracking-widest text-on-surface-variant">Scholarly Bio</label>
+<textarea class="w-full bg-surface-container-low border-0 border-b-2 border-transparent focus:border-primary-container focus:ring-0 text-md p-3 transition-all resize-none" rows="3">Architecting a mental lexicon. Currently focused on etymological deep-dives and 18th-century literary prose.</textarea>
+</div>
+</div>
+</div>
+</section>
+<!-- Account Security (Bento Item) -->
+<section class="lg:col-span-5 bg-surface-container-low p-10 relative flex flex-col">
+<h2 class="text-2xl font-bold mb-10 flex items-center gap-3">
+<span class="w-1.5 h-6 bg-primary-container block"></span>
+            Account Security
+          </h2>
+<div class="space-y-8 flex-1">
+<div class="flex justify-between items-center group cursor-pointer p-4 -mx-4 hover:bg-surface-container-lowest transition-colors">
+<div>
+<p class="font-bold text-on-surface">Password reset</p>
+<p class="text-sm text-on-surface-variant">Last changed 4 months ago</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary-container transition-colors" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="pt-4 border-t border-outline-variant/20">
+<div class="flex justify-between items-center">
+<div>
+<p class="font-bold text-on-surface">Two-factor authentication</p>
+<p class="text-sm text-on-surface-variant">Enhanced security via SMS or App</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-14 h-7 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+</div>
+<div class="mt-10">
+<button class="w-full py-4 text-sm font-bold uppercase tracking-widest bg-surface-container-highest text-on-primary-fixed-variant hover:bg-outline-variant transition-colors">
+              Download Recovery Codes
+            </button>
+</div>
+</section>
+<!-- Learning Goals (Large Bento) -->
+<section class="lg:col-span-12 bg-surface-container-lowest p-10 shadow-[0_32px_64px_-15px_rgba(27,27,28,0.06)]">
+<div class="flex flex-col md:flex-row justify-between md:items-center mb-12 gap-4">
+<h2 class="text-2xl font-bold flex items-center gap-3">
+<span class="w-1.5 h-6 bg-primary-container block"></span>
+              Learning Goals
+            </h2>
+<div class="flex items-center gap-2 text-primary font-bold">
+<span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+<span>Current Streak: 42 Days</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+<div class="space-y-6">
+<label class="text-[0.75rem] font-bold uppercase tracking-widest text-on-surface-variant block">Daily Review Target</label>
+<div class="flex items-end gap-2">
+<span class="text-5xl font-black text-on-surface">20</span>
+<span class="text-on-surface-variant font-bold pb-1">words / day</span>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 py-2 bg-surface-container-low hover:bg-surface-container-high transition-colors font-bold">-5</button>
+<button class="flex-1 py-2 bg-surface-container-low hover:bg-surface-container-high transition-colors font-bold">+5</button>
+</div>
+</div>
+<div class="space-y-6">
+<label class="text-[0.75rem] font-bold uppercase tracking-widest text-on-surface-variant block">Focus Mode Duration</label>
+<div class="flex items-end gap-2">
+<span class="text-5xl font-black text-on-surface">25</span>
+<span class="text-on-surface-variant font-bold pb-1">minutes</span>
+</div>
+<div class="w-full bg-surface-container-low h-1 rounded-full relative">
+<div class="absolute top-1/2 left-[40%] -translate-y-1/2 w-6 h-6 bg-primary-container shadow-lg border-4 border-white cursor-pointer"></div>
+<div class="bg-primary-container h-full w-[40%]"></div>
+</div>
+</div>
+<div class="space-y-6 bg-surface-container-low p-6">
+<div class="flex justify-between items-start">
+<label class="text-[0.75rem] font-bold uppercase tracking-widest text-on-surface-variant block">Desirable Difficulty</label>
+<span class="material-symbols-outlined text-primary-container text-sm" data-icon="info">info</span>
+</div>
+<div class="space-y-4">
+<input class="w-full h-1 bg-outline-variant appearance-none cursor-pointer accent-primary-container" max="10" min="1" type="range" value="7"/>
+<div class="flex justify-between text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter">
+<span>Novice</span>
+<span class="text-primary-container">Challenger</span>
+<span>Polymath</span>
+</div>
+<p class="text-xs text-on-surface-variant italic leading-relaxed pt-2">Level 7: Optimal for long-term retention. Mistakes are encouraged for neural pathway strengthening.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Notifications (Bento Item) -->
+<section class="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-0">
+<div class="bg-primary-container text-white p-10 flex flex-col justify-center">
+<h2 class="text-2xl font-bold mb-4">Notification Center</h2>
+<p class="opacity-80 text-sm max-w-sm mb-8">Synchronize your review schedule with your biological peak performance times.</p>
+<div class="flex gap-4">
+<button class="px-6 py-3 bg-white text-primary-container font-bold text-xs uppercase tracking-widest hover:scale-105 transition-transform">Enable All</button>
+<button class="px-6 py-3 border border-white/30 text-white font-bold text-xs uppercase tracking-widest hover:bg-white/10 transition-colors">Quiet Mode</button>
+</div>
+</div>
+<div class="bg-surface-container-high p-10 space-y-6">
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Next Optimal Review</p>
+<p class="text-xs text-on-surface-variant uppercase font-bold tracking-tighter">Push &amp; Email</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-error-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-error" data-icon="warning">warning</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Streak at Risk</p>
+<p class="text-xs text-on-surface-variant uppercase font-bold tracking-tighter">Push Only</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest shadow-sm opacity-50">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="mail">mail</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">Weekly Scholarly Digest</p>
+<p class="text-xs text-on-surface-variant uppercase font-bold tracking-tighter">Disabled</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+</section>
+</div>
+<footer class="mt-20 pt-10 border-t border-outline-variant/10 flex flex-col md:flex-row justify-between items-center gap-6">
+<p class="text-on-surface-variant text-sm font-medium">© 2024 Vocabulous EdTech. Curating mastery since 2021.</p>
+<div class="flex gap-8">
+<button class="text-sm font-bold text-on-surface-variant hover:text-primary-container transition-colors">Privacy Policy</button>
+<button class="text-sm font-bold text-on-surface-variant hover:text-primary-container transition-colors">Terms of Service</button>
+<button class="text-sm font-bold text-error hover:underline transition-all">Deactivate Account</button>
+</div>
+</footer>
+</main>
+</div>
+<!-- BottomNavBar for Mobile -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-lowest shadow-[0_-8px_32px_rgba(0,0,0,0.05)] h-20 flex justify-around items-center z-50">
+<a class="flex flex-col items-center gap-1 text-primary-container" href="#">
+<span class="material-symbols-outlined" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Account</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="shield">shield</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Privacy</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Learn</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Plans</span>
+</a>
+</nav>
+</body></html>

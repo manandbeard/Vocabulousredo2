@@ -23,6 +23,7 @@ import StudentLearningLab from "./pages/student/StudentLearningLab";
 import Landing from "./pages/Landing";
 import BuildingInPublic from "./pages/BuildingInPublic";
 import PitchDeck from "./pages/PitchDeck";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,6 +63,7 @@ function Router() {
       {/* Public Pages */}
       <Route path="/build" component={BuildingInPublic} />
       <Route path="/pitch" component={PitchDeck} />
+      <Route path="/settings" component={Settings} />
       
       <Route component={NotFound} />
     </Switch>

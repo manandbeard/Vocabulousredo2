@@ -123,7 +123,10 @@ export function TopNav() {
 
         {/* Right: User & Actions */}
         <div className="flex items-center gap-4">
-          <button className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors flex items-center gap-2">
+          <button
+            onClick={() => navigate("/settings")}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors flex items-center gap-2"
+          >
             <Settings className="w-4 h-4" />
             Settings
           </button>
