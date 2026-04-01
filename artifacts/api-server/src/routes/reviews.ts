@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, lte, or, isNull, sql } from "drizzle-orm";
 import { db, reviewsTable, cardStatesTable, cardsTable } from "@workspace/db";
+import { checkAndIssueStudentAchievements } from "../lib/check-achievements";
 import {
   SubmitReviewBody,
   GetDueCardsParams,
@@ -98,6 +99,9 @@ router.post("/reviews", async (req, res): Promise<void> => {
       nextReviewAt,
     });
   }
+
+  // Fire-and-forget achievement check (non-blocking)
+  checkAndIssueStudentAchievements(studentId).catch(() => {});
 
   res.status(201).json(review);
 });

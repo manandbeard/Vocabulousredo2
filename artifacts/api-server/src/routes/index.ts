@@ -7,6 +7,7 @@ import cardsRouter from "./cards";
 import reviewsRouter from "./reviews";
 import analyticsRouter from "./analytics";
 import changelogRouter from "./changelog";
+import achievementsRouter from "./achievements";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(cardsRouter);
 router.use(reviewsRouter);
 router.use(analyticsRouter);
 router.use("/changelog", changelogRouter);
+router.use(achievementsRouter);
 
 export default router;

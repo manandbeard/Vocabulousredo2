@@ -18,6 +18,7 @@ import StudentDashboard from "./pages/student/StudentDashboard";
 import StudentStudy from "./pages/student/StudentStudy";
 import StudentProgress from "./pages/student/StudentProgress";
 import StudentLearningLab from "./pages/student/StudentLearningLab";
+import StudentAchievements from "./pages/student/StudentAchievements";
 
 // Public Pages
 import Landing from "./pages/Landing";
@@ -59,6 +60,7 @@ function Router() {
       <Route path="/student/study" component={StudentStudy} />
       <Route path="/student/learning-lab" component={StudentLearningLab} />
       <Route path="/student/progress" component={StudentProgress} />
+      <Route path="/student/achievements" component={StudentAchievements} />
 
       {/* Public Pages */}
       <Route path="/build" component={BuildingInPublic} />

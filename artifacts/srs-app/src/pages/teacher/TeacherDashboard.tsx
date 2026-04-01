@@ -1,4 +1,4 @@
-import { useGetTeacherAnalytics } from "@workspace/api-client-react";
+import { useGetTeacherAnalytics, useGetTeacherMilestones } from "@workspace/api-client-react";
 import { useRole } from "@/hooks/use-role";
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
@@ -22,6 +22,7 @@ function ShadowCard({ children, className = "", hover = true }: {
 export default function TeacherDashboard() {
   const { userId } = useRole();
   const { data: analytics, isLoading, error } = useGetTeacherAnalytics(userId || 1);
+  const { data: milestones } = useGetTeacherMilestones(userId || 1);
 
   if (isLoading) {
     return (
@@ -233,7 +234,7 @@ export default function TeacherDashboard() {
             </ShadowCard>
           )}
 
-          {/* Class Milestone — faded award image */}
+          {/* Class Milestone — real data from DB */}
           <div
             className="col-span-4 rounded-3xl border border-violet-100 shadow-[0_4px_24px_-4px_rgba(139,92,246,0.18)] hover:shadow-[0_8px_32px_-4px_rgba(139,92,246,0.28)] hover:-translate-y-0.5 transition-all duration-200 p-6 relative overflow-hidden"
             style={{ backgroundColor: "#f5f3ff", backgroundImage: "url('/images/card-bg-award.png')", backgroundSize: "cover", backgroundPosition: "center" }}
@@ -244,7 +245,18 @@ export default function TeacherDashboard() {
               <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-3 flex items-center gap-1.5">
                 <Award className="w-3.5 h-3.5" /> Class Milestone
               </p>
-              {topClass ? (
+              {milestones && milestones.length > 0 ? (
+                <>
+                  <p className="text-2xl mb-1">{milestones[0].achievement.icon}</p>
+                  <p className="text-base font-black text-slate-900 leading-snug">
+                    {milestones[0].achievement.name}
+                  </p>
+                  <p className="text-sm text-slate-500 mt-1">{milestones[0].className}</p>
+                  <p className="text-xs text-violet-500 font-semibold mt-1.5">
+                    Earned {new Date(milestones[0].earnedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </p>
+                </>
+              ) : topClass ? (
                 <>
                   <p className="text-base font-black text-slate-900 leading-snug">
                     {topClass.className}
@@ -252,10 +264,10 @@ export default function TeacherDashboard() {
                   <p className="text-2xl font-black text-slate-900 mt-1">
                     {topClass.totalReviews.toLocaleString()} <span className="text-sm font-semibold text-slate-500">reviews</span>
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">Most reviews this week 🏅</p>
+                  <p className="text-xs text-slate-400 mt-1">Milestone pending 🏅</p>
                 </>
               ) : (
-                <p className="text-sm text-slate-500">Milestones coming soon</p>
+                <p className="text-sm text-slate-500">No milestones yet</p>
               )}
             </div>
           </div>
