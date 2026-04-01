@@ -1,11 +1,11 @@
 import { useGetTeacherAnalytics } from "@workspace/api-client-react";
 import { useRole } from "@/hooks/use-role";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { BookOpen, Users, Brain, AlertTriangle, ChevronRight } from "lucide-react";
+import { BookOpen, Users, Brain, AlertTriangle, ChevronRight, Activity } from "lucide-react";
 import { Link } from "wouter";
 
 export default function TeacherDashboard() {
-  const { userId, role, setRole } = useRole();
+  const { userId } = useRole();
   const { data: analytics, isLoading, error } = useGetTeacherAnalytics(userId || 1);
 
   if (isLoading) {
@@ -21,7 +21,7 @@ export default function TeacherDashboard() {
   if (error || !analytics) {
     return (
       <AppLayout>
-        <div className="border border-slate-200 rounded-xl p-8 text-center">
+        <div className="border border-slate-200 rounded-3xl p-8 text-center bg-white shadow-sm">
           <AlertTriangle className="mx-auto mb-4 h-8 w-8 text-slate-400" />
           <h2 className="text-lg font-semibold text-slate-900">Failed to load analytics</h2>
           <p className="mt-1 text-sm text-slate-500">Please ensure the backend is running and the database is seeded.</p>
@@ -30,22 +30,9 @@ export default function TeacherDashboard() {
     );
   }
 
-  const statCards = [
-    { label: "Total Classes", value: analytics.totalClasses, icon: BookOpen },
-    { label: "Total Students", value: analytics.totalStudents, icon: Users },
-    { label: "Total Cards", value: analytics.totalCards, icon: Brain },
-    {
-      label: "Avg. Retention",
-      value: analytics.averageClassRetention
-        ? `${(analytics.averageClassRetention * 100).toFixed(1)}%`
-        : "N/A",
-      icon: AlertTriangle,
-    },
-  ];
-
   return (
     <AppLayout>
-      <div className="space-y-10">
+      <div className="space-y-6 font-['Inter']">
         {/* Header */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">Teacher Dashboard</p>
@@ -55,23 +42,46 @@ export default function TeacherDashboard() {
           <p className="mt-2 text-slate-500 font-light">Here's what's happening in your classes today.</p>
         </div>
 
-        {/* Stats */}
+        {/* Stats — bento row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {statCards.map((stat, i) => (
-            <div key={i} className="bg-white border border-slate-200 rounded-xl p-6">
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">{stat.label}</p>
-              <p className="text-4xl font-bold text-slate-900">{stat.value}</p>
+          {/* Hero dark card */}
+          <div className="bg-slate-900 text-white rounded-3xl p-6 border border-slate-800 shadow-sm flex flex-col justify-center relative overflow-hidden col-span-2 lg:col-span-1">
+            <Activity className="absolute right-[-10%] bottom-[-20%] w-32 h-32 text-slate-800 opacity-50" />
+            <div className="relative z-10">
+              <p className="text-slate-400 text-xs font-medium mb-2 uppercase tracking-wider flex items-center gap-1">
+                <BookOpen className="w-3 h-3" /> Total Classes
+              </p>
+              <p className="text-5xl font-bold tracking-tight">{analytics.totalClasses}</p>
             </div>
-          ))}
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-center">
+            <p className="text-slate-500 text-xs font-medium mb-2 uppercase tracking-wider">Students</p>
+            <p className="text-5xl font-bold tracking-tight text-slate-900">{analytics.totalStudents}</p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-center">
+            <p className="text-slate-500 text-xs font-medium mb-2 uppercase tracking-wider">Total Cards</p>
+            <p className="text-5xl font-bold tracking-tight text-slate-900">{analytics.totalCards}</p>
+          </div>
+
+          <div className="bg-blue-50 rounded-3xl p-6 border border-blue-100 shadow-sm flex flex-col justify-center">
+            <p className="text-blue-600 text-xs font-medium mb-2 uppercase tracking-wider">Avg Retention</p>
+            <p className="text-4xl font-bold tracking-tight text-blue-900">
+              {analytics.averageClassRetention
+                ? `${(analytics.averageClassRetention * 100).toFixed(1)}%`
+                : "N/A"}
+            </p>
+          </div>
         </div>
 
         {/* Class Overview */}
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-6">Class Overview</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Class Overview</p>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {analytics.classBreakdown.map((cls) => (
               <Link key={cls.classId} href={`/teacher/classes/${cls.classId}`}>
-                <div className="bg-white border border-slate-200 rounded-xl p-6 hover:border-slate-400 transition-colors cursor-pointer group">
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 hover:border-slate-400 transition-colors cursor-pointer group shadow-sm">
                   <div className="flex items-start justify-between mb-4">
                     <h3 className="text-lg font-semibold text-slate-900">{cls.className}</h3>
                     <div className="flex items-center gap-2">
@@ -104,12 +114,12 @@ export default function TeacherDashboard() {
             ))}
 
             {analytics.classBreakdown.length === 0 && (
-              <div className="col-span-full bg-white border border-dashed border-slate-300 rounded-xl p-12 text-center">
+              <div className="col-span-full bg-white border border-dashed border-slate-300 rounded-3xl p-12 text-center shadow-sm">
                 <BookOpen className="mx-auto h-8 w-8 text-slate-300 mb-4" />
                 <h3 className="text-base font-semibold text-slate-900">No classes yet</h3>
                 <p className="text-sm text-slate-500 mt-1 mb-6">Create your first class to start tracking student progress.</p>
                 <Link href="/teacher/classes">
-                  <span className="inline-block px-5 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors">
+                  <span className="inline-block px-5 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors">
                     Manage Classes
                   </span>
                 </Link>
