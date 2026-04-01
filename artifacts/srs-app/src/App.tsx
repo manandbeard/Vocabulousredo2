@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { RoleProvider, useRole } from "@/hooks/use-role";
+import { TopNav } from "@/components/layout/TopNav";
 
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
@@ -71,6 +72,7 @@ function App() {
       <TooltipProvider>
         <RoleProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <TopNav />
             <Router />
           </WouterRouter>
         </RoleProvider>
