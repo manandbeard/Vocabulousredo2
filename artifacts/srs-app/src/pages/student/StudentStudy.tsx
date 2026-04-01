@@ -112,15 +112,16 @@ export default function StudentStudy() {
           </div>
         </div>
 
-        {/* Flashcard — 3D bounce flip */}
+        {/* Flashcard — swipe-away card transition + 3D bounce flip */}
+        <div className="overflow-hidden rounded-3xl mt-10">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentCard.cardId}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="relative h-[380px] w-full mt-10"
+            initial={{ x: "110%", opacity: 1 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "-110%", opacity: 1 }}
+            transition={{ type: "spring", stiffness: 280, damping: 28, mass: 0.9 }}
+            className="relative h-[380px] w-full"
             style={{ perspective: "1200px" }}
           >
             <motion.div
@@ -157,6 +158,7 @@ export default function StudentStudy() {
             </motion.div>
           </motion.div>
         </AnimatePresence>
+        </div>
 
         {/* Actions */}
         <div className="mt-10 flex justify-center">
