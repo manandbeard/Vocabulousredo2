@@ -66,3 +66,9 @@ id = "1leoRiJUQOXGj15yYOUbD"
 uri = "file://artifacts/srs-app/public/images/card-bg-mind-learning.png"
 type = "image"
 title = "Mind learning connection icon"
+
+[[generated]]
+id = "Oh7V8naQU0BYcgyo165ZP"
+uri = "file://artifacts/srs-app/public/images/card-bg-collaborative-learning.png"
+type = "image"
+title = "Collaborative student learning scene"
