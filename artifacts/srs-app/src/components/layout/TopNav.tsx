@@ -1,10 +1,10 @@
 import { useLocation } from "wouter";
-import { BookOpen, BarChart3, Settings, LogOut, Home } from "lucide-react";
+import { BookOpen, BarChart3, Settings, LogOut, Home, Rocket, Presentation } from "lucide-react";
 import { useRole } from "@/hooks/use-role";
 
 export function TopNav() {
   const { role, setRole } = useRole();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
 
   if (role !== "teacher") return null;
 
@@ -12,6 +12,8 @@ export function TopNav() {
     { label: "Dashboard", href: "/teacher", icon: Home },
     { label: "Classes", href: "/teacher/classes", icon: BookOpen },
     { label: "Analytics", href: "/teacher/analytics", icon: BarChart3 },
+    { label: "Building in Public", href: "/build", icon: Rocket },
+    { label: "Pitch Deck", href: "/pitch", icon: Presentation },
   ];
 
   const handleLogout = () => {
@@ -35,11 +37,16 @@ export function TopNav() {
           <div className="flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const isActive = location === item.href || (item.href !== "/teacher" && location.startsWith(item.href));
               return (
                 <button
                   key={item.href}
                   onClick={() => navigate(item.href)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
                 >
                   <Icon className="w-4 h-4" />
                   {item.label}
