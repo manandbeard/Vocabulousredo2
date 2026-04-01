@@ -9,6 +9,20 @@ import {
 
 const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
+const ILLUSTRATION_SCENES = [
+  "/images/card-bg-student-focused.png",
+  "/images/card-bg-peer-study.png",
+  "/images/card-bg-active-learning.png",
+  "/images/card-bg-study-desk.png",
+  "/images/card-bg-group-session.png",
+  "/images/card-bg-deep-reading.png",
+  "/images/card-bg-collaborative-learning.png",
+];
+
+function getRotatingImage(seed: number): string {
+  return ILLUSTRATION_SCENES[seed % ILLUSTRATION_SCENES.length];
+}
+
 function ShadowCard({ children, className = "", hover = true }: {
   children: React.ReactNode; className?: string; hover?: boolean;
 }) {
@@ -84,10 +98,10 @@ export default function StudentDashboard() {
         {/* Row 1 — Hero bento */}
         <div className="grid grid-cols-12 gap-4">
 
-          {/* Dark streak card with faded bg image */}
+          {/* Dark streak card with rotating bg image */}
           <div
             className="col-span-3 text-white rounded-3xl p-6 border border-slate-800 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.40)] hover:shadow-[0_8px_40px_-4px_rgba(15,23,42,0.55)] hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between relative overflow-hidden"
-            style={{ backgroundColor: "#0f172a", backgroundImage: "url('/images/card-bg-streak.png')", backgroundSize: "cover", backgroundPosition: "center" }}
+            style={{ backgroundColor: "#0f172a", backgroundImage: `url('${getRotatingImage(userId || 2)}')`, backgroundSize: "cover", backgroundPosition: "center" }}
           >
             <div className="absolute inset-0 bg-slate-900/85" />
             <Activity className="absolute right-[-8%] bottom-[-12%] w-32 h-32 text-slate-700 opacity-40 z-10" />
@@ -209,7 +223,7 @@ export default function StudentDashboard() {
           <Link href="/student/achievements">
             <div
               className="col-span-4 rounded-3xl border border-violet-100 shadow-[0_4px_24px_-4px_rgba(139,92,246,0.18)] hover:shadow-[0_8px_32px_-4px_rgba(139,92,246,0.28)] hover:-translate-y-0.5 transition-all duration-200 p-6 relative overflow-hidden cursor-pointer"
-              style={{ backgroundColor: "#f5f3ff", backgroundImage: "url('/images/card-bg-award.png')", backgroundSize: "cover", backgroundPosition: "center" }}
+              style={{ backgroundColor: "#f5f3ff", backgroundImage: `url('${getRotatingImage((userId || 2) + 3)}')`, backgroundSize: "cover", backgroundPosition: "center" }}
             >
               <div className="absolute inset-0 bg-violet-50/80" />
               <Award className="absolute right-[-5%] bottom-[-10%] w-28 h-28 text-violet-200 opacity-60 z-10" />
