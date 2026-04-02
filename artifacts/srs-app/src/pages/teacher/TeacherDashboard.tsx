@@ -215,7 +215,7 @@ export default function TeacherDashboard() {
 
           {/* Needs Attention — 4 cols */}
           {atRiskClasses.length > 0 ? (
-            <div className="col-span-4 bg-red-50 rounded-3xl border border-red-100 shadow-[0_4px_24px_-4px_rgba(220,38,38,0.14)] hover:shadow-[0_8px_32px_-4px_rgba(220,38,38,0.22)] hover:-translate-y-0.5 transition-all duration-200 p-6">
+            <div className="col-span-4 bg-red-50 rounded-3xl border border-red-100 shadow-[0_4px_24px_-4px_rgba(220,38,38,0.14)] hover:shadow-[0_8px_32px_-4px_rgba(220,38,38,0.22)] hover:-translate-y-0.5 transition-all duration-200 p-6 min-h-60 flex flex-col justify-between">
               <p className="text-xs font-semibold uppercase tracking-widest text-red-500 mb-4 flex items-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5" /> Needs Attention
               </p>
