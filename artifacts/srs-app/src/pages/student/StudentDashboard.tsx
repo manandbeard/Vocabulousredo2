@@ -224,7 +224,7 @@ export default function StudentDashboard() {
               className="col-span-4 rounded-3xl border border-violet-100 shadow-[0_4px_24px_-4px_rgba(139,92,246,0.18)] hover:shadow-[0_8px_32px_-4px_rgba(139,92,246,0.28)] hover:-translate-y-0.5 transition-all duration-200 p-6 relative overflow-hidden cursor-pointer"
               style={{ backgroundColor: "#f5f3ff", backgroundImage: `url('${getSceneImage((userId || 0) + 1)}')`, backgroundSize: "cover", backgroundPosition: "center" }}
             >
-              <div className="absolute inset-0 bg-violet-50/80" />
+              <div className="absolute inset-0 bg-violet-50/80 pl-[24px] pr-[24px] pt-[24px] pb-[24px]" />
               <Award className="absolute right-[-5%] bottom-[-10%] w-28 h-28 text-violet-200 opacity-60 z-10" />
               <div className="relative z-20">
                 <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-3 flex items-center gap-1.5">
