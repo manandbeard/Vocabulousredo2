@@ -3,7 +3,13 @@ import { execSync } from "child_process";
 
 const router = Router();
 
-const REPO_ROOT = execSync("git rev-parse --show-toplevel").toString().trim();
+let REPO_ROOT: string | null = null;
+try {
+  REPO_ROOT = execSync("git rev-parse --show-toplevel").toString().trim();
+} catch {
+  // Not running inside a git repository (e.g. Replit deployment)
+  REPO_ROOT = null;
+}
 
 const SKIP_PATTERNS = [
   /^visual edit$/i,
@@ -44,6 +50,8 @@ let cacheTimestamp = 0;
 const CACHE_TTL = 60_000;
 
 function loadFromGit(): ChangelogEntry[] {
+  if (!REPO_ROOT) return [];
+
   const raw = execSync(
     `git log --pretty=format:"%H|%aI|%s|%b|||END|||" HEAD`,
     { cwd: REPO_ROOT, maxBuffer: 4 * 1024 * 1024 }
