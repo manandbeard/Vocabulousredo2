@@ -382,10 +382,10 @@ router.get("/analytics/class/:classId/at-risk", async (req, res): Promise<void> 
     if (daysSinceLastReview === null || daysSinceLastReview > 7) {
       riskLevel = "high";
       riskReason = daysSinceLastReview === null ? "No study activity yet" : `No reviews in ${daysSinceLastReview} days`;
-    } else if ((s.averageRetention ?? 1) < 0.6 || s.cardsOverdue > 5) {
+    } else if ((s.averageRetention !== null && s.averageRetention < 0.6) || s.cardsOverdue > 5) {
       riskLevel = "high";
       riskReason = s.cardsOverdue > 5 ? `${s.cardsOverdue} cards overdue` : "Low recall rate";
-    } else if ((s.averageRetention ?? 1) < 0.75 || s.cardsOverdue > 2 || (daysSinceLastReview ?? 0) > 3) {
+    } else if ((s.averageRetention !== null && s.averageRetention < 0.75) || s.cardsOverdue > 2 || (daysSinceLastReview ?? 0) > 3) {
       riskLevel = "medium";
       riskReason =
         s.cardsOverdue > 2

@@ -86,7 +86,7 @@ export default function StudentStudy() {
     );
   }
 
-  const progress = (currentIndex / cards.length) * 100;
+  const progress = ((currentIndex + 1) / cards.length) * 100;
 
   return (
     <AppLayout>

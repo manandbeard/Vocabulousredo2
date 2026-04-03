@@ -7,6 +7,7 @@ import {
   cardStatesTable,
   enrollmentsTable,
   classesTable,
+  decksTable,
 } from "@workspace/db";
 
 export async function checkAndIssueStudentAchievements(studentId: number): Promise<string[]> {
@@ -99,6 +100,10 @@ export async function checkAndIssueStudentAchievements(studentId: number): Promi
       .innerJoin(enrollmentsTable, and(
         eq(reviewsTable.studentId, enrollmentsTable.studentId),
         eq(enrollmentsTable.classId, classId)
+      ))
+      .innerJoin(decksTable, and(
+        eq(reviewsTable.deckId, decksTable.id),
+        eq(decksTable.classId, classId)
       ));
 
     const classTotal = classReviewCount?.totalReviews ?? 0;
