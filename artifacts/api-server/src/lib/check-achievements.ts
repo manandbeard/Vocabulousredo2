@@ -9,6 +9,7 @@ import {
   classesTable,
   decksTable,
 } from "@workspace/db";
+import { computeStreak } from "./streak";
 
 export async function checkAndIssueStudentAchievements(studentId: number): Promise<string[]> {
   const newlyEarned: string[] = [];
@@ -46,19 +47,7 @@ export async function checkAndIssueStudentAchievements(studentId: number): Promi
     .orderBy(sql`date_trunc('day', ${reviewsTable.reviewedAt}) desc`)
     .limit(35);
 
-  let currentStreak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  for (let i = 0; i < recentReviews.length; i++) {
-    const reviewDay = new Date(recentReviews[i].day);
-    const expectedDay = new Date(today);
-    expectedDay.setDate(expectedDay.getDate() - i);
-    if (reviewDay.toDateString() === expectedDay.toDateString()) {
-      currentStreak++;
-    } else {
-      break;
-    }
-  }
+  const currentStreak = computeStreak(recentReviews.map((r) => r.day));
 
   const totalReviews = reviewStats?.totalReviews ?? 0;
   const retention = reviewStats?.averageRetention;

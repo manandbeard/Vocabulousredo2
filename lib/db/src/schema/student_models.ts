@@ -22,7 +22,7 @@ export const FSRS6_DEFAULT_PARAMS: number[] = [
   0.51655,                             // w17: (reserved)
   0.6621,                              // w18: (reserved)
   0.1,                                 // w19: (reserved)
-  0.1,                                 // w20: power-law exponent for R(t,S)
+  0.4665,                              // w20: power-law exponent for R(t,S) — FSRS-6 population default
 ];
 
 // Per-student personalized FSRS-6 parameters, updated via Reptile meta-learning
