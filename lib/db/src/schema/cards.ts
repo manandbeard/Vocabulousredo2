@@ -7,7 +7,7 @@ import { usersTable } from "./users";
 export const cardsTable = pgTable("cards", {
   id: serial("id").primaryKey(),
   deckId: integer("deck_id").notNull().references(() => decksTable.id),
-  createdBy: integer("created_by").references(() => usersTable.id),
+  createdBy: integer("created_by").notNull().references(() => usersTable.id),
   front: text("front").notNull(),
   back: text("back").notNull(),
   hint: text("hint"),
