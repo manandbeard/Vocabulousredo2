@@ -11,7 +11,11 @@ import { FSRS6_DEFAULT_PARAMS } from "@workspace/db";
 
 export { FSRS6_DEFAULT_PARAMS };
 
-// ─── Core math ───────────────────────────────────────────────────────────────
+// ─── Core constants ───────────────────────────────────────────────────────────
+
+/** Difficulty is clamped to the range [MIN_DIFFICULTY, MAX_DIFFICULTY]. */
+const MIN_DIFFICULTY = 1;
+const MAX_DIFFICULTY = 10;
 
 /**
  * Power-law forgetting curve: R(t, S) = (0.9^(1/S))^(t^w20)
@@ -34,7 +38,7 @@ export function initialDifficulty(
   grade: number,
   w: number[] = FSRS6_DEFAULT_PARAMS,
 ): number {
-  return Math.min(10, Math.max(1, w[4] - Math.exp(w[5] * (grade - 1)) + 1));
+  return Math.min(MAX_DIFFICULTY, Math.max(MIN_DIFFICULTY, w[4] - Math.exp(w[5] * (grade - 1)) + 1));
 }
 
 /**
@@ -102,7 +106,7 @@ export function computeNextReview(
         S,
         S *
           (Math.exp(w[8]) *
-            (11 - D) *
+            (MAX_DIFFICULTY + 1 - D) *
             Math.pow(S, -w[9]) *
             (Math.exp(w[10] * (1 - R)) - 1) *
             gradeMod +
@@ -114,10 +118,10 @@ export function computeNextReview(
     // ΔD = -w6 · (G - 3)
     const deltaD = -w[6] * (grade - 3);
     // D'' = D + ΔD · (10 - D) / 9   (linear damping toward max)
-    const dPrime = D + deltaD * ((10 - D) / 9);
+    const dPrime = D + deltaD * ((MAX_DIFFICULTY - D) / (MAX_DIFFICULTY - MIN_DIFFICULTY));
     // D' = w5 · D_0(grade=4) + (1 - w5) · D''   (mean reversion)
     const d0Easy = initialDifficulty(4, w);
-    newDifficulty = Math.min(10, Math.max(1, w[5] * d0Easy + (1 - w[5]) * dPrime));
+    newDifficulty = Math.min(MAX_DIFFICULTY, Math.max(MIN_DIFFICULTY, w[5] * d0Easy + (1 - w[5]) * dPrime));
   }
 
   // Interval = stability (days until 90% retention), minimum 1 day

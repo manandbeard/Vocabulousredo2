@@ -15,6 +15,9 @@ import {
 
 const router: IRouter = Router();
 
+/** Milliseconds in one day — used for elapsed-days calculation. */
+const MS_PER_DAY = 86_400_000;
+
 /**
  * Load the FSRS-6 parameter vector for a student.
  * Falls back to population defaults if no personalised model exists yet.
@@ -78,7 +81,7 @@ router.post("/reviews", async (req, res): Promise<void> => {
   // time the student spent looking at the card during the current session.
   const elapsedDays =
     state?.lastReviewedAt
-      ? (Date.now() - new Date(state.lastReviewedAt).getTime()) / 86400000
+      ? (Date.now() - new Date(state.lastReviewedAt).getTime()) / MS_PER_DAY
       : 0;
 
   const { newStability, newDifficulty, nextReviewAt } = computeNextReview(
@@ -202,7 +205,7 @@ router.get("/students/:studentId/due-cards", async (req, res): Promise<void> => 
   const result = dueCards.map((card) => {
     let predictedRetention: number | null = null;
     if (card.stabilityDays && card.lastReviewedAt) {
-      const daysSince = (now.getTime() - new Date(card.lastReviewedAt).getTime()) / 86400000;
+      const daysSince = (now.getTime() - new Date(card.lastReviewedAt).getTime()) / MS_PER_DAY;
       predictedRetention = retrievability(daysSince, card.stabilityDays, w);
     }
     return { ...card, predictedRetention };

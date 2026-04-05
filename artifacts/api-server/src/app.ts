@@ -42,18 +42,22 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // General API rate limit: 300 requests per minute per IP
+const API_RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const API_RATE_LIMIT_MAX = Number(process.env.API_RATE_LIMIT_MAX ?? 300);
+const REVIEW_RATE_LIMIT_MAX = Number(process.env.REVIEW_RATE_LIMIT_MAX ?? 120);
+
 const apiLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 300,
+  windowMs: API_RATE_LIMIT_WINDOW_MS,
+  max: API_RATE_LIMIT_MAX,
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: { error: "Too many requests, please try again later." },
 });
 
-// Stricter limit for review submissions: 120 per minute per IP
+// Stricter limit for review submissions
 const reviewLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 120,
+  windowMs: API_RATE_LIMIT_WINDOW_MS,
+  max: REVIEW_RATE_LIMIT_MAX,
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: { error: "Too many review submissions, please slow down." },
