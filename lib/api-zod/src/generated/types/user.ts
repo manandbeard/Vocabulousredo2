@@ -12,5 +12,12 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  /** @nullable */
+  googleId?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+  streakCount: number;
+  /** @nullable */
+  lastStudyDate?: Date | null;
   createdAt: Date;
 }

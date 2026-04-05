@@ -5,6 +5,7 @@
  * MetaSRS Learning Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { CardType } from "./cardType";
 
 export interface DueCard {
   cardId: number;
@@ -13,6 +14,14 @@ export interface DueCard {
   back: string;
   /** @nullable */
   hint?: string | null;
+  cardType: CardType;
+  /** @nullable */
+  imageUrl?: string | null;
+  /** @nullable */
+  mcOptions?: string[] | null;
+  /** @nullable */
+  mcCorrectIndex?: number | null;
+  importance: number;
   /** @nullable */
   stabilityDays?: number | null;
   /** @nullable */

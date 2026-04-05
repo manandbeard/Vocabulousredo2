@@ -5,10 +5,17 @@
  * MetaSRS Learning Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { CardType } from "./cardType";
 
 export interface CreateCardBody {
   front: string;
   back: string;
   hint?: string;
   tags?: string[];
+  createdBy?: number;
+  cardType?: CardType;
+  imageUrl?: string;
+  mcOptions?: string[];
+  mcCorrectIndex?: number;
+  importance?: number;
 }

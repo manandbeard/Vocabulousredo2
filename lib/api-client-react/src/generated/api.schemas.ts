@@ -25,6 +25,13 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  /** @nullable */
+  googleId?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+  streakCount: number;
+  /** @nullable */
+  lastStudyDate?: string | null;
   createdAt: string;
 }
 
@@ -40,6 +47,8 @@ export interface CreateUserBody {
   name: string;
   email: string;
   role: CreateUserBodyRole;
+  googleId?: string;
+  avatarUrl?: string;
 }
 
 export interface Class {
@@ -118,15 +127,34 @@ export interface UpdateDeckBody {
   classId?: number;
 }
 
+export type CardType = (typeof CardType)[keyof typeof CardType];
+
+export const CardType = {
+  flashcard: "flashcard",
+  multiple_choice: "multiple_choice",
+  brain_dump: "brain_dump",
+} as const;
+
 export interface Card {
   id: number;
   deckId: number;
+  /** @nullable */
+  createdBy?: number | null;
   front: string;
   back: string;
   /** @nullable */
   hint?: string | null;
   tags: string[];
+  cardType: CardType;
+  /** @nullable */
+  imageUrl?: string | null;
+  /** @nullable */
+  mcOptions?: string[] | null;
+  /** @nullable */
+  mcCorrectIndex?: number | null;
+  importance: number;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateCardBody {
@@ -134,6 +162,12 @@ export interface CreateCardBody {
   back: string;
   hint?: string;
   tags?: string[];
+  createdBy?: number;
+  cardType?: CardType;
+  imageUrl?: string;
+  mcOptions?: string[];
+  mcCorrectIndex?: number;
+  importance?: number;
 }
 
 export interface UpdateCardBody {
@@ -141,6 +175,11 @@ export interface UpdateCardBody {
   back?: string;
   hint?: string;
   tags?: string[];
+  cardType?: CardType;
+  imageUrl?: string;
+  mcOptions?: string[];
+  mcCorrectIndex?: number;
+  importance?: number;
 }
 
 export interface Review {
@@ -178,6 +217,14 @@ export interface DueCard {
   back: string;
   /** @nullable */
   hint?: string | null;
+  cardType: CardType;
+  /** @nullable */
+  imageUrl?: string | null;
+  /** @nullable */
+  mcOptions?: string[] | null;
+  /** @nullable */
+  mcCorrectIndex?: number | null;
+  importance: number;
   /** @nullable */
   stabilityDays?: number | null;
   /** @nullable */

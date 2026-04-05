@@ -659,6 +659,15 @@ components:
         role:
           type: string
           enum: [teacher, student]
+        googleId:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        streakCount:
+          type: integer
+        lastStudyDate:
+          type: ["string", "null"]
+          format: date-time
         createdAt:
           type: string
           format: date-time
@@ -667,6 +676,7 @@ components:
         - name
         - email
         - role
+        - streakCount
         - createdAt
 
     CreateUserBody:
@@ -679,6 +689,10 @@ components:
         role:
           type: string
           enum: [teacher, student]
+        googleId:
+          type: string
+        avatarUrl:
+          type: string
       required:
         - name
         - email
@@ -857,6 +871,8 @@ components:
           type: integer
         deckId:
           type: integer
+        createdBy:
+          type: ["integer", "null"]
         front:
           type: string
         back:
@@ -867,7 +883,23 @@ components:
           type: array
           items:
             type: string
+        cardType:
+          type: string
+          enum: [flashcard, multiple_choice, brain_dump]
+        imageUrl:
+          type: ["string", "null"]
+        mcOptions:
+          type: ["array", "null"]
+          items:
+            type: string
+        mcCorrectIndex:
+          type: ["integer", "null"]
+        importance:
+          type: integer
         createdAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
       required:
@@ -876,7 +908,10 @@ components:
         - front
         - back
         - tags
+        - cardType
+        - importance
         - createdAt
+        - updatedAt
 
     CreateCardBody:
       type: object
@@ -891,6 +926,21 @@ components:
           type: array
           items:
             type: string
+        createdBy:
+          type: integer
+        cardType:
+          type: string
+          enum: [flashcard, multiple_choice, brain_dump]
+        imageUrl:
+          type: string
+        mcOptions:
+          type: array
+          items:
+            type: string
+        mcCorrectIndex:
+          type: integer
+        importance:
+          type: integer
       required:
         - front
         - back
@@ -908,6 +958,19 @@ components:
           type: array
           items:
             type: string
+        cardType:
+          type: string
+          enum: [flashcard, multiple_choice, brain_dump]
+        imageUrl:
+          type: string
+        mcOptions:
+          type: array
+          items:
+            type: string
+        mcCorrectIndex:
+          type: integer
+        importance:
+          type: integer
 
     # ─── Reviews ───────────────────────────────────────────────────────────────
     Review:
@@ -985,6 +1048,19 @@ components:
           type: string
         hint:
           type: ["string", "null"]
+        cardType:
+          type: string
+          enum: [flashcard, multiple_choice, brain_dump]
+        imageUrl:
+          type: ["string", "null"]
+        mcOptions:
+          type: ["array", "null"]
+          items:
+            type: string
+        mcCorrectIndex:
+          type: ["integer", "null"]
+        importance:
+          type: integer
         stabilityDays:
           type: ["number", "null"]
         difficulty:
@@ -1006,6 +1082,8 @@ components:
         - deckId
         - front
         - back
+        - cardType
+        - importance
         - reviewCount
         - isNew
 
