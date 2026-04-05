@@ -9,6 +9,7 @@
 export * from "./atRiskStudent";
 export * from "./atRiskStudentRiskLevel";
 export * from "./card";
+export * from "./cardType";
 export * from "./class";
 export * from "./classAnalytics";
 export * from "./classSummary";

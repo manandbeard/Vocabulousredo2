@@ -22,6 +22,10 @@ export const ListUsersResponseItem = zod.object({
   name: zod.string(),
   email: zod.string(),
   role: zod.enum(["teacher", "student"]),
+  googleId: zod.string().nullish(),
+  avatarUrl: zod.string().nullish(),
+  streakCount: zod.number(),
+  lastStudyDate: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
@@ -33,6 +37,8 @@ export const CreateUserBody = zod.object({
   name: zod.string(),
   email: zod.string(),
   role: zod.enum(["teacher", "student"]),
+  googleId: zod.string().optional(),
+  avatarUrl: zod.string().optional(),
 });
 
 /**
@@ -47,6 +53,10 @@ export const GetUserResponse = zod.object({
   name: zod.string(),
   email: zod.string(),
   role: zod.enum(["teacher", "student"]),
+  googleId: zod.string().nullish(),
+  avatarUrl: zod.string().nullish(),
+  streakCount: zod.number(),
+  lastStudyDate: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
 });
 
@@ -273,11 +283,18 @@ export const ListCardsParams = zod.object({
 export const ListCardsResponseItem = zod.object({
   id: zod.number(),
   deckId: zod.number(),
+  createdBy: zod.number().nullish(),
   front: zod.string(),
   back: zod.string(),
   hint: zod.string().nullish(),
   tags: zod.array(zod.string()),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]),
+  imageUrl: zod.string().nullish(),
+  mcOptions: zod.array(zod.string()).nullish(),
+  mcCorrectIndex: zod.number().nullish(),
+  importance: zod.number(),
   createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
 });
 export const ListCardsResponse = zod.array(ListCardsResponseItem);
 
@@ -293,6 +310,12 @@ export const CreateCardBody = zod.object({
   back: zod.string(),
   hint: zod.string().optional(),
   tags: zod.array(zod.string()).optional(),
+  createdBy: zod.number().optional(),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]).optional(),
+  imageUrl: zod.string().optional(),
+  mcOptions: zod.array(zod.string()).optional(),
+  mcCorrectIndex: zod.number().optional(),
+  importance: zod.number().optional(),
 });
 
 /**
@@ -305,11 +328,18 @@ export const GetCardParams = zod.object({
 export const GetCardResponse = zod.object({
   id: zod.number(),
   deckId: zod.number(),
+  createdBy: zod.number().nullish(),
   front: zod.string(),
   back: zod.string(),
   hint: zod.string().nullish(),
   tags: zod.array(zod.string()),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]),
+  imageUrl: zod.string().nullish(),
+  mcOptions: zod.array(zod.string()).nullish(),
+  mcCorrectIndex: zod.number().nullish(),
+  importance: zod.number(),
   createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
 });
 
 /**
@@ -324,16 +354,28 @@ export const UpdateCardBody = zod.object({
   back: zod.string().optional(),
   hint: zod.string().optional(),
   tags: zod.array(zod.string()).optional(),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]).optional(),
+  imageUrl: zod.string().optional(),
+  mcOptions: zod.array(zod.string()).optional(),
+  mcCorrectIndex: zod.number().optional(),
+  importance: zod.number().optional(),
 });
 
 export const UpdateCardResponse = zod.object({
   id: zod.number(),
   deckId: zod.number(),
+  createdBy: zod.number().nullish(),
   front: zod.string(),
   back: zod.string(),
   hint: zod.string().nullish(),
   tags: zod.array(zod.string()),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]),
+  imageUrl: zod.string().nullish(),
+  mcOptions: zod.array(zod.string()).nullish(),
+  mcCorrectIndex: zod.number().nullish(),
+  importance: zod.number(),
   createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
 });
 
 /**
@@ -371,6 +413,11 @@ export const GetDueCardsResponseItem = zod.object({
   front: zod.string(),
   back: zod.string(),
   hint: zod.string().nullish(),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]),
+  imageUrl: zod.string().nullish(),
+  mcOptions: zod.array(zod.string()).nullish(),
+  mcCorrectIndex: zod.number().nullish(),
+  importance: zod.number(),
   stabilityDays: zod.number().nullish(),
   difficulty: zod.number().nullish(),
   predictedRetention: zod.number().nullish(),

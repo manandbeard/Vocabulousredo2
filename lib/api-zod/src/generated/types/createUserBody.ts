@@ -11,4 +11,6 @@ export interface CreateUserBody {
   name: string;
   email: string;
   role: CreateUserBodyRole;
+  googleId?: string;
+  avatarUrl?: string;
 }
