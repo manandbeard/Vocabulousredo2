@@ -7,15 +7,12 @@ import { decksTable } from "./decks";
 
 export const assessmentsTable = pgTable("assessments", {
   id: serial("id").primaryKey(),
-  classId: integer("class_id").references(() => classesTable.id),
-  deckId: integer("deck_id").references(() => decksTable.id),
-  teacherId: integer("teacher_id").notNull().references(() => usersTable.id),
+  classId: integer("class_id").notNull().references(() => classesTable.id),
+  deckId: integer("deck_id").notNull().references(() => decksTable.id),
   title: text("title").notNull(),
   description: text("description"),
-  assessmentType: text("assessment_type").notNull().$type<"quiz" | "test" | "exam" | "practice">().default("quiz"),
-  maxScore: integer("max_score"),
-  scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
-  dueAt: timestamp("due_at", { withTimezone: true }),
+  scheduledDate: timestamp("scheduled_date", { withTimezone: true }).notNull(),
+  createdBy: integer("created_by").notNull().references(() => usersTable.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

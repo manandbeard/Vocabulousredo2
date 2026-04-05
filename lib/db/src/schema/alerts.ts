@@ -6,14 +6,12 @@ import { classesTable } from "./classes";
 
 export const alertsTable = pgTable("alerts", {
   id: serial("id").primaryKey(),
-  teacherId: integer("teacher_id").references(() => usersTable.id),
+  teacherId: integer("teacher_id").notNull().references(() => usersTable.id),
   studentId: integer("student_id").notNull().references(() => usersTable.id),
   classId: integer("class_id").references(() => classesTable.id),
-  alertType: text("alert_type").notNull().$type<"at_risk" | "overdue" | "low_retention" | "streak_broken" | "streak" | "achievement" | "review_due" | "class_update">(),
-  title: text("title").notNull(),
+  alertType: text("alert_type").notNull().$type<"low_retention" | "no_activity" | "struggling_concept">(),
   message: text("message").notNull(),
   isRead: boolean("is_read").notNull().default(false),
-  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
