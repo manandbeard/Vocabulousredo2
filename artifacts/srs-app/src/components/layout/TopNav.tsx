@@ -58,14 +58,14 @@ export function TopNav() {
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition-colors"
             >
               <GraduationCap className="w-4 h-4" />
-              Teacher Demo
+              Enter as Teacher
             </button>
             <button
               onClick={() => { setRole("student"); navigate("/student"); }}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             >
               <Users className="w-4 h-4" />
-              Student Demo
+              Enter as Student
             </button>
           </div>
         </div>
