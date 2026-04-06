@@ -20,6 +20,7 @@ import {
   GetAtRiskStudentsParams,
   GetAtRiskStudentsResponse,
 } from "@workspace/api-zod";
+import { computeStreak } from "../lib/streak";
 
 const router: IRouter = Router();
 
@@ -252,19 +253,7 @@ router.get("/analytics/student/:studentId", async (req, res): Promise<void> => {
     .orderBy(sql`date_trunc('day', ${reviewsTable.reviewedAt}) desc`)
     .limit(30);
 
-  let currentStreak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  for (let i = 0; i < recentReviews.length; i++) {
-    const reviewDay = new Date(recentReviews[i].day);
-    const expectedDay = new Date(today);
-    expectedDay.setDate(expectedDay.getDate() - i);
-    if (reviewDay.toDateString() === expectedDay.toDateString()) {
-      currentStreak++;
-    } else {
-      break;
-    }
-  }
+  const currentStreak = computeStreak(recentReviews.map((r) => r.day));
 
   // Retention trend — last 30 days
   const thirtyDaysAgo = new Date();

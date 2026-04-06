@@ -17,19 +17,17 @@ export default function StudentStudy() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [startTime, setStartTime] = useState<number>(0);
 
   const currentCard = cards?.[currentIndex];
 
   useEffect(() => {
     if (!isFlipped && currentCard) {
-      setStartTime(Date.now());
+      // reset flip state when navigating to a new card
     }
   }, [currentIndex, isFlipped, currentCard]);
 
   const handleGrade = async (grade: number) => {
     if (!currentCard) return;
-    const elapsedDays = (Date.now() - startTime) / (1000 * 60 * 60 * 24);
     try {
       await submitReviewMut.mutateAsync({
         data: {
@@ -37,7 +35,10 @@ export default function StudentStudy() {
           cardId: currentCard.cardId,
           deckId: currentCard.deckId,
           grade,
-          elapsedDays
+          // elapsedDays is computed server-side from cardStatesTable.lastReviewedAt;
+          // the field is kept in the request body for API compatibility but ignored
+          // by the server when computing the actual inter-review interval.
+          elapsedDays: 0,
         }
       });
       setIsFlipped(false);
