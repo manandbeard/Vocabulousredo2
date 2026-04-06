@@ -1,21 +1,9 @@
 import { useLocation } from "wouter";
 import { ArrowRight, Brain, Zap, Target, BarChart3, Clock, Users, Activity, RefreshCw } from "lucide-react";
 import { SynapticWeb } from "@/components/ui/synaptic-web";
-import { useRole } from "@/hooks/use-role";
 
 export default function Landing() {
   const [, navigate] = useLocation();
-  const { setRole } = useRole();
-
-  const handleLoginTeacher = () => {
-    setRole("teacher");
-    navigate("/teacher");
-  };
-
-  const handleLoginStudent = () => {
-    setRole("student");
-    navigate("/student");
-  };
 
   return (
     <div className="min-h-screen font-['Inter'] text-slate-900 p-4 md:p-8 flex items-center justify-center relative">
@@ -141,30 +129,31 @@ export default function Landing() {
 
           {/* CTAs embedded — 1 col × 2 rows */}
           <div className="md:col-span-1 md:row-span-2 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center gap-4">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-2">
-              <Target className="w-8 h-8 text-slate-400" />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-2" style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)" }}>
+              <Target className="w-8 h-8 text-blue-500" />
             </div>
             <h3 className="font-bold text-xl tracking-tight">Ready to start?</h3>
-            <p className="text-sm text-slate-500 mb-2">Join the learning platform today.</p>
+            <p className="text-sm text-slate-500 mb-2">Join thousands of learners today.</p>
             <button
-              onClick={handleLoginTeacher}
-              className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 group"
+              onClick={() => navigate("/signup")}
+              className="w-full py-3 px-6 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 group"
+              style={{ background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)" }}
             >
-              Log in as a Teacher
+              Create account
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
-              onClick={handleLoginStudent}
-              className="w-full py-3 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 group"
+              onClick={() => navigate("/login")}
+              className="w-full py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 group"
             >
-              Log in as a Student
+              Sign in
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
               onClick={() => navigate("/pitch")}
-              className="w-full py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors"
+              className="w-full py-3 px-6 text-slate-500 hover:text-slate-700 text-sm font-medium transition-colors"
             >
-              See the pitch
+              See the pitch deck →
             </button>
           </div>
 

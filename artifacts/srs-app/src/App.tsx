@@ -22,6 +22,8 @@ import StudentAchievements from "./pages/student/StudentAchievements";
 
 // Public Pages
 import Landing from "./pages/Landing";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import BuildingInPublic from "./pages/BuildingInPublic";
 import PitchDeck from "./pages/PitchDeck";
 import Settings from "./pages/Settings";
@@ -61,6 +63,10 @@ function Router() {
       <Route path="/student/learning-lab" component={StudentLearningLab} />
       <Route path="/student/progress" component={StudentProgress} />
       <Route path="/student/achievements" component={StudentAchievements} />
+
+      {/* Auth Pages */}
+      <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
 
       {/* Public Pages */}
       <Route path="/build" component={BuildingInPublic} />
