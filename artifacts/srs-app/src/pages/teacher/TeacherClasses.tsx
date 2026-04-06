@@ -13,9 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function TeacherClasses() {
   const { userId } = useRole();
+  const safeUserId = userId ?? 0;
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { data: classes, isLoading } = useListClasses({ teacherId: userId });
+  const { data: classes, isLoading } = useListClasses({ teacherId: safeUserId });
   const createClassMut = useCreateClass();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -25,12 +26,12 @@ export default function TeacherClasses() {
     e.preventDefault();
     try {
       await createClassMut.mutateAsync({
-        data: { ...formData, teacherId: userId }
+        data: { ...formData, teacherId: safeUserId }
       });
       toast({ title: "Class created successfully" });
       setIsOpen(false);
       setFormData({ name: "", subject: "", description: "" });
-      queryClient.invalidateQueries({ queryKey: getListClassesQueryKey({ teacherId: userId }) });
+      queryClient.invalidateQueries({ queryKey: getListClassesQueryKey({ teacherId: safeUserId }) });
     } catch {
       toast({ title: "Failed to create class", variant: "destructive" });
     }

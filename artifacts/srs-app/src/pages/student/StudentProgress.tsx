@@ -7,7 +7,7 @@ import { TrendingUp, CheckCircle2, BarChart3, Layers } from "lucide-react";
 
 export default function StudentProgress() {
   const { userId } = useRole();
-  const { data: analytics, isLoading } = useGetStudentAnalytics(userId);
+  const { data: analytics, isLoading } = useGetStudentAnalytics(userId ?? 0);
 
   if (isLoading) {
     return (

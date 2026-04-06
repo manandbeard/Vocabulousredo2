@@ -7,12 +7,19 @@
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "build:production": "sh scripts/build-production.sh",
     "start": "node --enable-source-maps artifacts/api-server/dist/index.mjs",
+    "dev": "concurrently --names \"API,UI\" --prefix-colors \"blue,green\" \"pnpm --filter @workspace/api-server dev\" \"pnpm --filter @workspace/srs-app dev\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
   "private": true,
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.2",
+    "concurrently": "^9.2.1",
+    "prettier": "^3.8.1",
     "typescript": "~5.9.2",
-    "prettier": "^3.8.1"
+    "vitest": "^4.1.2"
   }
 }

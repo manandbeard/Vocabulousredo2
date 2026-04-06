@@ -6,7 +6,7 @@ import { BarChart3, AlertTriangle } from "lucide-react";
 
 export default function TeacherAnalytics() {
   const { userId } = useRole();
-  const { data: analytics, isLoading } = useGetTeacherAnalytics(userId);
+  const { data: analytics, isLoading } = useGetTeacherAnalytics(userId ?? 0);
 
   if (isLoading) {
     return (

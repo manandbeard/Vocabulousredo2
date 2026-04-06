@@ -22,6 +22,7 @@ export default function TeacherClassDetail() {
   const { id } = useParams<{ id: string }>();
   const classId = parseInt(id || "0", 10);
   const { userId } = useRole();
+  const safeUserId = userId ?? 0;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -38,7 +39,7 @@ export default function TeacherClassDetail() {
     e.preventDefault();
     try {
       await createDeckMut.mutateAsync({
-        data: { ...deckForm, classId, teacherId: userId }
+        data: { ...deckForm, classId, teacherId: safeUserId }
       });
       toast({ title: "Deck created successfully" });
       setIsDeckOpen(false);
