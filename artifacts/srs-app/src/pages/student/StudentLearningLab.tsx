@@ -1,9 +1,93 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Zap, TrendingUp, BookOpen, PlayCircle } from "lucide-react";
 import { Link } from "wouter";
 import { useGetStudentAnalytics } from "@workspace/api-client-react";
 import { useRole } from "@/hooks/use-role";
+
+// FSRS-6 population default w20 (power-law exponent) — mirrors server constant
+const FSRS6_W20 = 0.4665;
+
+/**
+ * Compute predicted retention at `t` days given stability `S`.
+ * Uses the same power-law formula as the server scheduler:
+ *   R(t, S) = (0.9^(1/S))^(t^w20) = 0.9^(t^w20 / S)
+ */
+function fsrsRetention(t: number, stability: number): number {
+  if (t <= 0) return 1;
+  return Math.pow(0.9, Math.pow(t, FSRS6_W20) / stability);
+}
+
+/**
+ * Build an SVG polyline path for a 30-day retention curve.
+ * The SVG viewport is 800 × 400 with the top (y=40) representing 100% and
+ * the bottom (y=360) representing 0%.
+ */
+function buildRetentionPath(stability: number, dayCount = 30): string {
+  const points: string[] = [];
+  const steps = 120; // sample every quarter-day
+  for (let step = 0; step <= steps; step++) {
+    const t = (step / steps) * dayCount;
+    const r = fsrsRetention(t, stability);
+    const x = (t / dayCount) * 800;
+    const y = 360 - r * 320; // map [0,1] → [360,40]
+    points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  return points.join(" ");
+}
+
+/**
+ * Build a path that simulates cramming: one spike of near-perfect retention
+ * followed by rapid forgetting (stability ≈ 0.5 days).
+ */
+function buildCrammingPath(dayCount = 30): string {
+  return buildRetentionPath(0.5, dayCount);
+}
+
+/**
+ * Build a path simulating no review: exponential decay with stability ≈ 1 day.
+ */
+function buildNonePath(dayCount = 30): string {
+  return buildRetentionPath(1, dayCount);
+}
+
+/**
+ * Build a spaced-repetition path that resets to R=1 at each review interval
+ * and decays until the next scheduled review.
+ * The review intervals grow with each successful repetition.
+ */
+function buildSpacedPath(stability: number, dayCount = 30): string {
+  const points: string[] = [];
+  const steps = 300;
+
+  // Simulate growth: after each review the stability roughly doubles (Good grade)
+  const reviewDays: number[] = [];
+  let nextReview = 0;
+  let s = stability;
+  while (nextReview < dayCount) {
+    reviewDays.push(nextReview);
+    s = Math.min(s * 2.1, dayCount * 2); // simplified growth
+    nextReview += Math.max(1, Math.round(s));
+  }
+
+  for (let step = 0; step <= steps; step++) {
+    const t = (step / steps) * dayCount;
+    // Find most recent review before t
+    const lastReview = reviewDays.filter((d) => d <= t).slice(-1)[0] ?? 0;
+    const reviewIndex = reviewDays.indexOf(lastReview);
+    // Stability at this point in the sequence
+    let localS = stability;
+    for (let i = 0; i < reviewIndex; i++) {
+      localS = Math.min(localS * 2.1, dayCount * 2);
+    }
+    const elapsed = t - lastReview;
+    const r = fsrsRetention(elapsed, localS);
+    const x = (t / dayCount) * 800;
+    const y = 360 - r * 320;
+    points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  return points.join(" ");
+}
 
 export default function StudentLearningLab() {
   const { userId } = useRole();
@@ -13,15 +97,21 @@ export default function StudentLearningLab() {
   const [reviewStrategy, setReviewStrategy] = useState<"spaced" | "cramming" | "none">("spaced");
   const [recallStrength, setRecallStrength] = useState(0.8);
 
-  const generateCurvePath = (strategy: "spaced" | "cramming" | "none", complexity: number) => {
-    if (strategy === "cramming") {
-      return "M 0 40 L 100 50 L 200 150 L 300 280 L 400 360 L 500 360 L 600 360 L 800 360";
-    } else if (strategy === "none") {
-      return "M 0 40 Q 150 200 800 360";
-    } else {
-      return "M 0 40 Q 100 80 200 120 L 200 40 Q 350 80 500 100 L 500 40 Q 650 60 800 70";
-    }
-  };
+  // Map complexity slider (1-9) to a stability value for the visualisation.
+  // Higher complexity → harder to remember → lower base stability.
+  const baseStability = useMemo(() => {
+    const complexityNorm = complexity / 9; // 0–1
+    return Math.max(0.5, 8 * (1 - complexityNorm * 0.85));
+  }, [complexity]);
+
+  const curvePath = useMemo(() => {
+    if (reviewStrategy === "cramming") return buildCrammingPath();
+    if (reviewStrategy === "none") return buildNonePath();
+    return buildSpacedPath(baseStability);
+  }, [reviewStrategy, baseStability]);
+
+  // Baseline "no review" path for reference
+  const baselinePath = useMemo(() => buildNonePath(), []);
 
   return (
     <AppLayout>
@@ -47,57 +137,55 @@ export default function StudentLearningLab() {
               </p>
             </div>
 
-            {/* SVG Chart */}
+            {/* SVG Chart — generated from real FSRS-6 formula */}
             <div className="relative h-96 w-full mb-8">
               <svg viewBox="0 0 800 400" className="w-full h-full" preserveAspectRatio="none">
+                {/* Horizontal grid lines at 0%, 25%, 50%, 75%, 100% */}
                 {[0, 1, 2, 3, 4].map((i) => (
                   <line
                     key={`hgrid-${i}`}
                     x1="0"
                     x2="800"
-                    y1={360 - (80 * i)}
-                    y2={360 - (80 * i)}
+                    y1={360 - 80 * i}
+                    y2={360 - 80 * i}
                     stroke="#e2e8f0"
                     strokeDasharray="4"
                     strokeWidth="1"
                   />
                 ))}
 
-                <path
-                  d="M 0 40 Q 150 200 800 360"
+                {/* Baseline: no-review exponential decay */}
+                <polyline
+                  points={baselinePath}
                   stroke="#cbd5e1"
                   strokeWidth="2"
                   fill="none"
                   strokeDasharray="6"
-                  opacity="0.5"
+                  opacity="0.6"
                 />
 
-                <path
-                  d={generateCurvePath(reviewStrategy, complexity)}
+                {/* Main strategy curve */}
+                <polyline
+                  points={curvePath}
                   stroke="#2563eb"
                   strokeWidth="4"
                   fill="none"
+                  strokeLinejoin="round"
                 />
 
+                {/* Area fill for spaced strategy */}
                 {reviewStrategy === "spaced" && (
                   <>
                     <defs>
                       <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.1" />
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.12" />
                         <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
                       </linearGradient>
                     </defs>
-                    <path
-                      d="M 0 40 Q 100 80 200 120 L 200 40 Q 350 80 500 100 L 500 40 Q 650 60 800 70 L 800 400 L 0 400 Z"
+                    <polygon
+                      points={`${curvePath} 800,360 0,360`}
                       fill="url(#grad1)"
                     />
-                  </>
-                )}
-
-                {reviewStrategy === "spaced" && (
-                  <>
-                    <circle cx="200" cy="40" r="5" fill="#2563eb" />
-                    <circle cx="500" cy="40" r="5" fill="#2563eb" />
                   </>
                 )}
               </svg>

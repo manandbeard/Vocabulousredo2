@@ -6,31 +6,8 @@ import {
   Activity, Clock, Award, TrendingUp, Flame, BarChart2
 } from "lucide-react";
 import { Link } from "wouter";
-
-const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
-
-const SCENE_IMAGES = [
-  "/images/card-bg-student-focused.png",
-  "/images/card-bg-peer-study.png",
-  "/images/card-bg-active-learning.png",
-  "/images/card-bg-study-desk.png",
-  "/images/card-bg-group-session.png",
-  "/images/card-bg-deep-reading.png",
-];
-
-function getSceneImage(index: number): string {
-  return SCENE_IMAGES[index % SCENE_IMAGES.length];
-}
-
-function ShadowCard({ children, className = "", hover = true }: {
-  children: React.ReactNode; className?: string; hover?: boolean;
-}) {
-  return (
-    <div className={`bg-white rounded-3xl border border-slate-200 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.12)] ${hover ? "hover:shadow-[0_8px_32px_-4px_rgba(15,23,42,0.18)] hover:-translate-y-0.5" : ""} transition-all duration-200 ${className}`}>
-      {children}
-    </div>
-  );
-}
+import { ShadowCard } from "@/components/ui/ShadowCard";
+import { DAYS, getSceneImage } from "@/lib/dashboard-constants";
 
 export default function TeacherDashboard() {
   const { userId } = useRole();

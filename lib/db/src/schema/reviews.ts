@@ -1,4 +1,5 @@
 import { pgTable, serial, timestamp, integer, real, boolean, text } from "drizzle-orm/pg-core";
+import { pgTable, serial, timestamp, integer, real, boolean, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -18,7 +19,16 @@ export const reviewsTable = pgTable("reviews", {
   difficultyAfter: real("difficulty_after"),
   nextReviewAt: timestamp("next_review_at", { withTimezone: true }).notNull(),
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  // Primary access pattern: all reviews for a student (analytics, streak)
+  index("reviews_student_id_idx").on(t.studentId),
+  // Analytics: per-student per-card history (computeNextReview needs prior state)
+  index("reviews_student_card_idx").on(t.studentId, t.cardId),
+  // Analytics: time-based queries (30-day retention trend)
+  index("reviews_student_reviewed_at_idx").on(t.studentId, t.reviewedAt),
+  // Deck-level analytics
+  index("reviews_deck_id_idx").on(t.deckId),
+]);
 
 // Per-card SRS state per student (ts-fsrs Card model)
 export const cardStatesTable = pgTable("card_states", {
@@ -36,7 +46,12 @@ export const cardStatesTable = pgTable("card_states", {
   lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true }),
   nextReviewAt: timestamp("next_review_at", { withTimezone: true }),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (t) => [
+  // Hot path: look up card state for a specific student+card (review submission)
+  index("card_states_student_card_idx").on(t.studentId, t.cardId),
+  // Hot path: due-cards query filters by studentId + nextReviewAt
+  index("card_states_student_next_review_idx").on(t.studentId, t.nextReviewAt),
+]);
 
 export const insertReviewSchema = createInsertSchema(reviewsTable).omit({ id: true, reviewedAt: true });
 export type InsertReview = z.infer<typeof insertReviewSchema>;
