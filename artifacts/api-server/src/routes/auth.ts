@@ -9,7 +9,6 @@ import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { syncClerkUser } from "../middlewares/auth";
 import type { Role } from "../middlewares/auth";
-import { z } from "zod/v4";
 
 const router: IRouter = Router();
 
@@ -46,10 +45,6 @@ router.get("/auth/me", async (req, res): Promise<void> => {
  * Body: { role: "teacher" | "student" }
  * Creates (or updates) the user's record in our DB and returns it.
  */
-const SyncUserBody = z.object({
-  role: z.enum(["teacher", "student"]),
-});
-
 router.post("/auth/sync-user", async (req, res): Promise<void> => {
   const { userId: clerkId } = getAuth(req);
   if (!clerkId) {
@@ -57,14 +52,14 @@ router.post("/auth/sync-user", async (req, res): Promise<void> => {
     return;
   }
 
-  const parsed = SyncUserBody.safeParse(req.body);
-  if (!parsed.success) {
+  const { role } = req.body as { role?: unknown };
+  if (role !== "teacher" && role !== "student") {
     res.status(400).json({ error: "role must be 'teacher' or 'student'" });
     return;
   }
 
   try {
-    const user = await syncClerkUser(clerkId, parsed.data.role as Role);
+    const user = await syncClerkUser(clerkId, role as Role);
     const { passwordHash: _omit, ...safeUser } = user;
     res.status(201).json(safeUser);
   } catch (err) {

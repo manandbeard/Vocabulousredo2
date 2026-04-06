@@ -13,7 +13,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { useUser, useAuth } from "@clerk/react";
+import { useAuth } from "@clerk/react";
 
 export type Role = "teacher" | "student";
 
