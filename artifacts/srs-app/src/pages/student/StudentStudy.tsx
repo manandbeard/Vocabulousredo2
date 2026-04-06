@@ -12,7 +12,10 @@ export default function StudentStudy() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
-  const { data: cards, isLoading } = useGetDueCards(userId);
+  // userId is guaranteed non-null inside the StudentGuard, but we narrow the type here
+  const safeUserId = userId ?? 0;
+
+  const { data: cards, isLoading } = useGetDueCards(safeUserId);
   const submitReviewMut = useSubmitReview();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -33,7 +36,7 @@ export default function StudentStudy() {
     try {
       await submitReviewMut.mutateAsync({
         data: {
-          studentId: userId,
+          studentId: safeUserId,
           cardId: currentCard.cardId,
           deckId: currentCard.deckId,
           grade,
@@ -45,7 +48,7 @@ export default function StudentStudy() {
         if (cards && currentIndex < cards.length - 1) {
           setCurrentIndex(prev => prev + 1);
         } else {
-          queryClient.invalidateQueries({ queryKey: getGetDueCardsQueryKey(userId) });
+          queryClient.invalidateQueries({ queryKey: getGetDueCardsQueryKey(safeUserId) });
           setLocation("/student/progress");
         }
       }, 200);
@@ -87,6 +90,10 @@ export default function StudentStudy() {
   }
 
   const progress = ((currentIndex + 1) / cards.length) * 100;
+
+  // TypeScript narrowing: currentCard is guaranteed non-undefined here
+  // because we checked `currentIndex >= cards.length` above
+  if (!currentCard) return null;
 
   return (
     <AppLayout>

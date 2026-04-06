@@ -1,20 +1,16 @@
 import { useLocation } from "wouter";
 import { ArrowRight, Brain, Zap, Target, BarChart3, Clock, Users, Activity } from "lucide-react";
 import { SynapticWeb } from "@/components/ui/synaptic-web";
-import { useRole } from "@/hooks/use-role";
 
 export default function Landing() {
   const [, navigate] = useLocation();
-  const { setRole } = useRole();
 
-  const handleLoginTeacher = () => {
-    setRole("teacher");
-    navigate("/teacher");
+  const handleGetStarted = () => {
+    navigate("/sign-up");
   };
 
-  const handleLoginStudent = () => {
-    setRole("student");
-    navigate("/student");
+  const handleSignIn = () => {
+    navigate("/sign-in");
   };
 
   return (
@@ -106,17 +102,17 @@ export default function Landing() {
             <h3 className="font-bold text-xl tracking-tight">Ready to start?</h3>
             <p className="text-sm text-slate-500 mb-2">Join the learning platform today.</p>
             <button
-              onClick={handleLoginTeacher}
+              onClick={handleGetStarted}
               className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 group"
             >
-              Log in as a Teacher
+              Get Started — Free
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
-              onClick={handleLoginStudent}
+              onClick={handleSignIn}
               className="w-full py-3 px-6 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 group"
             >
-              Log in as a Student
+              Sign In
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button

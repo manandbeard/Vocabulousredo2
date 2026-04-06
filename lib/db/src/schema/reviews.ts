@@ -1,4 +1,4 @@
-import { pgTable, serial, timestamp, integer, real, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, timestamp, integer, real, boolean, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -20,14 +20,18 @@ export const reviewsTable = pgTable("reviews", {
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Per-card SRS state per student
+// Per-card SRS state per student (ts-fsrs Card model)
 export const cardStatesTable = pgTable("card_states", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").notNull().references(() => usersTable.id),
   cardId: integer("card_id").notNull().references(() => cardsTable.id),
   deckId: integer("deck_id").notNull().references(() => decksTable.id),
-  stability: real("stability").notNull().default(1),
-  difficulty: real("difficulty").notNull().default(5),
+  stability: real("stability").notNull().default(0),
+  difficulty: real("difficulty").notNull().default(0),
+  // FSRS card state: "New" | "Learning" | "Review" | "Relearning"
+  fsrsState: text("fsrs_state").notNull().default("New"),
+  lapses: integer("lapses").notNull().default(0),
+  scheduledDays: real("scheduled_days").notNull().default(0),
   reviewCount: integer("review_count").notNull().default(0),
   lastReviewedAt: timestamp("last_reviewed_at", { withTimezone: true }),
   nextReviewAt: timestamp("next_review_at", { withTimezone: true }),

@@ -1,15 +1,17 @@
 import { useLocation } from "wouter";
-import { BookOpen, BarChart3, Settings, LogOut, Home, Rocket, Presentation, ChevronDown, Info, BrainCircuit, TrendingUp } from "lucide-react";
+import { BookOpen, BarChart3, Settings, Home, Rocket, Presentation, ChevronDown, Info, BrainCircuit, TrendingUp } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useRole } from "@/hooks/use-role";
+import { useClerk } from "@clerk/react";
+import { UserButton } from "@clerk/react";
 
 export function TopNav() {
-  const { role, setRole } = useRole();
+  const { role } = useRole();
+  const { signOut } = useClerk();
   const [location, navigate] = useLocation();
   const [infoOpen, setInfoOpen] = useState(false);
   const infoRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (infoRef.current && !infoRef.current.contains(event.target as Node)) {
@@ -22,7 +24,7 @@ export function TopNav() {
 
   if (!role) return null;
 
-  const navItems = role === "teacher" 
+  const navItems = role === "teacher"
     ? [
         { label: "Dashboard", href: "/teacher", icon: Home },
         { label: "Classes", href: "/teacher/classes", icon: BookOpen },
@@ -40,11 +42,6 @@ export function TopNav() {
     { label: "Pitch Deck", href: "/pitch", icon: Presentation },
   ];
 
-  const handleLogout = () => {
-    setRole(null);
-    navigate("/");
-  };
-
   return (
     <nav className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-8 py-3 flex items-center justify-between">
@@ -57,12 +54,13 @@ export function TopNav() {
             <span>Vocabulous²</span>
           </div>
 
-          {/* Navigation */}
           <div className="flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const baseHref = role === "teacher" ? "/teacher" : "/student";
-              const isActive = location === item.href || (item.href !== baseHref && location.startsWith(item.href));
+              const isActive =
+                location === item.href ||
+                (item.href !== baseHref && location.startsWith(item.href));
               return (
                 <button
                   key={item.href}
@@ -79,7 +77,6 @@ export function TopNav() {
               );
             })}
 
-            {/* Info Dropdown — Teacher only */}
             {role === "teacher" && (
               <div ref={infoRef} className="relative">
                 <button
@@ -88,7 +85,9 @@ export function TopNav() {
                 >
                   <Info className="w-4 h-4" />
                   Info
-                  <ChevronDown className={`w-4 h-4 transition-transform ${infoOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${infoOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 {infoOpen && (
@@ -121,8 +120,8 @@ export function TopNav() {
           </div>
         </div>
 
-        {/* Right: User & Actions */}
-        <div className="flex items-center gap-4">
+        {/* Right: Settings + Clerk UserButton (avatar / sign-out) */}
+        <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/settings")}
             className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors flex items-center gap-2"
@@ -130,13 +129,8 @@ export function TopNav() {
             <Settings className="w-4 h-4" />
             Settings
           </button>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </button>
+          {/* Clerk's built-in user button — handles sign-out, profile management */}
+          <UserButton />
         </div>
       </div>
     </nav>

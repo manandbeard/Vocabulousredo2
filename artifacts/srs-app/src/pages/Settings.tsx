@@ -10,6 +10,7 @@ type SettingsTab = "account" | "security" | "notifications" | "preferences";
 
 export default function Settings() {
   const { role, userId } = useRole();
+  const safeUserId = userId ?? 0;
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<SettingsTab>("account");
@@ -24,14 +25,14 @@ export default function Settings() {
   const handleResetStudyProgress = async () => {
     setResetLoading(true);
     try {
-      const response = await fetch(`/api/students/${userId}/reset-progress`, {
+      const response = await fetch(`/api/students/${safeUserId}/reset-progress`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
 
       if (response.ok) {
         // Invalidate the due-cards query to refetch
-        queryClient.invalidateQueries({ queryKey: getGetDueCardsQueryKey(userId) });
+        queryClient.invalidateQueries({ queryKey: getGetDueCardsQueryKey(safeUserId) });
         setShowResetModal(false);
       } else {
         console.error("Failed to reset progress");
