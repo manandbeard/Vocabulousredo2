@@ -2,6 +2,7 @@ import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Loader2 } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import { RoleProvider, useRole, type Role } from "@/hooks/use-role";
 import { TopNav } from "@/components/layout/TopNav";
@@ -38,16 +39,34 @@ const queryClient = new QueryClient({
 });
 
 function Root() {
-  const { role } = useRole();
-  if (role) {
+  const { role, isAuthenticated, isAuthLoading } = useRole();
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+  if (isAuthenticated && role) {
     return <Redirect to={role === "teacher" ? "/teacher" : "/student"} />;
+  }
+  if (isAuthenticated && !role) {
+    return <Redirect to="/signup" />;
   }
   return <Landing />;
 }
 
 function RequireRole({ required, component: Component }: { required: Role; component: React.ComponentType }) {
-  const { role } = useRole();
-  if (!role) return <Redirect to="/login" />;
+  const { role, isAuthenticated, isAuthLoading } = useRole();
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+  if (!isAuthenticated) return <Redirect to="/login" />;
+  if (!role) return <Redirect to="/signup" />;
   if (role !== required) return <Redirect to={role === "teacher" ? "/teacher" : "/student"} />;
   return <Component />;
 }

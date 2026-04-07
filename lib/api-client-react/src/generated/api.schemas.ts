@@ -5,6 +5,43 @@
  * MetaSRS Learning Platform API
  * OpenAPI spec version: 0.1.0
  */
+export interface AuthUser {
+  id: string;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  firstName: string | null;
+  /** @nullable */
+  lastName: string | null;
+  /** @nullable */
+  profileImageUrl: string | null;
+}
+
+export interface GetCurrentAuthUserResponse {
+  user: AuthUser | null;
+}
+
+export interface ExchangeMobileAuthorizationCodeBody {
+  /** @minLength 1 */
+  code: string;
+  /** @minLength 1 */
+  code_verifier: string;
+  /** @minLength 1 */
+  redirect_uri: string;
+  /** @minLength 1 */
+  state: string;
+  /** @minLength 1 */
+  nonce?: string;
+}
+
+export interface ExchangeMobileAuthorizationCodeResponse {
+  token: string;
+}
+
+export interface LogoutMobileSessionResponse {
+  success: boolean;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -127,9 +164,9 @@ export interface UpdateDeckBody {
   classId?: number;
 }
 
-export type CardType = (typeof CardType)[keyof typeof CardType];
+export type CardCardType = (typeof CardCardType)[keyof typeof CardCardType];
 
-export const CardType = {
+export const CardCardType = {
   flashcard: "flashcard",
   multiple_choice: "multiple_choice",
   brain_dump: "brain_dump",
@@ -145,7 +182,7 @@ export interface Card {
   /** @nullable */
   hint?: string | null;
   tags: string[];
-  cardType: CardType;
+  cardType: CardCardType;
   /** @nullable */
   imageUrl?: string | null;
   /** @nullable */
@@ -157,25 +194,43 @@ export interface Card {
   updatedAt: string;
 }
 
+export type CreateCardBodyCardType =
+  (typeof CreateCardBodyCardType)[keyof typeof CreateCardBodyCardType];
+
+export const CreateCardBodyCardType = {
+  flashcard: "flashcard",
+  multiple_choice: "multiple_choice",
+  brain_dump: "brain_dump",
+} as const;
+
 export interface CreateCardBody {
   front: string;
   back: string;
   hint?: string;
   tags?: string[];
   createdBy?: number;
-  cardType?: CardType;
+  cardType?: CreateCardBodyCardType;
   imageUrl?: string;
   mcOptions?: string[];
   mcCorrectIndex?: number;
   importance?: number;
 }
 
+export type UpdateCardBodyCardType =
+  (typeof UpdateCardBodyCardType)[keyof typeof UpdateCardBodyCardType];
+
+export const UpdateCardBodyCardType = {
+  flashcard: "flashcard",
+  multiple_choice: "multiple_choice",
+  brain_dump: "brain_dump",
+} as const;
+
 export interface UpdateCardBody {
   front?: string;
   back?: string;
   hint?: string;
   tags?: string[];
-  cardType?: CardType;
+  cardType?: UpdateCardBodyCardType;
   imageUrl?: string;
   mcOptions?: string[];
   mcCorrectIndex?: number;
@@ -210,6 +265,15 @@ export interface CreateReviewBody {
   elapsedDays: number;
 }
 
+export type DueCardCardType =
+  (typeof DueCardCardType)[keyof typeof DueCardCardType];
+
+export const DueCardCardType = {
+  flashcard: "flashcard",
+  multiple_choice: "multiple_choice",
+  brain_dump: "brain_dump",
+} as const;
+
 export interface DueCard {
   cardId: number;
   deckId: number;
@@ -217,7 +281,7 @@ export interface DueCard {
   back: string;
   /** @nullable */
   hint?: string | null;
-  cardType: CardType;
+  cardType: DueCardCardType;
   /** @nullable */
   imageUrl?: string | null;
   /** @nullable */
@@ -342,6 +406,20 @@ export interface AtRiskStudent {
   riskLevel: AtRiskStudentRiskLevel;
   riskReason: string;
 }
+
+/**
+ * Opaque session token — `Bearer <sid>`.
+ */
+export type AuthorizationSessionHeaderParameter = string;
+
+export type BeginBrowserLoginParams = {
+  returnTo?: string;
+};
+
+export type HandleBrowserLoginCallbackParams = {
+  code?: string;
+  state?: string;
+};
 
 export type ListClassesParams = {
   teacherId?: number;

@@ -5,7 +5,7 @@
  * MetaSRS Learning Platform API
  * OpenAPI spec version: 0.1.0
  */
-import type { CardType } from "./cardType";
+import type { CardCardType } from "./cardCardType";
 
 export interface Card {
   id: number;
@@ -17,7 +17,7 @@ export interface Card {
   /** @nullable */
   hint?: string | null;
   tags: string[];
-  cardType: CardType;
+  cardType: CardCardType;
   /** @nullable */
   imageUrl?: string | null;
   /** @nullable */

@@ -5,7 +5,7 @@
  * MetaSRS Learning Platform API
  * OpenAPI spec version: 0.1.0
  */
-import type { CardType } from "./cardType";
+import type { CreateCardBodyCardType } from "./createCardBodyCardType";
 
 export interface CreateCardBody {
   front: string;
@@ -13,7 +13,7 @@ export interface CreateCardBody {
   hint?: string;
   tags?: string[];
   createdBy?: number;
-  cardType?: CardType;
+  cardType?: CreateCardBodyCardType;
   imageUrl?: string;
   mcOptions?: string[];
   mcCorrectIndex?: number;
