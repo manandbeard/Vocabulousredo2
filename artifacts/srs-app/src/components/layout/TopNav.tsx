@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { useRole } from "@/hooks/use-role";
 
 export function TopNav() {
-  const { role, setRole } = useRole();
+  const { role, setRole, logout } = useRole();
   const [location, navigate] = useLocation();
   const [infoOpen, setInfoOpen] = useState(false);
   const infoRef = useRef<HTMLDivElement>(null);
@@ -21,7 +21,7 @@ export function TopNav() {
 
   const handleLogout = () => {
     setRole(null);
-    navigate("/");
+    logout();
   };
 
   if (!role) {
