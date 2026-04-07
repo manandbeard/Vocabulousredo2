@@ -11,8 +11,10 @@ import { DAYS, getSceneImage } from "@/lib/dashboard-constants";
 
 export default function TeacherDashboard() {
   const { userId } = useRole();
-  const { data: analytics, isLoading, error } = useGetTeacherAnalytics(userId || 1);
-  const { data: milestones } = useGetTeacherMilestones(userId || 1);
+  const numericUserId = userId ? Number(userId) : null;
+  const queryEnabled = numericUserId !== null && !Number.isNaN(numericUserId);
+  const { data: analytics, isLoading, error } = useGetTeacherAnalytics(numericUserId ?? 0, { query: { enabled: queryEnabled } });
+  const { data: milestones } = useGetTeacherMilestones(numericUserId ?? 0, { query: { enabled: queryEnabled } });
 
   if (isLoading) {
     return (
@@ -98,7 +100,7 @@ export default function TeacherDashboard() {
           {/* Dark hero card with faded bg image */}
           <div
             className="col-span-3 text-white rounded-3xl p-6 border border-slate-800 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.40)] hover:shadow-[0_8px_40px_-4px_rgba(15,23,42,0.55)] hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between relative overflow-hidden"
-            style={{ backgroundColor: "#0f172a", backgroundImage: `url('${getSceneImage(userId || 0)}')`, backgroundSize: "cover", backgroundPosition: "center" }}
+            style={{ backgroundColor: "#0f172a", backgroundImage: `url('${getSceneImage(numericUserId ?? 0)}')`, backgroundSize: "cover", backgroundPosition: "center" }}
           >
             <div className="absolute inset-0 bg-slate-900/85" />
             <Activity className="absolute right-[-8%] bottom-[-12%] w-32 h-32 text-slate-700 opacity-40 z-10" />
@@ -228,7 +230,7 @@ export default function TeacherDashboard() {
         {/* Row 3 — Class Milestone full width */}
         <div
           className="col-span-12 min-h-60 rounded-3xl border border-violet-100 shadow-[0_4px_24px_-4px_rgba(139,92,246,0.18)] hover:shadow-[0_8px_32px_-4px_rgba(139,92,246,0.28)] hover:-translate-y-0.5 transition-all duration-200 p-6 relative overflow-hidden flex flex-col justify-between"
-          style={{ backgroundColor: "#f5f3ff", backgroundImage: `url('${getSceneImage((userId || 0) + 2)}')`, backgroundSize: "cover", backgroundPosition: "center" }}
+          style={{ backgroundColor: "#f5f3ff", backgroundImage: `url('${getSceneImage((numericUserId ?? 0) + 2)}')`, backgroundSize: "cover", backgroundPosition: "center" }}
         >
             <div className="absolute inset-0 bg-violet-50/80" />
             <Award className="absolute right-[-5%] bottom-[-10%] w-28 h-28 text-violet-200 opacity-60 z-10" />

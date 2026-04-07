@@ -6,7 +6,7 @@ export default function Landing() {
   const [, navigate] = useLocation();
 
   return (
-    <div className="min-h-screen font-['Inter'] text-slate-900 p-4 md:p-8 flex items-center justify-center relative">
+    <div className="min-h-screen font-['Inter'] text-slate-900 p-4 md:p-8 flex items-center justify-center relative" style={{ background: "linear-gradient(145deg, #eef2ff 0%, #f5f3ff 40%, #fdf4ff 70%, #eff6ff 100%)" }}>
       <SynapticWeb />
       <div className="max-w-6xl w-full mx-auto relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[minmax(140px,auto)]">
