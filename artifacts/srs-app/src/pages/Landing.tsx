@@ -131,7 +131,7 @@ export default function Landing() {
             <h3 className="font-bold text-xl tracking-tight">Ready to start?</h3>
             <p className="text-sm text-slate-500 mb-2">Join thousands of learners today.</p>
             <button
-              onClick={() => navigate("/sign-up")}
+              onClick={() => navigate("/signup")}
               className="w-full py-3 px-6 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 group"
               style={{ background: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)" }}
             >
@@ -139,7 +139,7 @@ export default function Landing() {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
-              onClick={() => navigate("/sign-in")}
+              onClick={() => navigate("/login")}
               className="w-full py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 group"
             >
               Sign in
