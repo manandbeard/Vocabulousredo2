@@ -5,18 +5,16 @@ import { rateLimit } from "express-rate-limit";
 import pinoHttp from "pino-http";
 import path from "path";
 import fs from "fs";
-import { clerkMiddleware } from "@clerk/express";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { errorHandler } from "./middlewares/error-handler";
-import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxyMiddleware";
 
 const app: Express = express();
 
-// Security headers
+app.set("trust proxy", 1);
+
 app.use(helmet());
 
-// Request logging
 app.use(
   pinoHttp({
     logger,
@@ -37,19 +35,11 @@ app.use(
   }),
 );
 
-// Clerk proxy — must be before body parsers (streams raw bytes)
-app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
-
 app.use(cors({ credentials: true, origin: true }));
 
-// Body parsing with a 1 MB size cap
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
-// Clerk middleware — attaches auth info on every request
-app.use(clerkMiddleware());
-
-// General API rate limit: 300 requests per minute per IP
 const API_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const API_RATE_LIMIT_MAX = Number(process.env.API_RATE_LIMIT_MAX ?? 300);
 const REVIEW_RATE_LIMIT_MAX = Number(process.env.REVIEW_RATE_LIMIT_MAX ?? 120);
@@ -62,7 +52,6 @@ const apiLimiter = rateLimit({
   message: { error: "Too many requests, please try again later." },
 });
 
-// Stricter limit for review submissions
 const reviewLimiter = rateLimit({
   windowMs: API_RATE_LIMIT_WINDOW_MS,
   max: REVIEW_RATE_LIMIT_MAX,
@@ -72,7 +61,6 @@ const reviewLimiter = rateLimit({
 });
 
 app.use("/api", apiLimiter);
-
 app.use("/api/reviews", reviewLimiter);
 app.use("/api", router);
 
@@ -89,7 +77,6 @@ if (process.env.NODE_ENV === "production") {
   }
 }
 
-// Global error handler — must be last
 app.use(errorHandler);
 
 export default app;

@@ -2,13 +2,9 @@ import { useLocation } from "wouter";
 import { BookOpen, BarChart3, Settings, LogOut, Home, Rocket, Presentation, ChevronDown, Info, BrainCircuit, TrendingUp, LogIn, UserPlus } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useRole } from "@/hooks/use-role";
-import { useAuth, useClerk, useUser } from "@clerk/react";
 
 export function TopNav() {
-  const { role } = useRole();
-  const { isSignedIn } = useAuth();
-  const { signOut } = useClerk();
-  const { user } = useUser();
+  const { role, setRole } = useRole();
   const [location, navigate] = useLocation();
   const [infoOpen, setInfoOpen] = useState(false);
   const infoRef = useRef<HTMLDivElement>(null);
@@ -23,13 +19,12 @@ export function TopNav() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
-    await signOut();
+  const handleLogout = () => {
+    setRole(null);
     navigate("/");
   };
 
-  // Public nav — not signed in
-  if (!isSignedIn) {
+  if (!role) {
     return (
       <nav className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 py-3 flex items-center justify-between">
@@ -66,14 +61,14 @@ export function TopNav() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate("/sign-in")}
+              onClick={() => navigate("/login")}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition-colors"
             >
               <LogIn className="w-4 h-4" />
               Sign in
             </button>
             <button
-              onClick={() => navigate("/sign-up")}
+              onClick={() => navigate("/signup")}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             >
               <UserPlus className="w-4 h-4" />
@@ -85,30 +80,6 @@ export function TopNav() {
     );
   }
 
-  // Signed in but no role yet (on /select-role) — minimal nav
-  if (!role) {
-    return (
-      <nav className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-8 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-slate-900">
-            <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center">
-              <span className="text-white text-xs font-black">V</span>
-            </div>
-            <span>Vocabulous²</span>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign out
-          </button>
-        </div>
-      </nav>
-    );
-  }
-
-  // Signed in with role — full role-specific nav
   const navItems = role === "teacher"
     ? [
         { label: "Dashboard", href: "/teacher", icon: Home },
@@ -126,8 +97,6 @@ export function TopNav() {
     { label: "Building in Public", href: "/build", icon: Rocket },
     { label: "Pitch Deck", href: "/pitch", icon: Presentation },
   ];
-
-  const displayName = user?.firstName ?? user?.emailAddresses?.[0]?.emailAddress ?? "Account";
 
   return (
     <nav className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
@@ -198,24 +167,20 @@ export function TopNav() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-            <span className="text-sm font-medium text-slate-700 max-w-[120px] truncate">{displayName}</span>
-          </div>
+        <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/settings")}
-            className="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors flex items-center gap-2"
           >
             <Settings className="w-4 h-4" />
+            Settings
           </button>
           <button
             onClick={handleLogout}
-            className="p-2 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
           >
             <LogOut className="w-4 h-4" />
+            Logout
           </button>
         </div>
       </div>

@@ -4,10 +4,19 @@
 
 MetaSRS Learning Platform — a full-stack SRS (Spaced Repetition System) web app for teachers and students. Teachers can create classes, manage decks of flashcards, and view analytics on student retention. Students can study due cards and track their learning progress.
 
+## Auth
+
+Role-based auth is handled client-side via localStorage. No external auth provider.
+- Select "Sign in" → `/login` — pick Student or Teacher role, submits to redirect to the correct dashboard
+- Select "Sign up" → `/signup` — pick role, creates account (client-side), redirects to dashboard
+- Role stored in `localStorage` key `vocabulous_role`
+- `useRole()` hook (in `src/hooks/use-role.tsx`) provides `{ role, setRole, userId }` via React context (`RoleProvider`)
+- Mock IDs: Teacher = 1, Student = 2
+
 ## Demo Accounts
 
-- Teacher: ID=1 (Ms. Carter) — access via Teacher View in sidebar
-- Student: ID=2 (Alex Rivera) — access via "Switch to Student" button in sidebar
+- Teacher: click "Sign in" → select Teacher role → submit
+- Student: click "Sign in" → select Student role → submit
 
 ## Stack
 

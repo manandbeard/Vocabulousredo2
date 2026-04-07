@@ -17,7 +17,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
-      setRole(selectedRole);
+      setRole(selectedRole as "teacher" | "student");
       navigate(selectedRole === "teacher" ? "/teacher" : "/student");
     }, 600);
   };
