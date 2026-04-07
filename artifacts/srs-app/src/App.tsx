@@ -61,7 +61,9 @@ function SignInPage() {
         <SignIn
           routing="path"
           path={`${basePath}/sign-in`}
+          routingStrategy="path"
           signUpUrl={`${basePath}/sign-up`}
+          afterSignInUrl="/select-role"
         />
       </div>
     </div>
@@ -76,7 +78,9 @@ function SignUpPage() {
         <SignUp
           routing="path"
           path={`${basePath}/sign-up`}
+          routingStrategy="path"
           signInUrl={`${basePath}/sign-in`}
+          afterSignUpUrl="/select-role"
         />
       </div>
     </div>
