@@ -7,7 +7,7 @@
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "build:production": "sh scripts/build-production.sh",
     "start": "node --enable-source-maps artifacts/api-server/dist/index.mjs",
-    "dev": "concurrently --names \"API,UI\" --prefix-colors \"blue,green\" \"pnpm --filter @workspace/api-server dev\" \"pnpm --filter @workspace/srs-app dev\"",
+    "dev": "concurrently --names \"API,UI\" --prefix-colors \"blue,green\" \"PORT=8080 pnpm --filter @workspace/api-server dev\" \"PORT=5173 BASE_PATH=/ pnpm --filter @workspace/srs-app dev\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
