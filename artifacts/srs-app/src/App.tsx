@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -52,6 +52,17 @@ function RequireRole({ required, component: Component }: { required: Role; compo
   return <Component />;
 }
 
+function RouterWithNav() {
+  const [location] = useLocation();
+  const isLanding = location === "/";
+  return (
+    <>
+      {!isLanding && <TopNav />}
+      <Router />
+    </>
+  );
+}
+
 function Router() {
   return (
     <Switch>
@@ -91,8 +102,7 @@ function App() {
       <TooltipProvider>
         <RoleProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <TopNav />
-            <Router />
+            <RouterWithNav />
           </WouterRouter>
         </RoleProvider>
         <Toaster />
