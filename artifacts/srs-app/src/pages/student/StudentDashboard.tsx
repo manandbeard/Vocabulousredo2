@@ -2,6 +2,9 @@ import {
   useListStudentClasses,
   useGetStudentAnalytics,
   useGetStudentAchievements,
+  useGetStudentPersona,
+  useGetStudentStudyTime,
+  useGetStudentKnowledgeGraph,
 } from "@workspace/api-client-react";
 import { useRole } from "@/hooks/use-role";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -18,19 +21,87 @@ import {
   BarChart2,
   BookOpen,
   Trophy,
+  Brain,
+  Zap,
+  Shield,
+  Network,
 } from "lucide-react";
 import { ShadowCard } from "@/components/ui/ShadowCard";
 import { DAYS, SCENE_IMAGES, getSceneImage } from "@/lib/dashboard-constants";
 
+function DonutRing({ percent, size = 56 }: { percent: number; size?: number }) {
+  const r = (size - 8) / 2;
+  const circ = 2 * Math.PI * r;
+  const arc = (percent / 100) * circ;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="#e2e8f0"
+        strokeWidth={5}
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="url(#grad)"
+        strokeWidth={5}
+        strokeDasharray={`${arc} ${circ - arc}`}
+        strokeLinecap="round"
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+      />
+      <defs>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#2563eb" />
+          <stop offset="100%" stopColor="#9333ea" />
+        </linearGradient>
+      </defs>
+      <text
+        x="50%"
+        y="50%"
+        textAnchor="middle"
+        dy=".35em"
+        fontSize={size * 0.22}
+        fontWeight="700"
+        fill="#0f172a"
+      >
+        {percent}%
+      </text>
+    </svg>
+  );
+}
+
+function FlowStateDot({ state }: { state?: string | null }) {
+  const map: Record<string, { color: string; label: string }> = {
+    in_flow: { color: "bg-emerald-400", label: "In Flow" },
+    approaching: { color: "bg-blue-400", label: "Approaching" },
+    warming_up: { color: "bg-amber-400", label: "Warming Up" },
+    starting_out: { color: "bg-slate-400", label: "Starting Out" },
+  };
+  const info = state ? (map[state] ?? map["starting_out"]) : null;
+  if (!info) return null;
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className={`w-2.5 h-2.5 rounded-full ${info.color} inline-block`} />
+      <span className="text-sm font-semibold text-slate-700">{info.label}</span>
+    </span>
+  );
+}
+
 export default function StudentDashboard() {
   const { userId } = useRole();
-  const { data: classes, isLoading: classesLoading } = useListStudentClasses(
-    userId || 2,
-  );
-  const { data: analytics, isLoading: statsLoading } = useGetStudentAnalytics(
-    userId || 2,
-  );
-  const { data: achievementsData } = useGetStudentAchievements(userId || 2);
+  const studentId = userId || 2;
+
+  const { data: classes, isLoading: classesLoading } = useListStudentClasses(studentId);
+  const { data: analytics, isLoading: statsLoading } = useGetStudentAnalytics(studentId);
+  const { data: achievementsData } = useGetStudentAchievements(studentId);
+  const { data: persona, isLoading: personaLoading } = useGetStudentPersona(studentId);
+  const { data: studyTime, isLoading: studyTimeLoading } = useGetStudentStudyTime(studentId);
+  const { data: knowledgeGraph, isLoading: kgLoading } = useGetStudentKnowledgeGraph(studentId);
 
   if (classesLoading || statsLoading) {
     return (
@@ -207,17 +278,27 @@ export default function StudentDashboard() {
 
         {/* Row 2 — Action bento */}
         <div className="grid grid-cols-12 gap-4">
-          {/* Study time placeholder */}
+          {/* Study time — wired to real data */}
           <ShadowCard className="col-span-3 p-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" /> Study Time
             </p>
-            <p className="text-4xl font-black text-slate-900 tracking-tight">
-              —
-            </p>
-            <p className="text-xs text-slate-400 mt-1">this week</p>
+            {studyTimeLoading ? (
+              <div className="h-10 w-24 bg-slate-100 animate-pulse rounded-xl" />
+            ) : (
+              <>
+                <p className="text-4xl font-black text-slate-900 tracking-tight">
+                  {studyTime?.hoursThisWeek ?? 0}h
+                </p>
+                <p className="text-xs text-slate-400 mt-1">this week</p>
+              </>
+            )}
             <div className="mt-4 pt-4 border-t border-slate-100">
-              <p className="text-xs text-slate-400">Coming soon</p>
+              <p className="text-xs text-slate-400">
+                {(studyTime?.hoursThisWeek ?? 0) >= 5
+                  ? "Great pace! Keep it up"
+                  : "Build your study habit"}
+              </p>
             </div>
           </ShadowCard>
 
@@ -253,7 +334,115 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Row 3 — Achievement card full width */}
+        {/* Row 3 — AI Insight Cards + Blurting */}
+        <div className="grid grid-cols-12 gap-4">
+          {/* Blurting Exercise */}
+          <ShadowCard className="col-span-3 p-6 flex flex-col justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-1.5">
+                <Brain className="w-3.5 h-3.5" /> Blurting
+              </p>
+              <p className="text-lg font-bold text-slate-900 leading-snug">
+                Blurting Exercise
+              </p>
+              <p className="text-xs text-slate-500 mt-1.5">
+                Write everything you know from memory to reinforce recall.
+              </p>
+            </div>
+            <Link href="/student/blurting">
+              <span className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-colors cursor-pointer">
+                <PlayCircle className="w-4 h-4" /> Start Blurting
+              </span>
+            </Link>
+          </ShadowCard>
+
+          {/* Learning Persona */}
+          <div className="col-span-5 bg-purple-50 rounded-3xl border border-purple-100 shadow-[0_4px_24px_-4px_rgba(139,92,246,0.14)] hover:shadow-[0_8px_32px_-4px_rgba(139,92,246,0.22)] hover:-translate-y-0.5 transition-all duration-200 p-6">
+            <p className="text-xs font-semibold uppercase tracking-widest text-purple-500 mb-3 flex items-center gap-1.5">
+              <Trophy className="w-3.5 h-3.5" /> Learning Persona
+            </p>
+            {personaLoading ? (
+              <div className="space-y-2">
+                <div className="h-6 w-36 bg-purple-100 animate-pulse rounded-lg" />
+                <div className="h-4 w-full bg-purple-100 animate-pulse rounded-lg" />
+                <div className="h-4 w-4/5 bg-purple-100 animate-pulse rounded-lg" />
+              </div>
+            ) : persona ? (
+              <>
+                <p className="text-xl font-black text-purple-900">
+                  {persona.personaLabel}
+                </p>
+                <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                  {persona.personaDescription}
+                </p>
+                <span className="mt-3 inline-block text-xs font-bold text-purple-600 bg-purple-100 px-2.5 py-1 rounded-full border border-purple-200">
+                  {persona.personaType}
+                </span>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <div className="h-6 w-36 bg-purple-100 animate-pulse rounded-lg" />
+                <div className="h-4 w-full bg-purple-100 animate-pulse rounded-lg" />
+                <div className="h-4 w-4/5 bg-purple-100 animate-pulse rounded-lg" />
+                <p className="text-xs text-purple-400 mt-1">Generating your persona…</p>
+              </div>
+            )}
+          </div>
+
+          {/* Grit Score + Flow State stacked */}
+          <div className="col-span-4 grid grid-rows-2 gap-4">
+            {/* Grit Score */}
+            <ShadowCard className="p-5 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0">
+                <Shield className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
+                  Grit Score
+                </p>
+                {personaLoading ? (
+                  <div className="h-8 w-16 bg-slate-100 animate-pulse rounded-lg mt-1" />
+                ) : persona?.gritScore != null ? (
+                  <>
+                    <p className="text-3xl font-black text-slate-900 tracking-tight">
+                      {persona.gritScore}
+                      <span className="text-sm font-semibold text-slate-400">/100</span>
+                    </p>
+                    <p className="text-xs text-emerald-600 font-semibold mt-0.5">
+                      {persona.gritLabel}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-2xl font-black text-slate-300">—</p>
+                )}
+              </div>
+            </ShadowCard>
+
+            {/* Flow State */}
+            <ShadowCard className="p-5 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
+                <Zap className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">
+                  Flow State
+                </p>
+                {personaLoading ? (
+                  <div className="h-5 w-24 bg-slate-100 animate-pulse rounded-lg" />
+                ) : persona?.flowState ? (
+                  <>
+                    <FlowStateDot state={persona.flowState} />
+                    <p className="text-xs text-slate-400 mt-0.5">{persona.flowLabel}</p>
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-300">—</p>
+                )}
+              </div>
+            </ShadowCard>
+          </div>
+        </div>
+
+        {/* Row 4 — Achievement card full width */}
         <Link href="/student/achievements">
           <div
             className="col-span-12 min-h-60 rounded-3xl border border-violet-100 shadow-[0_4px_24px_-4px_rgba(139,92,246,0.18)] hover:shadow-[0_8px_32px_-4px_rgba(139,92,246,0.28)] hover:-translate-y-0.5 transition-all duration-200 p-6 relative overflow-hidden cursor-pointer flex flex-col justify-between"
@@ -298,6 +487,68 @@ export default function StudentDashboard() {
             </div>
           </div>
         </Link>
+
+        {/* Knowledge Graph Section */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Network className="w-4 h-4 text-slate-500" />
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+              Knowledge Graph
+            </p>
+          </div>
+          {kgLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white border border-slate-200 rounded-3xl p-6 animate-pulse shadow-[0_4px_24px_-4px_rgba(15,23,42,0.08)]"
+                >
+                  <div className="h-4 w-24 bg-slate-200 rounded mb-4" />
+                  <div className="h-14 w-14 bg-slate-200 rounded-full mx-auto mb-4" />
+                  <div className="h-3 w-full bg-slate-100 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : knowledgeGraph && knowledgeGraph.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {knowledgeGraph.map((item) => (
+                <div
+                  key={item.tag}
+                  className="bg-white border border-slate-200 rounded-3xl overflow-hidden hover:border-slate-400 transition-all duration-200 shadow-[0_4px_24px_-4px_rgba(15,23,42,0.10)] hover:shadow-[0_8px_32px_-4px_rgba(15,23,42,0.16)] hover:-translate-y-0.5 p-6 flex flex-col gap-4"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-slate-900 capitalize">
+                        {item.tag}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {item.totalCards} cards · {item.dueCards} due
+                      </p>
+                    </div>
+                    <DonutRing percent={item.masteryPercent} size={56} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500">
+                      {item.masteredCards} mastered
+                    </span>
+                    <Link href={`/student/study?tag=${encodeURIComponent(item.tag)}`}>
+                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors">
+                        Study Now →
+                      </span>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white border border-dashed border-slate-300 rounded-3xl p-12 text-center shadow-[0_4px_24px_-4px_rgba(15,23,42,0.06)]">
+              <Network className="mx-auto h-8 w-8 text-slate-300 mb-3" />
+              <p className="text-sm text-slate-500">
+                Start reviewing cards to see your knowledge graph.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Enrolled Classes */}
         <div>

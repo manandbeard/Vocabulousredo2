@@ -624,3 +624,53 @@ export const GetAtRiskStudentsResponseItem = zod.object({
 export const GetAtRiskStudentsResponse = zod.array(
   GetAtRiskStudentsResponseItem,
 );
+
+/**
+ * @summary Get or generate AI learning persona for a student
+ */
+export const GetStudentPersonaParams = zod.object({
+  studentId: zod.coerce.number(),
+});
+
+export const GetStudentPersonaResponse = zod.object({
+  studentId: zod.number(),
+  personaType: zod.string(),
+  personaLabel: zod.string(),
+  personaDescription: zod.string(),
+  gritScore: zod.number().nullish(),
+  gritLabel: zod.string().nullish(),
+  flowState: zod.string().nullish(),
+  flowLabel: zod.string().nullish(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Get total study time for the current ISO week
+ */
+export const GetStudentStudyTimeParams = zod.object({
+  studentId: zod.coerce.number(),
+});
+
+export const GetStudentStudyTimeResponse = zod.object({
+  studentId: zod.number(),
+  hoursThisWeek: zod.number(),
+  totalSecondsThisWeek: zod.number(),
+});
+
+/**
+ * @summary Get knowledge graph grouped by tag for a student
+ */
+export const GetStudentKnowledgeGraphParams = zod.object({
+  studentId: zod.coerce.number(),
+});
+
+export const GetStudentKnowledgeGraphResponseItem = zod.object({
+  tag: zod.string(),
+  totalCards: zod.number(),
+  masteredCards: zod.number(),
+  dueCards: zod.number(),
+  masteryPercent: zod.number(),
+});
+export const GetStudentKnowledgeGraphResponse = zod.array(
+  GetStudentKnowledgeGraphResponseItem,
+);

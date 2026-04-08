@@ -724,6 +724,65 @@ paths:
                 items:
                   $ref: "#/components/schemas/AtRiskStudent"
 
+  /students/{studentId}/persona:
+    get:
+      operationId: getStudentPersona
+      tags: [analytics]
+      summary: Get or generate AI learning persona for a student
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: AI learning persona
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentPersona"
+
+  /students/{studentId}/study-time:
+    get:
+      operationId: getStudentStudyTime
+      tags: [analytics]
+      summary: Get total study time for the current ISO week
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Study time this week
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentStudyTime"
+
+  /students/{studentId}/knowledge-graph:
+    get:
+      operationId: getStudentKnowledgeGraph
+      tags: [analytics]
+      summary: Get knowledge graph grouped by tag for a student
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Knowledge graph by tag
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeGraphTag"
+
 components:
   schemas:
     HealthStatus:
@@ -1467,3 +1526,66 @@ components:
         - learning
         - new
         - dueToday
+
+    StudentPersona:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        personaType:
+          type: string
+        personaLabel:
+          type: string
+        personaDescription:
+          type: string
+        gritScore:
+          type: ["integer", "null"]
+        gritLabel:
+          type: ["string", "null"]
+        flowState:
+          type: ["string", "null"]
+        flowLabel:
+          type: ["string", "null"]
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - studentId
+        - personaType
+        - personaLabel
+        - personaDescription
+        - updatedAt
+
+    StudentStudyTime:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        hoursThisWeek:
+          type: number
+        totalSecondsThisWeek:
+          type: integer
+      required:
+        - studentId
+        - hoursThisWeek
+        - totalSecondsThisWeek
+
+    KnowledgeGraphTag:
+      type: object
+      properties:
+        tag:
+          type: string
+        totalCards:
+          type: integer
+        masteredCards:
+          type: integer
+        dueCards:
+          type: integer
+        masteryPercent:
+          type: number
+      required:
+        - tag
+        - totalCards
+        - masteredCards
+        - dueCards
+        - masteryPercent

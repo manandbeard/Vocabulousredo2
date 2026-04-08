@@ -409,6 +409,36 @@ export type Logout200 = {
   ok: boolean;
 };
 
+export interface StudentPersona {
+  studentId: number;
+  personaType: string;
+  personaLabel: string;
+  personaDescription: string;
+  /** @nullable */
+  gritScore?: number | null;
+  /** @nullable */
+  gritLabel?: string | null;
+  /** @nullable */
+  flowState?: string | null;
+  /** @nullable */
+  flowLabel?: string | null;
+  updatedAt: string;
+}
+
+export interface StudentStudyTime {
+  studentId: number;
+  hoursThisWeek: number;
+  totalSecondsThisWeek: number;
+}
+
+export interface KnowledgeGraphTag {
+  tag: string;
+  totalCards: number;
+  masteredCards: number;
+  dueCards: number;
+  masteryPercent: number;
+}
+
 export type ListClassesParams = {
   teacherId?: number;
 };

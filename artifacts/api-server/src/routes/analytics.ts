@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, and, gte } from "drizzle-orm";
+import { eq, sql, and, gte, isNotNull } from "drizzle-orm";
 import {
   db,
   classesTable,
@@ -9,6 +9,8 @@ import {
   reviewsTable,
   usersTable,
   cardStatesTable,
+  studySessionsTable,
+  aiPersonasTable,
 } from "@workspace/db";
 import {
   GetTeacherAnalyticsParams,
@@ -19,8 +21,15 @@ import {
   GetStudentAnalyticsResponse,
   GetAtRiskStudentsParams,
   GetAtRiskStudentsResponse,
+  GetStudentPersonaParams,
+  GetStudentPersonaResponse,
+  GetStudentStudyTimeParams,
+  GetStudentStudyTimeResponse,
+  GetStudentKnowledgeGraphParams,
+  GetStudentKnowledgeGraphResponse,
 } from "@workspace/api-zod";
 import { computeStreak } from "../lib/streak";
+import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router: IRouter = Router();
 
@@ -397,6 +406,249 @@ router.get("/analytics/class/:classId/at-risk", async (req, res): Promise<void> 
   });
 
   res.json(GetAtRiskStudentsResponse.parse(atRisk));
+});
+
+// ─── Persona endpoint ─────────────────────────────────────────────────────────
+router.get("/students/:studentId/persona", async (req, res): Promise<void> => {
+  const params = GetStudentPersonaParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const { studentId } = params.data;
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const now = new Date();
+
+  const [existing] = await db
+    .select()
+    .from(aiPersonasTable)
+    .where(eq(aiPersonasTable.studentId, studentId));
+
+  if (existing && now.getTime() - new Date(existing.updatedAt).getTime() < SEVEN_DAYS_MS) {
+    res.json(GetStudentPersonaResponse.parse({ ...existing, studentId }));
+    return;
+  }
+
+  // Gather review stats for the AI call
+  const [student] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, studentId));
+  const [reviewStats] = await db
+    .select({
+      totalReviews: sql<number>`cast(count(${reviewsTable.id}) as int)`,
+      averageRetention: sql<number | null>`
+        case when count(${reviewsTable.id}) > 0 
+        then cast(avg(case when ${reviewsTable.recalled} then 1.0 else 0.0 end) as double precision)
+        else null end
+      `,
+      avgGrade: sql<number | null>`cast(avg(${reviewsTable.grade}) as double precision)`,
+    })
+    .from(reviewsTable)
+    .where(eq(reviewsTable.studentId, studentId));
+
+  const cardStateRows = await db
+    .select({ stability: cardStatesTable.stability, reviewCount: cardStatesTable.reviewCount })
+    .from(cardStatesTable)
+    .where(eq(cardStatesTable.studentId, studentId));
+
+  const mastered = cardStateRows.filter((s) => (s.stability ?? 0) >= 21).length;
+  const totalStates = cardStateRows.length;
+  const avgReviewCount = totalStates > 0 ? cardStateRows.reduce((sum, s) => sum + (s.reviewCount ?? 0), 0) / totalStates : 0;
+
+  const prompt = `You are analyzing a student's spaced repetition learning data to generate a learning persona profile.
+
+Student: ${student?.name ?? "Unknown"}
+Total reviews: ${reviewStats?.totalReviews ?? 0}
+Average retention: ${reviewStats?.averageRetention !== null ? Math.round((reviewStats?.averageRetention ?? 0) * 100) + "%" : "N/A"}
+Average grade (1=Again, 4=Easy): ${reviewStats?.avgGrade?.toFixed(2) ?? "N/A"}
+Cards mastered (stability >= 21 days): ${mastered} of ${totalStates}
+Average review count per card: ${avgReviewCount.toFixed(1)}
+
+Based on this data, generate a learning persona with the following JSON format (respond with ONLY valid JSON, no markdown):
+{
+  "personaType": "one of: Sprinter, Marathoner, Deep Diver, Juggler, Perfectionist, Explorer",
+  "personaLabel": "a short catchy label like 'The Deep Diver'",
+  "personaDescription": "2-3 sentences describing this student's learning style based on the data",
+  "gritScore": integer from 1-100 representing persistence and long-term commitment,
+  "gritLabel": "short label like 'High Persistence' or 'Building Momentum'",
+  "flowState": "one of: in_flow, approaching, warming_up, starting_out",
+  "flowLabel": "short label like 'In the Zone' or 'Finding Your Rhythm'"
+}`;
+
+  let personaData: {
+    personaType: string;
+    personaLabel: string;
+    personaDescription: string;
+    gritScore: number;
+    gritLabel: string;
+    flowState: string;
+    flowLabel: string;
+  };
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5-mini",
+      max_completion_tokens: 512,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const content = completion.choices[0]?.message?.content ?? "{}";
+    personaData = JSON.parse(content);
+  } catch {
+    personaData = {
+      personaType: "Explorer",
+      personaLabel: "The Explorer",
+      personaDescription: "You're building your learning journey step by step.",
+      gritScore: 50,
+      gritLabel: "Building Momentum",
+      flowState: "warming_up",
+      flowLabel: "Finding Your Rhythm",
+    };
+  }
+
+  // Upsert into ai_personas
+  if (existing) {
+    await db
+      .update(aiPersonasTable)
+      .set({
+        personaType: personaData.personaType,
+        personaLabel: personaData.personaLabel,
+        personaDescription: personaData.personaDescription,
+        gritScore: personaData.gritScore,
+        gritLabel: personaData.gritLabel,
+        flowState: personaData.flowState,
+        flowLabel: personaData.flowLabel,
+        updatedAt: now,
+      })
+      .where(eq(aiPersonasTable.studentId, studentId));
+  } else {
+    await db.insert(aiPersonasTable).values({
+      studentId,
+      personaType: personaData.personaType,
+      personaLabel: personaData.personaLabel,
+      personaDescription: personaData.personaDescription,
+      gritScore: personaData.gritScore,
+      gritLabel: personaData.gritLabel,
+      flowState: personaData.flowState,
+      flowLabel: personaData.flowLabel,
+      updatedAt: now,
+    });
+  }
+
+  res.json(
+    GetStudentPersonaResponse.parse({
+      studentId,
+      personaType: personaData.personaType,
+      personaLabel: personaData.personaLabel,
+      personaDescription: personaData.personaDescription,
+      gritScore: personaData.gritScore,
+      gritLabel: personaData.gritLabel,
+      flowState: personaData.flowState,
+      flowLabel: personaData.flowLabel,
+      updatedAt: now,
+    })
+  );
+});
+
+// ─── Study time endpoint ──────────────────────────────────────────────────────
+router.get("/students/:studentId/study-time", async (req, res): Promise<void> => {
+  const params = GetStudentStudyTimeParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const { studentId } = params.data;
+
+  // Get start of current ISO week (Monday)
+  const now = new Date();
+  const dayOfWeek = now.getUTCDay(); // 0=Sunday, 1=Monday, ...
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const weekStart = new Date(now);
+  weekStart.setUTCDate(now.getUTCDate() - daysToMonday);
+  weekStart.setUTCHours(0, 0, 0, 0);
+
+  const [result] = await db
+    .select({
+      totalSeconds: sql<number>`cast(coalesce(sum(${studySessionsTable.sessionDurationSeconds}), 0) as int)`,
+    })
+    .from(studySessionsTable)
+    .where(
+      and(
+        eq(studySessionsTable.studentId, studentId),
+        gte(studySessionsTable.startedAt, weekStart),
+        isNotNull(studySessionsTable.sessionDurationSeconds)
+      )
+    );
+
+  const totalSeconds = result?.totalSeconds ?? 0;
+  const hoursThisWeek = Math.round((totalSeconds / 3600) * 10) / 10;
+
+  res.json(
+    GetStudentStudyTimeResponse.parse({
+      studentId,
+      hoursThisWeek,
+      totalSecondsThisWeek: totalSeconds,
+    })
+  );
+});
+
+// ─── Knowledge graph endpoint ─────────────────────────────────────────────────
+router.get("/students/:studentId/knowledge-graph", async (req, res): Promise<void> => {
+  const params = GetStudentKnowledgeGraphParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const { studentId } = params.data;
+  const MASTERY_THRESHOLD = 21;
+  const now = new Date();
+
+  // Get all card states for this student with card tags
+  const cardStateRows = await db
+    .select({
+      cardId: cardStatesTable.cardId,
+      stability: cardStatesTable.stability,
+      nextReviewAt: cardStatesTable.nextReviewAt,
+      tags: cardsTable.tags,
+    })
+    .from(cardStatesTable)
+    .innerJoin(cardsTable, eq(cardStatesTable.cardId, cardsTable.id))
+    .where(eq(cardStatesTable.studentId, studentId));
+
+  // Group by tag
+  const tagMap = new Map<string, { totalCards: number; masteredCards: number; dueCards: number }>();
+
+  for (const row of cardStateRows) {
+    const tags = row.tags?.length ? row.tags : ["(untagged)"];
+    for (const tag of tags) {
+      if (!tagMap.has(tag)) {
+        tagMap.set(tag, { totalCards: 0, masteredCards: 0, dueCards: 0 });
+      }
+      const entry = tagMap.get(tag)!;
+      entry.totalCards++;
+      if ((row.stability ?? 0) >= MASTERY_THRESHOLD) {
+        entry.masteredCards++;
+      }
+      if (row.nextReviewAt && new Date(row.nextReviewAt) <= now) {
+        entry.dueCards++;
+      }
+    }
+  }
+
+  const result = Array.from(tagMap.entries()).map(([tag, data]) => ({
+    tag,
+    totalCards: data.totalCards,
+    masteredCards: data.masteredCards,
+    dueCards: data.dueCards,
+    masteryPercent:
+      data.totalCards > 0 ? Math.round((data.masteredCards / data.totalCards) * 100) : 0,
+  }));
+
+  // Sort by mastery percent descending
+  result.sort((a, b) => b.masteryPercent - a.masteryPercent);
+
+  res.json(GetStudentKnowledgeGraphResponse.parse(result));
 });
 
 export default router;

@@ -34,6 +34,7 @@ import type {
   ErrorResponse,
   GetDueCardsParams,
   HealthStatus,
+  KnowledgeGraphTag,
   ListClassesParams,
   ListDecksParams,
   ListStudentReviewsParams,
@@ -43,6 +44,8 @@ import type {
   SignupBody,
   StudentAnalytics,
   StudentEnrollment,
+  StudentPersona,
+  StudentStudyTime,
   TeacherAnalytics,
   UpdateCardBody,
   UpdateClassBody,
@@ -2884,6 +2887,279 @@ export function useGetAtRiskStudents<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetAtRiskStudentsQueryOptions(classId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get or generate AI learning persona for a student
+ */
+export const getGetStudentPersonaUrl = (studentId: number) => {
+  return `/api/students/${studentId}/persona`;
+};
+
+export const getStudentPersona = async (
+  studentId: number,
+  options?: RequestInit,
+): Promise<StudentPersona> => {
+  return customFetch<StudentPersona>(getGetStudentPersonaUrl(studentId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetStudentPersonaQueryKey = (studentId: number) => {
+  return [`/api/students/${studentId}/persona`] as const;
+};
+
+export const getGetStudentPersonaQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStudentPersona>>,
+  TError = ErrorType<unknown>,
+>(
+  studentId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStudentPersona>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetStudentPersonaQueryKey(studentId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getStudentPersona>>
+  > = ({ signal }) =>
+    getStudentPersona(studentId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!studentId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStudentPersona>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetStudentPersonaQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStudentPersona>>
+>;
+export type GetStudentPersonaQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get or generate AI learning persona for a student
+ */
+
+export function useGetStudentPersona<
+  TData = Awaited<ReturnType<typeof getStudentPersona>>,
+  TError = ErrorType<unknown>,
+>(
+  studentId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStudentPersona>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStudentPersonaQueryOptions(studentId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get total study time for the current ISO week
+ */
+export const getGetStudentStudyTimeUrl = (studentId: number) => {
+  return `/api/students/${studentId}/study-time`;
+};
+
+export const getStudentStudyTime = async (
+  studentId: number,
+  options?: RequestInit,
+): Promise<StudentStudyTime> => {
+  return customFetch<StudentStudyTime>(getGetStudentStudyTimeUrl(studentId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetStudentStudyTimeQueryKey = (studentId: number) => {
+  return [`/api/students/${studentId}/study-time`] as const;
+};
+
+export const getGetStudentStudyTimeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStudentStudyTime>>,
+  TError = ErrorType<unknown>,
+>(
+  studentId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStudentStudyTime>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetStudentStudyTimeQueryKey(studentId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getStudentStudyTime>>
+  > = ({ signal }) =>
+    getStudentStudyTime(studentId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!studentId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStudentStudyTime>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetStudentStudyTimeQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStudentStudyTime>>
+>;
+export type GetStudentStudyTimeQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get total study time for the current ISO week
+ */
+
+export function useGetStudentStudyTime<
+  TData = Awaited<ReturnType<typeof getStudentStudyTime>>,
+  TError = ErrorType<unknown>,
+>(
+  studentId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStudentStudyTime>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStudentStudyTimeQueryOptions(studentId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get knowledge graph grouped by tag for a student
+ */
+export const getGetStudentKnowledgeGraphUrl = (studentId: number) => {
+  return `/api/students/${studentId}/knowledge-graph`;
+};
+
+export const getStudentKnowledgeGraph = async (
+  studentId: number,
+  options?: RequestInit,
+): Promise<KnowledgeGraphTag[]> => {
+  return customFetch<KnowledgeGraphTag[]>(
+    getGetStudentKnowledgeGraphUrl(studentId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetStudentKnowledgeGraphQueryKey = (studentId: number) => {
+  return [`/api/students/${studentId}/knowledge-graph`] as const;
+};
+
+export const getGetStudentKnowledgeGraphQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStudentKnowledgeGraph>>,
+  TError = ErrorType<unknown>,
+>(
+  studentId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStudentKnowledgeGraph>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetStudentKnowledgeGraphQueryKey(studentId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getStudentKnowledgeGraph>>
+  > = ({ signal }) =>
+    getStudentKnowledgeGraph(studentId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!studentId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStudentKnowledgeGraph>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetStudentKnowledgeGraphQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStudentKnowledgeGraph>>
+>;
+export type GetStudentKnowledgeGraphQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get knowledge graph grouped by tag for a student
+ */
+
+export function useGetStudentKnowledgeGraph<
+  TData = Awaited<ReturnType<typeof getStudentKnowledgeGraph>>,
+  TError = ErrorType<unknown>,
+>(
+  studentId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStudentKnowledgeGraph>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStudentKnowledgeGraphQueryOptions(
+    studentId,
+    options,
+  );
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
