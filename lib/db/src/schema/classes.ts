@@ -9,6 +9,8 @@ export const classesTable = pgTable("classes", {
   description: text("description"),
   subject: text("subject").notNull(),
   teacherId: integer("teacher_id").notNull().references(() => usersTable.id),
+  icon: text("icon"),
+  colorScheme: text("color_scheme"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (t) => [

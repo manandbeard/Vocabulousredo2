@@ -8,3 +8,6 @@ export * from "./achievements";
 export * from "./assessments";
 export * from "./student_models";
 export * from "./alerts";
+export * from "./study_sessions";
+export * from "./ai_personas";
+export * from "./blurting_sessions";

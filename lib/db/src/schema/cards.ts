@@ -17,6 +17,8 @@ export const cardsTable = pgTable("cards", {
   mcOptions: text("mc_options").array(),
   mcCorrectIndex: integer("mc_correct_index"),
   importance: integer("importance").notNull().default(3),
+  status: text("status").notNull().$type<"active" | "archived" | "deleted">().default("active"),
+  contextNote: text("context_note"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
