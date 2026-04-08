@@ -13,6 +13,41 @@ export interface ErrorResponse {
   error: string;
 }
 
+export type AuthUserRole = (typeof AuthUserRole)[keyof typeof AuthUserRole];
+
+export const AuthUserRole = {
+  teacher: "teacher",
+  student: "student",
+} as const;
+
+export interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  role: AuthUserRole;
+}
+
+export type SignupBodyRole =
+  (typeof SignupBodyRole)[keyof typeof SignupBodyRole];
+
+export const SignupBodyRole = {
+  teacher: "teacher",
+  student: "student",
+} as const;
+
+export interface SignupBody {
+  name: string;
+  email: string;
+  /** @minLength 6 */
+  password: string;
+  role: SignupBodyRole;
+}
+
+export interface LoginBody {
+  email: string;
+  password: string;
+}
+
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export const UserRole = {
@@ -127,9 +162,9 @@ export interface UpdateDeckBody {
   classId?: number;
 }
 
-export type CardType = (typeof CardType)[keyof typeof CardType];
+export type CardCardType = (typeof CardCardType)[keyof typeof CardCardType];
 
-export const CardType = {
+export const CardCardType = {
   flashcard: "flashcard",
   multiple_choice: "multiple_choice",
   brain_dump: "brain_dump",
@@ -145,7 +180,7 @@ export interface Card {
   /** @nullable */
   hint?: string | null;
   tags: string[];
-  cardType: CardType;
+  cardType: CardCardType;
   /** @nullable */
   imageUrl?: string | null;
   /** @nullable */
@@ -157,25 +192,43 @@ export interface Card {
   updatedAt: string;
 }
 
+export type CreateCardBodyCardType =
+  (typeof CreateCardBodyCardType)[keyof typeof CreateCardBodyCardType];
+
+export const CreateCardBodyCardType = {
+  flashcard: "flashcard",
+  multiple_choice: "multiple_choice",
+  brain_dump: "brain_dump",
+} as const;
+
 export interface CreateCardBody {
   front: string;
   back: string;
   hint?: string;
   tags?: string[];
   createdBy?: number;
-  cardType?: CardType;
+  cardType?: CreateCardBodyCardType;
   imageUrl?: string;
   mcOptions?: string[];
   mcCorrectIndex?: number;
   importance?: number;
 }
 
+export type UpdateCardBodyCardType =
+  (typeof UpdateCardBodyCardType)[keyof typeof UpdateCardBodyCardType];
+
+export const UpdateCardBodyCardType = {
+  flashcard: "flashcard",
+  multiple_choice: "multiple_choice",
+  brain_dump: "brain_dump",
+} as const;
+
 export interface UpdateCardBody {
   front?: string;
   back?: string;
   hint?: string;
   tags?: string[];
-  cardType?: CardType;
+  cardType?: UpdateCardBodyCardType;
   imageUrl?: string;
   mcOptions?: string[];
   mcCorrectIndex?: number;
@@ -210,6 +263,15 @@ export interface CreateReviewBody {
   elapsedDays: number;
 }
 
+export type DueCardCardType =
+  (typeof DueCardCardType)[keyof typeof DueCardCardType];
+
+export const DueCardCardType = {
+  flashcard: "flashcard",
+  multiple_choice: "multiple_choice",
+  brain_dump: "brain_dump",
+} as const;
+
 export interface DueCard {
   cardId: number;
   deckId: number;
@@ -217,7 +279,7 @@ export interface DueCard {
   back: string;
   /** @nullable */
   hint?: string | null;
-  cardType: CardType;
+  cardType: DueCardCardType;
   /** @nullable */
   imageUrl?: string | null;
   /** @nullable */
@@ -342,6 +404,10 @@ export interface AtRiskStudent {
   riskLevel: AtRiskStudentRiskLevel;
   riskReason: string;
 }
+
+export type Logout200 = {
+  ok: boolean;
+};
 
 export type ListClassesParams = {
   teacherId?: number;

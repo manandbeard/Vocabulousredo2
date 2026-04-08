@@ -3,23 +3,32 @@ import { useLocation } from "wouter";
 import { Eye, EyeOff, GraduationCap, Users, ArrowRight, BookOpen } from "lucide-react";
 import { SynapticWeb } from "@/components/ui/synaptic-web";
 import { useRole } from "@/hooks/use-role";
+import { login } from "@workspace/api-client-react";
 
 export default function Login() {
   const [, navigate] = useLocation();
-  const { setRole } = useRole();
+  const { refetchUser } = useRole();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<"teacher" | "student">("student");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    setTimeout(() => {
-      setRole(selectedRole as "teacher" | "student");
-      navigate(selectedRole === "teacher" ? "/teacher" : "/student");
-    }, 600);
+    try {
+      const user = await login({ email, password });
+      await refetchUser();
+      navigate(user.role === "teacher" ? "/teacher" : "/student");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Login failed. Please try again.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,33 +51,11 @@ export default function Login() {
             <p className="text-sm text-slate-500">Sign in to your account to continue learning.</p>
           </div>
 
-          {/* Role selector */}
-          <div className="grid grid-cols-2 gap-2 mb-6">
-            <button
-              type="button"
-              onClick={() => setSelectedRole("student")}
-              className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium border transition-all ${
-                selectedRole === "student"
-                  ? "bg-blue-50 border-blue-200 text-blue-700"
-                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              Student
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedRole("teacher")}
-              className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium border transition-all ${
-                selectedRole === "teacher"
-                  ? "bg-violet-50 border-violet-200 text-violet-700"
-                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <GraduationCap className="w-4 h-4" />
-              Teacher
-            </button>
-          </div>
+          {error && (
+            <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -80,6 +67,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@school.edu"
+                required
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-slate-50"
               />
             </div>
@@ -102,6 +90,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  required
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-slate-50 pr-10"
                 />
                 <button

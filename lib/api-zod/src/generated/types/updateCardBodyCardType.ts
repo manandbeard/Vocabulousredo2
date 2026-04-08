@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CardType = (typeof CardType)[keyof typeof CardType];
+export type UpdateCardBodyCardType =
+  (typeof UpdateCardBodyCardType)[keyof typeof UpdateCardBodyCardType];
 
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const CardType = {
+export const UpdateCardBodyCardType = {
   flashcard: "flashcard",
   multiple_choice: "multiple_choice",
   brain_dump: "brain_dump",

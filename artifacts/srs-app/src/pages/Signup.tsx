@@ -3,14 +3,16 @@ import { useLocation } from "wouter";
 import { Eye, EyeOff, GraduationCap, Users, ArrowRight, BookOpen, Check } from "lucide-react";
 import { SynapticWeb } from "@/components/ui/synaptic-web";
 import { useRole } from "@/hooks/use-role";
+import { signup } from "@workspace/api-client-react";
 
 export default function Signup() {
   const [, navigate] = useLocation();
-  const { setRole } = useRole();
+  const { refetchUser } = useRole();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"teacher" | "student">("student");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const update = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -30,13 +32,27 @@ export default function Signup() {
   const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][strength];
   const strengthColor = ["", "bg-red-400", "bg-yellow-400", "bg-blue-400", "bg-emerald-400"][strength];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (form.password !== form.confirm) return;
+    setError(null);
     setLoading(true);
-    setTimeout(() => {
-      setRole(selectedRole as "teacher" | "student");
-      navigate(selectedRole === "teacher" ? "/teacher" : "/student");
-    }, 700);
+    try {
+      const user = await signup({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: selectedRole,
+      });
+      await refetchUser();
+      navigate(user.role === "teacher" ? "/teacher" : "/student");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Signup failed. Please try again.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,6 +103,12 @@ export default function Signup() {
             </button>
           </div>
 
+          {error && (
+            <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
@@ -97,6 +119,7 @@ export default function Signup() {
                 value={form.name}
                 onChange={update("name")}
                 placeholder="Jane Smith"
+                required
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-slate-50"
               />
             </div>
@@ -110,6 +133,7 @@ export default function Signup() {
                 value={form.email}
                 onChange={update("email")}
                 placeholder="you@school.edu"
+                required
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-slate-50"
               />
             </div>
@@ -123,7 +147,9 @@ export default function Signup() {
                   type={showPassword ? "text" : "password"}
                   value={form.password}
                   onChange={update("password")}
-                  placeholder="Min. 8 characters"
+                  placeholder="Min. 6 characters"
+                  required
+                  minLength={6}
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all bg-slate-50 pr-10"
                 />
                 <button

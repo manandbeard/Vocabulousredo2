@@ -25,5 +25,10 @@ expertMode = true
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
 
+[userenv]
+
+[userenv.shared]
+JWT_SECRET = "c2d8dda34863c7418b128f0514b8067bc657d923c523f50c598d06e8f1e8cba872d270c7e30180d3ae984d1a827274c2c205976574e818ab092ad50bc2e12dc3"
+
 [nix]
 channel = "stable-25_05"

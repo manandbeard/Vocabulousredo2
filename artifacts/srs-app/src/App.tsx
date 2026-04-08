@@ -38,7 +38,8 @@ const queryClient = new QueryClient({
 });
 
 function Root() {
-  const { role } = useRole();
+  const { role, loading } = useRole();
+  if (loading) return null;
   if (role) {
     return <Redirect to={role === "teacher" ? "/teacher" : "/student"} />;
   }
@@ -46,7 +47,8 @@ function Root() {
 }
 
 function RequireRole({ required, component: Component }: { required: Role; component: React.ComponentType }) {
-  const { role } = useRole();
+  const { role, loading } = useRole();
+  if (loading) return null;
   if (!role) return <Redirect to="/login" />;
   if (role !== required) return <Redirect to={role === "teacher" ? "/teacher" : "/student"} />;
   return <Component />;

@@ -15,6 +15,50 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
+ * @summary Create a new account and get a session cookie
+ */
+export const signupBodyPasswordMin = 6;
+
+export const SignupBody = zod.object({
+  name: zod.string(),
+  email: zod.string().email(),
+  password: zod.string().min(signupBodyPasswordMin),
+  role: zod.enum(["teacher", "student"]),
+});
+
+/**
+ * @summary Log in and get a session cookie
+ */
+export const LoginBody = zod.object({
+  email: zod.string().email(),
+  password: zod.string(),
+});
+
+export const LoginResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  role: zod.enum(["teacher", "student"]),
+});
+
+/**
+ * @summary Get the currently authenticated user
+ */
+export const GetMeResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  role: zod.enum(["teacher", "student"]),
+});
+
+/**
+ * @summary Log out and clear the session cookie
+ */
+export const LogoutResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
  * @summary List all users
  */
 export const ListUsersResponseItem = zod.object({
@@ -25,8 +69,8 @@ export const ListUsersResponseItem = zod.object({
   googleId: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
   streakCount: zod.number(),
-  lastStudyDate: zod.coerce.date().nullish(),
-  createdAt: zod.coerce.date(),
+  lastStudyDate: zod.date().nullish(),
+  createdAt: zod.date(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
 
@@ -56,8 +100,8 @@ export const GetUserResponse = zod.object({
   googleId: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
   streakCount: zod.number(),
-  lastStudyDate: zod.coerce.date().nullish(),
-  createdAt: zod.coerce.date(),
+  lastStudyDate: zod.date().nullish(),
+  createdAt: zod.date(),
 });
 
 /**
@@ -76,7 +120,7 @@ export const ListClassesResponseItem = zod.object({
   teacherName: zod.string().nullish(),
   enrollmentCount: zod.number(),
   deckCount: zod.number(),
-  createdAt: zod.coerce.date(),
+  createdAt: zod.date(),
 });
 export const ListClassesResponse = zod.array(ListClassesResponseItem);
 
@@ -106,7 +150,7 @@ export const GetClassResponse = zod.object({
   teacherName: zod.string().nullish(),
   enrollmentCount: zod.number(),
   deckCount: zod.number(),
-  createdAt: zod.coerce.date(),
+  createdAt: zod.date(),
 });
 
 /**
@@ -131,7 +175,7 @@ export const UpdateClassResponse = zod.object({
   teacherName: zod.string().nullish(),
   enrollmentCount: zod.number(),
   deckCount: zod.number(),
-  createdAt: zod.coerce.date(),
+  createdAt: zod.date(),
 });
 
 /**
@@ -163,10 +207,10 @@ export const ListClassStudentsResponseItem = zod.object({
   studentId: zod.number(),
   studentName: zod.string(),
   studentEmail: zod.string(),
-  enrolledAt: zod.coerce.date(),
+  enrolledAt: zod.date(),
   totalReviews: zod.number(),
   averageRetention: zod.number().nullish(),
-  lastReviewedAt: zod.coerce.date().nullish(),
+  lastReviewedAt: zod.date().nullish(),
 });
 export const ListClassStudentsResponse = zod.array(
   ListClassStudentsResponseItem,
@@ -188,7 +232,7 @@ export const ListStudentClassesResponseItem = zod.object({
   teacherName: zod.string().nullish(),
   enrollmentCount: zod.number(),
   deckCount: zod.number(),
-  createdAt: zod.coerce.date(),
+  createdAt: zod.date(),
 });
 export const ListStudentClassesResponse = zod.array(
   ListStudentClassesResponseItem,
@@ -209,8 +253,8 @@ export const ListDecksResponseItem = zod.object({
   classId: zod.number().nullish(),
   teacherId: zod.number(),
   cardCount: zod.number(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
 });
 export const ListDecksResponse = zod.array(ListDecksResponseItem);
 
@@ -238,8 +282,8 @@ export const GetDeckResponse = zod.object({
   classId: zod.number().nullish(),
   teacherId: zod.number(),
   cardCount: zod.number(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
 });
 
 /**
@@ -262,8 +306,8 @@ export const UpdateDeckResponse = zod.object({
   classId: zod.number().nullish(),
   teacherId: zod.number(),
   cardCount: zod.number(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
 });
 
 /**
@@ -293,8 +337,8 @@ export const ListCardsResponseItem = zod.object({
   mcOptions: zod.array(zod.string()).nullish(),
   mcCorrectIndex: zod.number().nullish(),
   importance: zod.number(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
 });
 export const ListCardsResponse = zod.array(ListCardsResponseItem);
 
@@ -338,8 +382,8 @@ export const GetCardResponse = zod.object({
   mcOptions: zod.array(zod.string()).nullish(),
   mcCorrectIndex: zod.number().nullish(),
   importance: zod.number(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
 });
 
 /**
@@ -374,8 +418,8 @@ export const UpdateCardResponse = zod.object({
   mcOptions: zod.array(zod.string()).nullish(),
   mcCorrectIndex: zod.number().nullish(),
   importance: zod.number(),
-  createdAt: zod.coerce.date(),
-  updatedAt: zod.coerce.date(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
 });
 
 /**
@@ -422,8 +466,8 @@ export const GetDueCardsResponseItem = zod.object({
   difficulty: zod.number().nullish(),
   predictedRetention: zod.number().nullish(),
   reviewCount: zod.number(),
-  lastReviewedAt: zod.coerce.date().nullish(),
-  nextReviewAt: zod.coerce.date().nullish(),
+  lastReviewedAt: zod.date().nullish(),
+  nextReviewAt: zod.date().nullish(),
   isNew: zod.boolean(),
 });
 export const GetDueCardsResponse = zod.array(GetDueCardsResponseItem);
@@ -451,8 +495,8 @@ export const ListStudentReviewsResponseItem = zod.object({
   stabilityBefore: zod.number().nullish(),
   stabilityAfter: zod.number().nullish(),
   difficultyAfter: zod.number().nullish(),
-  nextReviewAt: zod.coerce.date(),
-  reviewedAt: zod.coerce.date(),
+  nextReviewAt: zod.date(),
+  reviewedAt: zod.date(),
 });
 export const ListStudentReviewsResponse = zod.array(
   ListStudentReviewsResponseItem,
@@ -501,7 +545,7 @@ export const GetClassAnalyticsResponse = zod.object({
   averageRetention: zod.number().nullish(),
   retentionTrend: zod.array(
     zod.object({
-      date: zod.coerce.date(),
+      date: zod.date(),
       retention: zod.number(),
       reviewCount: zod.number(),
     }),
@@ -541,7 +585,7 @@ export const GetStudentAnalyticsResponse = zod.object({
   currentStreak: zod.number(),
   retentionTrend: zod.array(
     zod.object({
-      date: zod.coerce.date(),
+      date: zod.date(),
       retention: zod.number(),
       reviewCount: zod.number(),
     }),
