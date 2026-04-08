@@ -1047,6 +1047,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /analytics/teacher/{teacherId}/bottlenecks:
+    get:
+      operationId: getTeacherBottlenecks
+      tags: [analytics]
+      summary: Get content bottlenecks across all teacher classes
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Teacher content bottlenecks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherBottlenecks"
+
 components:
   schemas:
     HealthStatus:
@@ -2131,3 +2150,101 @@ components:
           type: integer
       required:
         - deckId
+
+    BottleneckCard:
+      type: object
+      properties:
+        cardId:
+          type: integer
+        deckId:
+          type: integer
+        front:
+          type: string
+        back:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        avgGrade:
+          type: number
+        recallRate:
+          type: number
+        reviewCount:
+          type: integer
+        decayRate:
+          type: number
+      required:
+        - cardId
+        - deckId
+        - front
+        - back
+        - tags
+        - avgGrade
+        - recallRate
+        - reviewCount
+        - decayRate
+
+    TagRetentionSummary:
+      type: object
+      properties:
+        tagName:
+          type: string
+        avgRecall:
+          type: number
+        cardCount:
+          type: integer
+      required:
+        - tagName
+        - avgRecall
+        - cardCount
+
+    ClassOverdueSummary:
+      type: object
+      properties:
+        classId:
+          type: integer
+        className:
+          type: string
+        overdueCount:
+          type: integer
+      required:
+        - classId
+        - className
+        - overdueCount
+
+    TeacherBottlenecks:
+      type: object
+      properties:
+        highestFailureCard:
+          allOf:
+            - $ref: "#/components/schemas/BottleneckCard"
+          nullable: true
+        mostReviewedCard:
+          allOf:
+            - $ref: "#/components/schemas/BottleneckCard"
+          nullable: true
+        fastestDecayingTag:
+          allOf:
+            - $ref: "#/components/schemas/TagRetentionSummary"
+          nullable: true
+        classWithMostOverdue:
+          allOf:
+            - $ref: "#/components/schemas/ClassOverdueSummary"
+          nullable: true
+        struggleCards:
+          type: array
+          items:
+            $ref: "#/components/schemas/BottleneckCard"
+        tagRetentionSummary:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagRetentionSummary"
+        classOverdueSummary:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClassOverdueSummary"
+      required:
+        - struggleCards
+        - tagRetentionSummary
+        - classOverdueSummary

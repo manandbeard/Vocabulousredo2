@@ -945,3 +945,80 @@ export const GradeBlurtResponse = zod.object({
     .describe("Concepts the student got right"),
   sessionId: zod.number().optional().describe("The saved session ID"),
 });
+
+/**
+ * @summary Get content bottlenecks across all teacher classes
+ */
+export const GetTeacherBottlenecksParams = zod.object({
+  teacherId: zod.coerce.number(),
+});
+
+export const GetTeacherBottlenecksResponse = zod.object({
+  highestFailureCard: zod
+    .object({
+      cardId: zod.number(),
+      deckId: zod.number(),
+      front: zod.string(),
+      back: zod.string(),
+      tags: zod.array(zod.string()),
+      avgGrade: zod.number(),
+      recallRate: zod.number(),
+      reviewCount: zod.number(),
+      decayRate: zod.number(),
+    })
+    .nullish(),
+  mostReviewedCard: zod
+    .object({
+      cardId: zod.number(),
+      deckId: zod.number(),
+      front: zod.string(),
+      back: zod.string(),
+      tags: zod.array(zod.string()),
+      avgGrade: zod.number(),
+      recallRate: zod.number(),
+      reviewCount: zod.number(),
+      decayRate: zod.number(),
+    })
+    .nullish(),
+  fastestDecayingTag: zod
+    .object({
+      tagName: zod.string(),
+      avgRecall: zod.number(),
+      cardCount: zod.number(),
+    })
+    .nullish(),
+  classWithMostOverdue: zod
+    .object({
+      classId: zod.number(),
+      className: zod.string(),
+      overdueCount: zod.number(),
+    })
+    .nullish(),
+  struggleCards: zod.array(
+    zod.object({
+      cardId: zod.number(),
+      deckId: zod.number(),
+      front: zod.string(),
+      back: zod.string(),
+      tags: zod.array(zod.string()),
+      avgGrade: zod.number(),
+      recallRate: zod.number(),
+      reviewCount: zod.number(),
+      decayRate: zod.number(),
+    }),
+  ),
+  tagRetentionSummary: zod.array(
+    zod.object({
+      tagName: zod.string(),
+      avgRecall: zod.number(),
+      cardCount: zod.number(),
+    }),
+  ),
+  classOverdueSummary: zod.array(
+    zod.object({
+      classId: zod.number(),
+      className: zod.string(),
+      overdueCount: zod.number(),
+    }),
+  ),
+});

@@ -33,6 +33,8 @@ import {
   GetStudentDetailParams,
   GetStudentDetailQueryParams,
   GetStudentDetailResponse,
+  GetTeacherBottlenecksParams,
+  GetTeacherBottlenecksResponse,
 } from "@workspace/api-zod";
 import { computeStreak } from "../lib/streak";
 import { openai } from "@workspace/integrations-openai-ai-server";
@@ -1074,6 +1076,134 @@ router.get("/analytics/students/:studentId/detail", async (req, res): Promise<vo
         reviewedAt: new Date(r.reviewedAt),
       })),
       atRiskFlags,
+    })
+  );
+});
+
+router.get("/analytics/teacher/:teacherId/bottlenecks", async (req, res): Promise<void> => {
+  const params = GetTeacherBottlenecksParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const { teacherId } = params.data;
+
+  // Get all cards across teacher's classes with aggregate stats
+  const struggleCardsRaw = await db
+    .select({
+      cardId: cardsTable.id,
+      deckId: cardsTable.deckId,
+      front: cardsTable.front,
+      back: cardsTable.back,
+      tags: cardsTable.tags,
+      avgGrade: sql<number>`cast(avg(${reviewsTable.grade}) as double precision)`,
+      recallRate: sql<number>`cast(avg(case when ${reviewsTable.recalled} then 1.0 else 0.0 end) as double precision)`,
+      reviewCount: sql<number>`cast(count(${reviewsTable.id}) as int)`,
+      avgStabilityAfter: sql<number | null>`cast(avg(${reviewsTable.stabilityAfter}) as double precision)`,
+      avgStabilityBefore: sql<number | null>`cast(avg(${reviewsTable.stabilityBefore}) as double precision)`,
+    })
+    .from(reviewsTable)
+    .innerJoin(cardsTable, eq(reviewsTable.cardId, cardsTable.id))
+    .innerJoin(decksTable, eq(cardsTable.deckId, decksTable.id))
+    .innerJoin(classesTable, eq(decksTable.classId, classesTable.id))
+    .where(eq(classesTable.teacherId, teacherId))
+    .groupBy(cardsTable.id)
+    .orderBy(sql`avg(${reviewsTable.grade}) asc`)
+    .limit(50);
+
+  const struggleCards = struggleCardsRaw.map((c) => ({
+    cardId: c.cardId,
+    deckId: c.deckId,
+    front: c.front,
+    back: c.back,
+    tags: c.tags ?? [],
+    avgGrade: c.avgGrade ?? 0,
+    recallRate: c.recallRate ?? 0,
+    reviewCount: c.reviewCount ?? 0,
+    decayRate:
+      c.avgStabilityAfter != null && c.avgStabilityBefore != null && c.avgStabilityBefore > 0
+        ? Math.max(0, (c.avgStabilityBefore - c.avgStabilityAfter) / c.avgStabilityBefore)
+        : 0,
+  }));
+
+  // Tag retention summary — aggregate recall rate per unique tag across all teacher cards with reviews
+  const tagRows = await db
+    .select({
+      tags: cardsTable.tags,
+      recallRate: sql<number>`cast(avg(case when ${reviewsTable.recalled} then 1.0 else 0.0 end) as double precision)`,
+      cardCount: sql<number>`cast(count(distinct ${cardsTable.id}) as int)`,
+    })
+    .from(reviewsTable)
+    .innerJoin(cardsTable, eq(reviewsTable.cardId, cardsTable.id))
+    .innerJoin(decksTable, eq(cardsTable.deckId, decksTable.id))
+    .innerJoin(classesTable, eq(decksTable.classId, classesTable.id))
+    .where(eq(classesTable.teacherId, teacherId))
+    .groupBy(cardsTable.tags, cardsTable.id);
+
+  // Aggregate per tag across all cards
+  const tagMap = new Map<string, { totalRecall: number; count: number; cardIds: Set<number> }>();
+  for (const row of tagRows) {
+    for (const tag of row.tags ?? []) {
+      if (!tagMap.has(tag)) tagMap.set(tag, { totalRecall: 0, count: 0, cardIds: new Set() });
+      const entry = tagMap.get(tag)!;
+      entry.totalRecall += row.recallRate ?? 0;
+      entry.count++;
+    }
+  }
+  const tagRetentionSummary = Array.from(tagMap.entries())
+    .map(([tagName, { totalRecall, count }]) => ({
+      tagName,
+      avgRecall: count > 0 ? totalRecall / count : 0,
+      cardCount: count,
+    }))
+    .sort((a, b) => a.avgRecall - b.avgRecall);
+
+  // Class overdue summary
+  const overdueRows = await db
+    .select({
+      classId: classesTable.id,
+      className: classesTable.name,
+      overdueCount: sql<number>`cast(count(distinct ${cardStatesTable.id}) as int)`,
+    })
+    .from(classesTable)
+    .innerJoin(enrollmentsTable, eq(classesTable.id, enrollmentsTable.classId))
+    .innerJoin(
+      cardStatesTable,
+      and(
+        eq(enrollmentsTable.studentId, cardStatesTable.studentId),
+        sql`${cardStatesTable.nextReviewAt} <= now()`
+      )
+    )
+    .where(eq(classesTable.teacherId, teacherId))
+    .groupBy(classesTable.id)
+    .orderBy(sql`count(distinct ${cardStatesTable.id}) desc`);
+
+  const classOverdueSummary = overdueRows.map((r) => ({
+    classId: r.classId,
+    className: r.className,
+    overdueCount: r.overdueCount ?? 0,
+  }));
+
+  // Stat card derivations
+  const highestFailureCard = struggleCards.length > 0 ? struggleCards[0] : null;
+  const mostReviewedCard =
+    struggleCards.length > 0
+      ? [...struggleCards].sort((a, b) => b.reviewCount - a.reviewCount)[0]
+      : null;
+  const fastestDecayingTag =
+    tagRetentionSummary.length > 0 ? tagRetentionSummary[0] : null;
+  const classWithMostOverdue = classOverdueSummary.length > 0 ? classOverdueSummary[0] : null;
+
+  res.json(
+    GetTeacherBottlenecksResponse.parse({
+      highestFailureCard,
+      mostReviewedCard,
+      fastestDecayingTag,
+      classWithMostOverdue,
+      struggleCards,
+      tagRetentionSummary,
+      classOverdueSummary,
     })
   );
 });

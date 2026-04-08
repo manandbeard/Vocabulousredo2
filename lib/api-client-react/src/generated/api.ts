@@ -58,6 +58,7 @@ import type {
   StudentPersona,
   StudentStudyTime,
   TeacherAnalytics,
+  TeacherBottlenecks,
   TeacherStudentRow,
   UpdateCardBody,
   UpdateCardStatusBody,
@@ -4041,3 +4042,95 @@ export const useGradeBlurt = <
 > => {
   return useMutation(getGradeBlurtMutationOptions(options));
 };
+
+/**
+ * @summary Get content bottlenecks across all teacher classes
+ */
+export const getGetTeacherBottlenecksUrl = (teacherId: number) => {
+  return `/api/analytics/teacher/${teacherId}/bottlenecks`;
+};
+
+export const getTeacherBottlenecks = async (
+  teacherId: number,
+  options?: RequestInit,
+): Promise<TeacherBottlenecks> => {
+  return customFetch<TeacherBottlenecks>(
+    getGetTeacherBottlenecksUrl(teacherId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetTeacherBottlenecksQueryKey = (teacherId: number) => {
+  return [`/api/analytics/teacher/${teacherId}/bottlenecks`] as const;
+};
+
+export const getGetTeacherBottlenecksQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTeacherBottlenecks>>,
+  TError = ErrorType<unknown>,
+>(
+  teacherId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTeacherBottlenecks>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetTeacherBottlenecksQueryKey(teacherId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getTeacherBottlenecks>>
+  > = ({ signal }) =>
+    getTeacherBottlenecks(teacherId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!teacherId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTeacherBottlenecks>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetTeacherBottlenecksQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTeacherBottlenecks>>
+>;
+export type GetTeacherBottlenecksQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get content bottlenecks across all teacher classes
+ */
+
+export function useGetTeacherBottlenecks<
+  TData = Awaited<ReturnType<typeof getTeacherBottlenecks>>,
+  TError = ErrorType<unknown>,
+>(
+  teacherId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTeacherBottlenecks>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTeacherBottlenecksQueryOptions(teacherId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}

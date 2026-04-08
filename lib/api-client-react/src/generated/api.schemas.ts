@@ -568,10 +568,6 @@ export interface GradeBlurtResult {
   sessionId?: number;
 }
 
-export type Logout200 = {
-  ok: boolean;
-};
-
 export interface GenerateCardsBody {
   terms: string;
   context?: string;
@@ -613,6 +609,44 @@ export interface UpdateCardStatusBody {
 export interface AssignCardBody {
   deckId: number;
 }
+
+export interface BottleneckCard {
+  cardId: number;
+  deckId: number;
+  front: string;
+  back: string;
+  tags: string[];
+  avgGrade: number;
+  recallRate: number;
+  reviewCount: number;
+  decayRate: number;
+}
+
+export interface TagRetentionSummary {
+  tagName: string;
+  avgRecall: number;
+  cardCount: number;
+}
+
+export interface ClassOverdueSummary {
+  classId: number;
+  className: string;
+  overdueCount: number;
+}
+
+export interface TeacherBottlenecks {
+  highestFailureCard?: BottleneckCard | null;
+  mostReviewedCard?: BottleneckCard | null;
+  fastestDecayingTag?: TagRetentionSummary | null;
+  classWithMostOverdue?: ClassOverdueSummary | null;
+  struggleCards: BottleneckCard[];
+  tagRetentionSummary: TagRetentionSummary[];
+  classOverdueSummary: ClassOverdueSummary[];
+}
+
+export type Logout200 = {
+  ok: boolean;
+};
 
 export type ListClassesParams = {
   teacherId?: number;
