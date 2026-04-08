@@ -815,6 +815,51 @@ paths:
                 items:
                   $ref: "#/components/schemas/KnowledgeGraphTag"
 
+  /analytics/teacher/{teacherId}/students:
+    get:
+      operationId: getTeacherStudents
+      tags: [analytics]
+      summary: Get all students across all teacher classes with risk and retention data
+      parameters:
+        - name: teacherId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Teacher-wide student list with risk indicators
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeacherStudentRow"
+
+  /analytics/students/{studentId}/detail:
+    get:
+      operationId: getStudentDetail
+      tags: [analytics]
+      summary: Get detailed analytics for a student (teacher view)
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: teacherId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student detail including retention trend, deck progress, recent reviews, and at-risk flags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentDetail"
+
 components:
   schemas:
     HealthStatus:
@@ -1664,3 +1709,113 @@ components:
           enum: [new, learning, mastered]
       required:
         - studentId
+
+    TeacherStudentRow:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        studentName:
+          type: string
+        studentEmail:
+          type: string
+        classes:
+          type: array
+          items:
+            type: string
+        averageRetention:
+          type: ["number", "null"]
+        cardsDueToday:
+          type: integer
+        lastActiveAt:
+          type: ["string", "null"]
+          format: date-time
+        streakCount:
+          type: integer
+        riskLevel:
+          type: string
+          enum: [on_track, slipping, at_risk]
+        riskReason:
+          type: string
+      required:
+        - studentId
+        - studentName
+        - studentEmail
+        - classes
+        - cardsDueToday
+        - streakCount
+        - riskLevel
+        - riskReason
+
+    StudentDetail:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        studentName:
+          type: string
+        studentEmail:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        classes:
+          type: array
+          items:
+            type: string
+        streakCount:
+          type: integer
+        lastActiveAt:
+          type: ["string", "null"]
+          format: date-time
+        averageRetention:
+          type: ["number", "null"]
+        retentionTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/RetentionDataPoint"
+        deckProgress:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeckProgress"
+        recentReviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudentDetailReview"
+        atRiskFlags:
+          type: array
+          items:
+            type: string
+      required:
+        - studentId
+        - studentName
+        - studentEmail
+        - classes
+        - streakCount
+        - retentionTrend
+        - deckProgress
+        - recentReviews
+        - atRiskFlags
+
+    StudentDetailReview:
+      type: object
+      properties:
+        reviewId:
+          type: integer
+        cardFront:
+          type: string
+        deckName:
+          type: string
+        grade:
+          type: integer
+        recalled:
+          type: boolean
+        reviewedAt:
+          type: string
+          format: date-time
+      required:
+        - reviewId
+        - cardFront
+        - deckName
+        - grade
+        - recalled
+        - reviewedAt

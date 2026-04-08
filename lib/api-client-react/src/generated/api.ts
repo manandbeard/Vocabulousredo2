@@ -33,6 +33,7 @@ import type {
   Enrollment,
   ErrorResponse,
   GetDueCardsParams,
+  GetStudentDetailParams,
   GetStudentResearchDecksParams,
   HealthStatus,
   KnowledgeGraphTag,
@@ -45,10 +46,12 @@ import type {
   Review,
   SignupBody,
   StudentAnalytics,
+  StudentDetail,
   StudentEnrollment,
   StudentPersona,
   StudentStudyTime,
   TeacherAnalytics,
+  TeacherStudentRow,
   UpdateCardBody,
   UpdateClassBody,
   UpdateDeckBody,
@@ -3281,6 +3284,212 @@ export function useGetStudentKnowledgeGraph<
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetStudentKnowledgeGraphQueryOptions(
     studentId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get all students across all teacher classes with risk and retention data
+ */
+export const getGetTeacherStudentsUrl = (teacherId: number) => {
+  return `/api/analytics/teacher/${teacherId}/students`;
+};
+
+export const getTeacherStudents = async (
+  teacherId: number,
+  options?: RequestInit,
+): Promise<TeacherStudentRow[]> => {
+  return customFetch<TeacherStudentRow[]>(getGetTeacherStudentsUrl(teacherId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTeacherStudentsQueryKey = (teacherId: number) => {
+  return [`/api/analytics/teacher/${teacherId}/students`] as const;
+};
+
+export const getGetTeacherStudentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTeacherStudents>>,
+  TError = ErrorType<unknown>,
+>(
+  teacherId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTeacherStudents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetTeacherStudentsQueryKey(teacherId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getTeacherStudents>>
+  > = ({ signal }) =>
+    getTeacherStudents(teacherId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!teacherId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTeacherStudents>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetTeacherStudentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTeacherStudents>>
+>;
+export type GetTeacherStudentsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all students across all teacher classes with risk and retention data
+ */
+
+export function useGetTeacherStudents<
+  TData = Awaited<ReturnType<typeof getTeacherStudents>>,
+  TError = ErrorType<unknown>,
+>(
+  teacherId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTeacherStudents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTeacherStudentsQueryOptions(teacherId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get detailed analytics for a student (teacher view)
+ */
+export const getGetStudentDetailUrl = (
+  studentId: number,
+  params?: GetStudentDetailParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/analytics/students/${studentId}/detail?${stringifiedParams}`
+    : `/api/analytics/students/${studentId}/detail`;
+};
+
+export const getStudentDetail = async (
+  studentId: number,
+  params?: GetStudentDetailParams,
+  options?: RequestInit,
+): Promise<StudentDetail> => {
+  return customFetch<StudentDetail>(getGetStudentDetailUrl(studentId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetStudentDetailQueryKey = (
+  studentId: number,
+  params?: GetStudentDetailParams,
+) => {
+  return [
+    `/api/analytics/students/${studentId}/detail`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetStudentDetailQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStudentDetail>>,
+  TError = ErrorType<unknown>,
+>(
+  studentId: number,
+  params?: GetStudentDetailParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStudentDetail>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetStudentDetailQueryKey(studentId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getStudentDetail>>
+  > = ({ signal }) =>
+    getStudentDetail(studentId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!studentId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStudentDetail>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetStudentDetailQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStudentDetail>>
+>;
+export type GetStudentDetailQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get detailed analytics for a student (teacher view)
+ */
+
+export function useGetStudentDetail<
+  TData = Awaited<ReturnType<typeof getStudentDetail>>,
+  TError = ErrorType<unknown>,
+>(
+  studentId: number,
+  params?: GetStudentDetailParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStudentDetail>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStudentDetailQueryOptions(
+    studentId,
+    params,
     options,
   );
 

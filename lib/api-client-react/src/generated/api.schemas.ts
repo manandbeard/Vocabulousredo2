@@ -405,9 +405,36 @@ export interface AtRiskStudent {
   riskReason: string;
 }
 
-export type Logout200 = {
-  ok: boolean;
-};
+export interface StudentPersona {
+  studentId: number;
+  personaType: string;
+  personaLabel: string;
+  personaDescription: string;
+  /** @nullable */
+  gritScore?: number | null;
+  /** @nullable */
+  gritLabel?: string | null;
+  /** @nullable */
+  flowState?: string | null;
+  /** @nullable */
+  flowLabel?: string | null;
+  updatedAt: string;
+}
+
+export interface StudentStudyTime {
+  studentId: number;
+  hoursThisWeek: number;
+  totalSecondsThisWeek: number;
+}
+
+export interface KnowledgeGraphTag {
+  tag: string;
+  totalCards: number;
+  masteredCards: number;
+  dueCards: number;
+  masteryPercent: number;
+}
+
 export type ResearchDeckMasteryLevel =
   (typeof ResearchDeckMasteryLevel)[keyof typeof ResearchDeckMasteryLevel];
 
@@ -445,35 +472,60 @@ export interface GetStudentResearchDecksParams {
   mastery?: GetStudentResearchDecksParamsMastery;
 }
 
-export interface StudentPersona {
+export type TeacherStudentRowRiskLevel =
+  (typeof TeacherStudentRowRiskLevel)[keyof typeof TeacherStudentRowRiskLevel];
+
+export const TeacherStudentRowRiskLevel = {
+  on_track: "on_track",
+  slipping: "slipping",
+  at_risk: "at_risk",
+} as const;
+
+export interface TeacherStudentRow {
   studentId: number;
-  personaType: string;
-  personaLabel: string;
-  personaDescription: string;
+  studentName: string;
+  studentEmail: string;
+  classes: string[];
   /** @nullable */
-  gritScore?: number | null;
+  averageRetention?: number | null;
+  cardsDueToday: number;
   /** @nullable */
-  gritLabel?: string | null;
-  /** @nullable */
-  flowState?: string | null;
-  /** @nullable */
-  flowLabel?: string | null;
-  updatedAt: string;
+  lastActiveAt?: string | null;
+  streakCount: number;
+  riskLevel: TeacherStudentRowRiskLevel;
+  riskReason: string;
 }
 
-export interface StudentStudyTime {
-  studentId: number;
-  hoursThisWeek: number;
-  totalSecondsThisWeek: number;
+export interface StudentDetailReview {
+  reviewId: number;
+  cardFront: string;
+  deckName: string;
+  grade: number;
+  recalled: boolean;
+  reviewedAt: string;
 }
 
-export interface KnowledgeGraphTag {
-  tag: string;
-  totalCards: number;
-  masteredCards: number;
-  dueCards: number;
-  masteryPercent: number;
+export interface StudentDetail {
+  studentId: number;
+  studentName: string;
+  studentEmail: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  classes: string[];
+  streakCount: number;
+  /** @nullable */
+  lastActiveAt?: string | null;
+  /** @nullable */
+  averageRetention?: number | null;
+  retentionTrend: RetentionDataPoint[];
+  deckProgress: DeckProgress[];
+  recentReviews: StudentDetailReview[];
+  atRiskFlags: string[];
 }
+
+export type Logout200 = {
+  ok: boolean;
+};
 
 export type ListClassesParams = {
   teacherId?: number;
@@ -491,4 +543,22 @@ export type GetDueCardsParams = {
 export type ListStudentReviewsParams = {
   deckId?: number;
   limit?: number;
+};
+
+export type GetStudentResearchDecksParams = {
+  tag?: string;
+  mastery?: GetStudentResearchDecksMastery;
+};
+
+export type GetStudentResearchDecksMastery =
+  (typeof GetStudentResearchDecksMastery)[keyof typeof GetStudentResearchDecksMastery];
+
+export const GetStudentResearchDecksMastery = {
+  new: "new",
+  learning: "learning",
+  mastered: "mastered",
+} as const;
+
+export type GetStudentDetailParams = {
+  teacherId?: number;
 };

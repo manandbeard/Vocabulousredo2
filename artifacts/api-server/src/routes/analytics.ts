@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, and, gte, isNotNull } from "drizzle-orm";
+import { eq, sql, and, gte, inArray, isNotNull } from "drizzle-orm";
 import {
   db,
   classesTable,
@@ -11,6 +11,7 @@ import {
   cardStatesTable,
   studySessionsTable,
   aiPersonasTable,
+  alertsTable,
 } from "@workspace/db";
 import {
   GetTeacherAnalyticsParams,
@@ -27,6 +28,11 @@ import {
   GetStudentStudyTimeResponse,
   GetStudentKnowledgeGraphParams,
   GetStudentKnowledgeGraphResponse,
+  GetTeacherStudentsParams,
+  GetTeacherStudentsResponse,
+  GetStudentDetailParams,
+  GetStudentDetailQueryParams,
+  GetStudentDetailResponse,
 } from "@workspace/api-zod";
 import { computeStreak } from "../lib/streak";
 import { openai } from "@workspace/integrations-openai-ai-server";
@@ -649,6 +655,427 @@ router.get("/students/:studentId/knowledge-graph", async (req, res): Promise<voi
   result.sort((a, b) => b.masteryPercent - a.masteryPercent);
 
   res.json(GetStudentKnowledgeGraphResponse.parse(result));
+});
+
+router.get("/analytics/teacher/:teacherId/students", async (req, res): Promise<void> => {
+  const params = GetTeacherStudentsParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const { teacherId } = params.data;
+  const now = new Date();
+
+  // Get all classes owned by this teacher
+  const teacherClasses = await db
+    .select({ id: classesTable.id, name: classesTable.name })
+    .from(classesTable)
+    .where(eq(classesTable.teacherId, teacherId));
+
+  if (teacherClasses.length === 0) {
+    res.json(GetTeacherStudentsResponse.parse([]));
+    return;
+  }
+
+  const classIds = teacherClasses.map((c) => c.id);
+
+  // Get all students enrolled in any of these classes
+  const enrolledStudents = await db
+    .select({
+      studentId: usersTable.id,
+      studentName: usersTable.name,
+      studentEmail: usersTable.email,
+      classId: enrollmentsTable.classId,
+    })
+    .from(enrollmentsTable)
+    .innerJoin(usersTable, eq(enrollmentsTable.studentId, usersTable.id))
+    .where(inArray(enrollmentsTable.classId, classIds));
+
+  // Build a map of studentId -> class names
+  const studentClassMap = new Map<number, string[]>();
+  for (const e of enrolledStudents) {
+    const className = teacherClasses.find((c) => c.id === e.classId)?.name ?? "";
+    if (!studentClassMap.has(e.studentId)) {
+      studentClassMap.set(e.studentId, []);
+    }
+    if (className && !studentClassMap.get(e.studentId)!.includes(className)) {
+      studentClassMap.get(e.studentId)!.push(className);
+    }
+  }
+
+  const uniqueStudentIds = [...studentClassMap.keys()];
+
+  if (uniqueStudentIds.length === 0) {
+    res.json(GetTeacherStudentsResponse.parse([]));
+    return;
+  }
+
+  // Get review stats per student (scoped to teacher's cards)
+  const reviewStats = await db
+    .select({
+      studentId: reviewsTable.studentId,
+      lastReviewedAt: sql<string | null>`max(${reviewsTable.reviewedAt})`,
+      averageRetention: sql<number | null>`
+        case when count(${reviewsTable.id}) > 0
+        then cast(avg(case when ${reviewsTable.recalled} then 1.0 else 0.0 end) as double precision)
+        else null end
+      `,
+    })
+    .from(reviewsTable)
+    .innerJoin(cardsTable, eq(reviewsTable.cardId, cardsTable.id))
+    .innerJoin(decksTable, eq(cardsTable.deckId, decksTable.id))
+    .where(and(inArray(decksTable.classId, classIds), inArray(reviewsTable.studentId, uniqueStudentIds)))
+    .groupBy(reviewsTable.studentId);
+
+  const reviewStatsMap = new Map(reviewStats.map((r) => [r.studentId, r]));
+
+  // Cards due today per student
+  const cardsDueRows = await db
+    .select({
+      studentId: cardStatesTable.studentId,
+      dueCount: sql<number>`cast(count(*) as int)`,
+    })
+    .from(cardStatesTable)
+    .innerJoin(cardsTable, eq(cardStatesTable.cardId, cardsTable.id))
+    .innerJoin(decksTable, eq(cardsTable.deckId, decksTable.id))
+    .where(
+      and(
+        inArray(decksTable.classId, classIds),
+        inArray(cardStatesTable.studentId, uniqueStudentIds),
+        sql`${cardStatesTable.nextReviewAt} <= now()`
+      )
+    )
+    .groupBy(cardStatesTable.studentId);
+
+  const cardsDueMap = new Map(cardsDueRows.map((r) => [r.studentId, r.dueCount]));
+
+  // Streak per student: get days with reviews in the last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const streakRows = await db
+    .select({
+      studentId: reviewsTable.studentId,
+      day: sql<string>`to_char(date_trunc('day', ${reviewsTable.reviewedAt}), 'YYYY-MM-DD')`,
+    })
+    .from(reviewsTable)
+    .innerJoin(cardsTable, eq(reviewsTable.cardId, cardsTable.id))
+    .innerJoin(decksTable, eq(cardsTable.deckId, decksTable.id))
+    .where(and(inArray(decksTable.classId, classIds), inArray(reviewsTable.studentId, uniqueStudentIds), gte(reviewsTable.reviewedAt, thirtyDaysAgo)))
+    .groupBy(reviewsTable.studentId, sql`date_trunc('day', ${reviewsTable.reviewedAt})`)
+    .orderBy(reviewsTable.studentId, sql`date_trunc('day', ${reviewsTable.reviewedAt}) desc`);
+
+  const streakDaysMap = new Map<number, string[]>();
+  for (const r of streakRows) {
+    if (!streakDaysMap.has(r.studentId)) streakDaysMap.set(r.studentId, []);
+    streakDaysMap.get(r.studentId)!.push(r.day);
+  }
+
+  // Get existing alerts per student from teacher
+  const alertRows = await db
+    .select({
+      studentId: alertsTable.studentId,
+      alertType: alertsTable.alertType,
+    })
+    .from(alertsTable)
+    .where(and(eq(alertsTable.teacherId, teacherId), inArray(alertsTable.studentId, uniqueStudentIds)));
+
+  const alertMap = new Map<number, Set<string>>();
+  for (const a of alertRows) {
+    if (!alertMap.has(a.studentId)) alertMap.set(a.studentId, new Set());
+    alertMap.get(a.studentId)!.add(a.alertType);
+  }
+
+  // Build result
+  const result = uniqueStudentIds.map((studentId) => {
+    const stats = reviewStatsMap.get(studentId);
+    const lastActiveAt = stats?.lastReviewedAt ?? null;
+    const daysSinceLastReview = lastActiveAt
+      ? Math.floor((now.getTime() - new Date(lastActiveAt).getTime()) / 86400000)
+      : null;
+    const averageRetention = stats?.averageRetention ?? null;
+    const cardsDueToday = cardsDueMap.get(studentId) ?? 0;
+    const streakDays = streakDaysMap.get(studentId) ?? [];
+    const streakCount = computeStreak(streakDays);
+    const alerts = alertMap.get(studentId) ?? new Set();
+
+    let riskLevel: "on_track" | "slipping" | "at_risk" = "on_track";
+    let riskReason = "On track";
+
+    const hasNoActivityAlert = alerts.has("no_activity");
+    const hasLowRetentionAlert = alerts.has("low_retention");
+    const hasStrugglingAlert = alerts.has("struggling_concept");
+
+    if (hasNoActivityAlert || daysSinceLastReview === null || daysSinceLastReview > 7) {
+      riskLevel = "at_risk";
+      riskReason = daysSinceLastReview === null ? "No activity yet" : `No reviews in ${daysSinceLastReview} days`;
+    } else if (hasLowRetentionAlert || hasStrugglingAlert || (averageRetention !== null && averageRetention < 0.6) || cardsDueToday > 5) {
+      riskLevel = "at_risk";
+      riskReason = hasStrugglingAlert ? "Struggling with concepts" : cardsDueToday > 5 ? `${cardsDueToday} cards overdue` : "Low recall rate";
+    } else if ((averageRetention !== null && averageRetention < 0.75) || cardsDueToday > 2 || (daysSinceLastReview ?? 0) > 3) {
+      riskLevel = "slipping";
+      riskReason =
+        cardsDueToday > 2
+          ? `${cardsDueToday} cards due`
+          : (daysSinceLastReview ?? 0) > 3
+          ? "Irregular study pattern"
+          : "Below average retention";
+    }
+
+    const studentInfo = enrolledStudents.find((e) => e.studentId === studentId);
+
+    return {
+      studentId,
+      studentName: studentInfo?.studentName ?? "",
+      studentEmail: studentInfo?.studentEmail ?? "",
+      classes: studentClassMap.get(studentId) ?? [],
+      averageRetention,
+      cardsDueToday,
+      lastActiveAt: lastActiveAt ? new Date(lastActiveAt) : null,
+      streakCount,
+      riskLevel,
+      riskReason,
+    };
+  });
+
+  res.json(GetTeacherStudentsResponse.parse(result));
+});
+
+router.get("/analytics/students/:studentId/detail", async (req, res): Promise<void> => {
+  const params = GetStudentDetailParams.safeParse(req.params);
+  const query = GetStudentDetailQueryParams.safeParse(req.query);
+
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const { studentId } = params.data;
+  const teacherId = query.success ? query.data.teacherId : undefined;
+
+  // Get student info
+  const [student] = await db.select().from(usersTable).where(eq(usersTable.id, studentId));
+  if (!student) {
+    res.status(404).json({ error: "Student not found" });
+    return;
+  }
+
+  // Get class IDs relevant to this teacher (if teacherId provided, scope to their classes)
+  let relevantClassIds: number[] | null = null;
+  let enrolledClassNames: string[] = [];
+
+  if (teacherId) {
+    const teacherClasses = await db
+      .select({ id: classesTable.id, name: classesTable.name })
+      .from(classesTable)
+      .innerJoin(enrollmentsTable, eq(classesTable.id, enrollmentsTable.classId))
+      .where(and(eq(classesTable.teacherId, teacherId), eq(enrollmentsTable.studentId, studentId)));
+    relevantClassIds = teacherClasses.map((c) => c.id);
+    enrolledClassNames = teacherClasses.map((c) => c.name);
+  } else {
+    const allClasses = await db
+      .select({ id: classesTable.id, name: classesTable.name })
+      .from(classesTable)
+      .innerJoin(enrollmentsTable, eq(classesTable.id, enrollmentsTable.classId))
+      .where(eq(enrollmentsTable.studentId, studentId));
+    enrolledClassNames = allClasses.map((c) => c.name);
+  }
+
+  // Get streak
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const streakQuery = db
+    .select({
+      day: sql<string>`to_char(date_trunc('day', ${reviewsTable.reviewedAt}), 'YYYY-MM-DD')`,
+    })
+    .from(reviewsTable)
+    .where(eq(reviewsTable.studentId, studentId))
+    .groupBy(sql`date_trunc('day', ${reviewsTable.reviewedAt})`)
+    .orderBy(sql`date_trunc('day', ${reviewsTable.reviewedAt}) desc`)
+    .limit(30);
+
+  const streakDays = await streakQuery;
+  const streakCount = computeStreak(streakDays.map((r) => r.day));
+
+  // Last active
+  const [lastActiveRow] = await db
+    .select({ lastAt: sql<string | null>`max(${reviewsTable.reviewedAt})` })
+    .from(reviewsTable)
+    .where(eq(reviewsTable.studentId, studentId));
+
+  // Average retention (scoped to relevant class decks if teacher)
+  let averageRetention: number | null = null;
+  if (relevantClassIds !== null && relevantClassIds.length > 0) {
+    const [retRow] = await db
+      .select({
+        avgRet: sql<number | null>`
+          case when count(${reviewsTable.id}) > 0
+          then cast(avg(case when ${reviewsTable.recalled} then 1.0 else 0.0 end) as double precision)
+          else null end
+        `,
+      })
+      .from(reviewsTable)
+      .innerJoin(cardsTable, eq(reviewsTable.cardId, cardsTable.id))
+      .innerJoin(decksTable, eq(cardsTable.deckId, decksTable.id))
+      .where(and(eq(reviewsTable.studentId, studentId), inArray(decksTable.classId, relevantClassIds)));
+    averageRetention = retRow?.avgRet ?? null;
+  } else if (relevantClassIds === null) {
+    const [retRow] = await db
+      .select({
+        avgRet: sql<number | null>`
+          case when count(${reviewsTable.id}) > 0
+          then cast(avg(case when ${reviewsTable.recalled} then 1.0 else 0.0 end) as double precision)
+          else null end
+        `,
+      })
+      .from(reviewsTable)
+      .where(eq(reviewsTable.studentId, studentId));
+    averageRetention = retRow?.avgRet ?? null;
+  }
+
+  // 30-day retention trend
+  const retentionTrendQuery =
+    relevantClassIds !== null && relevantClassIds.length > 0
+      ? db
+          .select({
+            date: sql<string>`to_char(date_trunc('day', ${reviewsTable.reviewedAt}), 'YYYY-MM-DD')`,
+            retention: sql<number>`cast(avg(case when ${reviewsTable.recalled} then 1.0 else 0.0 end) as double precision)`,
+            reviewCount: sql<number>`cast(count(${reviewsTable.id}) as int)`,
+          })
+          .from(reviewsTable)
+          .innerJoin(cardsTable, eq(reviewsTable.cardId, cardsTable.id))
+          .innerJoin(decksTable, eq(cardsTable.deckId, decksTable.id))
+          .where(and(eq(reviewsTable.studentId, studentId), gte(reviewsTable.reviewedAt, thirtyDaysAgo), inArray(decksTable.classId, relevantClassIds)))
+          .groupBy(sql`date_trunc('day', ${reviewsTable.reviewedAt})`)
+          .orderBy(sql`date_trunc('day', ${reviewsTable.reviewedAt})`)
+      : db
+          .select({
+            date: sql<string>`to_char(date_trunc('day', ${reviewsTable.reviewedAt}), 'YYYY-MM-DD')`,
+            retention: sql<number>`cast(avg(case when ${reviewsTable.recalled} then 1.0 else 0.0 end) as double precision)`,
+            reviewCount: sql<number>`cast(count(${reviewsTable.id}) as int)`,
+          })
+          .from(reviewsTable)
+          .where(and(eq(reviewsTable.studentId, studentId), gte(reviewsTable.reviewedAt, thirtyDaysAgo)))
+          .groupBy(sql`date_trunc('day', ${reviewsTable.reviewedAt})`)
+          .orderBy(sql`date_trunc('day', ${reviewsTable.reviewedAt})`);
+
+  const retentionTrend = await retentionTrendQuery;
+
+  // Per-deck progress
+  const deckProgressQuery =
+    relevantClassIds !== null && relevantClassIds.length > 0
+      ? db
+          .select({
+            deckId: decksTable.id,
+            deckName: decksTable.name,
+            totalCards: sql<number>`cast(count(distinct ${cardsTable.id}) as int)`,
+            mastered: sql<number>`cast(count(distinct case when ${cardStatesTable.stability} >= 21 then ${cardStatesTable.cardId} end) as int)`,
+            learning: sql<number>`cast(count(distinct case when ${cardStatesTable.stability} is not null and ${cardStatesTable.stability} < 21 then ${cardStatesTable.cardId} end) as int)`,
+            newCards: sql<number>`cast(count(distinct case when ${cardStatesTable.id} is null then ${cardsTable.id} end) as int)`,
+            dueToday: sql<number>`cast(count(distinct case when ${cardStatesTable.nextReviewAt} <= now() then ${cardStatesTable.cardId} end) as int)`,
+            averageRetention: sql<number | null>`
+              case when count(${reviewsTable.id}) > 0
+              then cast(avg(case when ${reviewsTable.recalled} then 1.0 else 0.0 end) as double precision)
+              else null end
+            `,
+          })
+          .from(decksTable)
+          .innerJoin(cardsTable, eq(decksTable.id, cardsTable.deckId))
+          .leftJoin(cardStatesTable, and(eq(cardsTable.id, cardStatesTable.cardId), eq(cardStatesTable.studentId, studentId)))
+          .leftJoin(reviewsTable, and(eq(cardsTable.id, reviewsTable.cardId), eq(reviewsTable.studentId, studentId)))
+          .where(inArray(decksTable.classId, relevantClassIds))
+          .groupBy(decksTable.id)
+      : db
+          .select({
+            deckId: decksTable.id,
+            deckName: decksTable.name,
+            totalCards: sql<number>`cast(count(distinct ${cardsTable.id}) as int)`,
+            mastered: sql<number>`cast(count(distinct case when ${cardStatesTable.stability} >= 21 then ${cardStatesTable.cardId} end) as int)`,
+            learning: sql<number>`cast(count(distinct case when ${cardStatesTable.stability} is not null and ${cardStatesTable.stability} < 21 then ${cardStatesTable.cardId} end) as int)`,
+            newCards: sql<number>`cast(count(distinct case when ${cardStatesTable.id} is null then ${cardsTable.id} end) as int)`,
+            dueToday: sql<number>`cast(count(distinct case when ${cardStatesTable.nextReviewAt} <= now() then ${cardStatesTable.cardId} end) as int)`,
+            averageRetention: sql<number | null>`
+              case when count(${reviewsTable.id}) > 0
+              then cast(avg(case when ${reviewsTable.recalled} then 1.0 else 0.0 end) as double precision)
+              else null end
+            `,
+          })
+          .from(decksTable)
+          .innerJoin(cardsTable, eq(decksTable.id, cardsTable.deckId))
+          .leftJoin(cardStatesTable, and(eq(cardsTable.id, cardStatesTable.cardId), eq(cardStatesTable.studentId, studentId)))
+          .leftJoin(reviewsTable, and(eq(cardsTable.id, reviewsTable.cardId), eq(reviewsTable.studentId, studentId)))
+          .where(
+            sql`${decksTable.id} in (
+              select distinct ${cardStatesTable.deckId} from ${cardStatesTable}
+              where ${cardStatesTable.studentId} = ${studentId}
+            )`
+          )
+          .groupBy(decksTable.id);
+
+  const deckProgressRows = await deckProgressQuery;
+  const deckProgress = deckProgressRows.map((d) => ({ ...d, new: d.newCards }));
+
+  // Recent reviews (last 20)
+  const recentReviewsQuery = db
+    .select({
+      reviewId: reviewsTable.id,
+      cardFront: cardsTable.front,
+      deckName: decksTable.name,
+      grade: reviewsTable.grade,
+      recalled: reviewsTable.recalled,
+      reviewedAt: reviewsTable.reviewedAt,
+    })
+    .from(reviewsTable)
+    .innerJoin(cardsTable, eq(reviewsTable.cardId, cardsTable.id))
+    .innerJoin(decksTable, eq(cardsTable.deckId, decksTable.id))
+    .where(eq(reviewsTable.studentId, studentId))
+    .orderBy(sql`${reviewsTable.reviewedAt} desc`)
+    .limit(20);
+
+  const recentReviews = await recentReviewsQuery;
+
+  // At-risk flags from alerts table + computed
+  const alertRows = await db
+    .select({ alertType: alertsTable.alertType, message: alertsTable.message })
+    .from(alertsTable)
+    .where(eq(alertsTable.studentId, studentId))
+    .orderBy(sql`${alertsTable.createdAt} desc`)
+    .limit(10);
+
+  const atRiskFlags: string[] = alertRows.map((a) => a.message);
+
+  // Add computed flags if not already covered
+  const now = new Date();
+  const lastActiveAt = lastActiveRow?.lastAt ? new Date(lastActiveRow.lastAt) : null;
+  if (lastActiveAt) {
+    const daysSince = Math.floor((now.getTime() - lastActiveAt.getTime()) / 86400000);
+    if (daysSince >= 4 && !atRiskFlags.some((f) => f.toLowerCase().includes("review"))) {
+      atRiskFlags.push(`Hasn't reviewed in ${daysSince} days`);
+    }
+  } else {
+    atRiskFlags.push("No study activity yet");
+  }
+
+  res.json(
+    GetStudentDetailResponse.parse({
+      studentId,
+      studentName: student.name,
+      studentEmail: student.email,
+      avatarUrl: student.avatarUrl ?? null,
+      classes: enrolledClassNames,
+      streakCount,
+      lastActiveAt: lastActiveAt ?? null,
+      averageRetention,
+      retentionTrend: retentionTrend.map((p) => ({ ...p, date: new Date(p.date) })),
+      deckProgress,
+      recentReviews: recentReviews.map((r) => ({
+        ...r,
+        reviewedAt: new Date(r.reviewedAt),
+      })),
+      atRiskFlags,
+    })
+  );
 });
 
 export default router;

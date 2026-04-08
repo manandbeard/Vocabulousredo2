@@ -700,3 +700,78 @@ export const GetStudentKnowledgeGraphResponseItem = zod.object({
 export const GetStudentKnowledgeGraphResponse = zod.array(
   GetStudentKnowledgeGraphResponseItem,
 );
+
+/**
+ * @summary Get all students across all teacher classes with risk and retention data
+ */
+export const GetTeacherStudentsParams = zod.object({
+  teacherId: zod.coerce.number(),
+});
+
+export const GetTeacherStudentsResponseItem = zod.object({
+  studentId: zod.number(),
+  studentName: zod.string(),
+  studentEmail: zod.string(),
+  classes: zod.array(zod.string()),
+  averageRetention: zod.number().nullish(),
+  cardsDueToday: zod.number(),
+  lastActiveAt: zod.date().nullish(),
+  streakCount: zod.number(),
+  riskLevel: zod.enum(["on_track", "slipping", "at_risk"]),
+  riskReason: zod.string(),
+});
+export const GetTeacherStudentsResponse = zod.array(
+  GetTeacherStudentsResponseItem,
+);
+
+/**
+ * @summary Get detailed analytics for a student (teacher view)
+ */
+export const GetStudentDetailParams = zod.object({
+  studentId: zod.coerce.number(),
+});
+
+export const GetStudentDetailQueryParams = zod.object({
+  teacherId: zod.coerce.number().optional(),
+});
+
+export const GetStudentDetailResponse = zod.object({
+  studentId: zod.number(),
+  studentName: zod.string(),
+  studentEmail: zod.string(),
+  avatarUrl: zod.string().nullish(),
+  classes: zod.array(zod.string()),
+  streakCount: zod.number(),
+  lastActiveAt: zod.date().nullish(),
+  averageRetention: zod.number().nullish(),
+  retentionTrend: zod.array(
+    zod.object({
+      date: zod.date(),
+      retention: zod.number(),
+      reviewCount: zod.number(),
+    }),
+  ),
+  deckProgress: zod.array(
+    zod.object({
+      deckId: zod.number(),
+      deckName: zod.string(),
+      totalCards: zod.number(),
+      mastered: zod.number(),
+      learning: zod.number(),
+      new: zod.number(),
+      dueToday: zod.number(),
+      averageRetention: zod.number().nullish(),
+    }),
+  ),
+  recentReviews: zod.array(
+    zod.object({
+      reviewId: zod.number(),
+      cardFront: zod.string(),
+      deckName: zod.string(),
+      grade: zod.number(),
+      recalled: zod.boolean(),
+      reviewedAt: zod.date(),
+    }),
+  ),
+  atRiskFlags: zod.array(zod.string()),
+});

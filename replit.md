@@ -108,3 +108,22 @@ Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHea
 ### `scripts` (`@workspace/scripts`)
 
 Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+
+## Teacher Features
+
+### Student Heatmap (`/teacher/heatmap`)
+- Full-width table of all students enrolled in any of the teacher's classes
+- Columns: Name/Email, Classes, Avg Retention, Due Today, Last Active, Streak, Risk Badge
+- Search bar (by name/email), class filter dropdown, risk level filter dropdown
+- Risk badges: On Track (green), Slipping (amber), At Risk (red)
+- Risk computed from: `alerts` table records + retention thresholds + inactivity
+- Clicking a student row navigates to `/teacher/students/:id`
+- API: `GET /api/analytics/teacher/:teacherId/students`
+
+### Student Detail (`/teacher/students/:id`)
+- Four sections: student header (name, avatar initials, classes, streak, retention, last active)
+- At-risk alerts panel (from `alerts` table + computed flags)
+- 30-day retention trend line chart (SVG, actual review data)
+- Deck progress bento grid (mastery %, cards mastered/learning/due, retention per deck)
+- Recent review history table (last 20 reviews with card, deck, grade, recalled, timestamp)
+- API: `GET /api/analytics/students/:studentId/detail?teacherId=:teacherId`

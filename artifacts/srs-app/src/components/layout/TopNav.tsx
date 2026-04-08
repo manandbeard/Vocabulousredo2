@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { BookOpen, BarChart3, Settings, LogOut, Home, Rocket, Presentation, ChevronDown, Info, BrainCircuit, TrendingUp, LogIn, UserPlus } from "lucide-react";
+import { BookOpen, BarChart3, Settings, LogOut, Home, Rocket, Presentation, ChevronDown, Info, BrainCircuit, TrendingUp, LogIn, UserPlus, Users } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useRole } from "@/hooks/use-role";
 
@@ -84,6 +84,7 @@ export function TopNav() {
     ? [
         { label: "Dashboard", href: "/teacher", icon: Home },
         { label: "Classes", href: "/teacher/classes", icon: BookOpen },
+        { label: "Students", href: "/teacher/heatmap", icon: Users },
         { label: "Analytics", href: "/teacher/analytics", icon: BarChart3 },
       ]
     : [
