@@ -35,6 +35,8 @@ import type {
   GetDueCardsParams,
   GetStudentDetailParams,
   GetStudentResearchDecksParams,
+  GradeBlurtBody,
+  GradeBlurtResult,
   HealthStatus,
   KnowledgeGraphTag,
   ListClassesParams,
@@ -3499,3 +3501,89 @@ export function useGetStudentDetail<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Grade a blurting exercise response using AI
+ */
+export const getGradeBlurtUrl = () => {
+  return `/api/ai/grade-blurt`;
+};
+
+export const gradeBlurt = async (
+  gradeBlurtBody: GradeBlurtBody,
+  options?: RequestInit,
+): Promise<GradeBlurtResult> => {
+  return customFetch<GradeBlurtResult>(getGradeBlurtUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(gradeBlurtBody),
+  });
+};
+
+export const getGradeBlurtMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof gradeBlurt>>,
+    TError,
+    { data: BodyType<GradeBlurtBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof gradeBlurt>>,
+  TError,
+  { data: BodyType<GradeBlurtBody> },
+  TContext
+> => {
+  const mutationKey = ["gradeBlurt"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof gradeBlurt>>,
+    { data: BodyType<GradeBlurtBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return gradeBlurt(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GradeBlurtMutationResult = NonNullable<
+  Awaited<ReturnType<typeof gradeBlurt>>
+>;
+export type GradeBlurtMutationBody = BodyType<GradeBlurtBody>;
+export type GradeBlurtMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Grade a blurting exercise response using AI
+ */
+export const useGradeBlurt = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof gradeBlurt>>,
+    TError,
+    { data: BodyType<GradeBlurtBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof gradeBlurt>>,
+  TError,
+  { data: BodyType<GradeBlurtBody> },
+  TContext
+> => {
+  return useMutation(getGradeBlurtMutationOptions(options));
+};

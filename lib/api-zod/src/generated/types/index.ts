@@ -34,6 +34,8 @@ export * from "./getStudentDetailParams";
 export * from "./getStudentResearchDecksMastery";
 export * from "./getStudentResearchDecksParams";
 export * from "./getStudentResearchDecksParamsMastery";
+export * from "./gradeBlurtBody";
+export * from "./gradeBlurtResult";
 export * from "./healthStatus";
 export * from "./knowledgeGraphTag";
 export * from "./listClassesParams";

@@ -9,6 +9,7 @@ import reviewsRouter from "./reviews";
 import analyticsRouter from "./analytics";
 import changelogRouter from "./changelog";
 import achievementsRouter from "./achievements";
+import aiRouter from "./ai";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(reviewsRouter);
 router.use(analyticsRouter);
 router.use("/changelog", changelogRouter);
 router.use(achievementsRouter);
+router.use(aiRouter);
 
 export default router;

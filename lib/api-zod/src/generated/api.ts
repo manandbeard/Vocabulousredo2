@@ -775,3 +775,26 @@ export const GetStudentDetailResponse = zod.object({
   ),
   atRiskFlags: zod.array(zod.string()),
 });
+
+/**
+ * @summary Grade a blurting exercise response using AI
+ */
+export const GradeBlurtBody = zod.object({
+  prompt: zod.string().describe("The topic\/prompt for the blurting exercise"),
+  studentResponse: zod.string().describe("The student's free-recall response"),
+  deckId: zod.number().describe("The deck ID to grade against"),
+  studentId: zod.number().describe("The student ID for session saving"),
+  rubric: zod.string().optional().describe("Optional custom rubric"),
+});
+
+export const GradeBlurtResponse = zod.object({
+  score: zod.number().describe("Score 0-100"),
+  feedback: zod.string().describe("Overall AI feedback"),
+  missedConcepts: zod
+    .array(zod.string())
+    .describe("Concepts the student missed"),
+  correctConcepts: zod
+    .array(zod.string())
+    .describe("Concepts the student got right"),
+  sessionId: zod.number().optional().describe("The saved session ID"),
+});

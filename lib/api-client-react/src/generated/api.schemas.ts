@@ -523,6 +523,32 @@ export interface StudentDetail {
   atRiskFlags: string[];
 }
 
+export interface GradeBlurtBody {
+  /** The topic/prompt for the blurting exercise */
+  prompt: string;
+  /** The student's free-recall response */
+  studentResponse: string;
+  /** The deck ID to grade against */
+  deckId: number;
+  /** The student ID for session saving */
+  studentId: number;
+  /** Optional custom rubric */
+  rubric?: string;
+}
+
+export interface GradeBlurtResult {
+  /** Score 0-100 */
+  score: number;
+  /** Overall AI feedback */
+  feedback: string;
+  /** Concepts the student missed */
+  missedConcepts: string[];
+  /** Concepts the student got right */
+  correctConcepts: string[];
+  /** The saved session ID */
+  sessionId?: number;
+}
+
 export type Logout200 = {
   ok: boolean;
 };

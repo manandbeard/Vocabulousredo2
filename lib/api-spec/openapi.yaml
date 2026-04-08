@@ -23,6 +23,8 @@ tags:
     description: Student review sessions
   - name: analytics
     description: Analytics and insights
+  - name: ai
+    description: AI-powered features
 
 paths:
   /healthz:
@@ -859,6 +861,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StudentDetail"
+
+  # ─── AI ──────────────────────────────────────────────────────────────────────
+  /ai/grade-blurt:
+    post:
+      operationId: gradeBlurt
+      tags: [ai]
+      summary: Grade a blurting exercise response using AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GradeBlurtBody"
+      responses:
+        "200":
+          description: Grading result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GradeBlurtResult"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -1819,3 +1853,56 @@ components:
         - grade
         - recalled
         - reviewedAt
+
+    # ─── AI ────────────────────────────────────────────────────────────────────
+    GradeBlurtBody:
+      type: object
+      properties:
+        prompt:
+          type: string
+          description: The topic/prompt for the blurting exercise
+        studentResponse:
+          type: string
+          description: The student's free-recall response
+        deckId:
+          type: integer
+          description: The deck ID to grade against
+        studentId:
+          type: integer
+          description: The student ID for session saving
+        rubric:
+          type: string
+          description: Optional custom rubric
+      required:
+        - prompt
+        - studentResponse
+        - deckId
+        - studentId
+
+    GradeBlurtResult:
+      type: object
+      properties:
+        score:
+          type: integer
+          description: Score 0-100
+        feedback:
+          type: string
+          description: Overall AI feedback
+        missedConcepts:
+          type: array
+          items:
+            type: string
+          description: Concepts the student missed
+        correctConcepts:
+          type: array
+          items:
+            type: string
+          description: Concepts the student got right
+        sessionId:
+          type: integer
+          description: The saved session ID
+      required:
+        - score
+        - feedback
+        - missedConcepts
+        - correctConcepts
