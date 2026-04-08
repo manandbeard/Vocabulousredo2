@@ -33,6 +33,7 @@ import type {
   Enrollment,
   ErrorResponse,
   GetDueCardsParams,
+  GetStudentResearchDecksParams,
   HealthStatus,
   KnowledgeGraphTag,
   ListClassesParams,
@@ -40,6 +41,7 @@ import type {
   ListStudentReviewsParams,
   LoginBody,
   Logout200,
+  ResearchDeck,
   Review,
   SignupBody,
   StudentAnalytics,
@@ -2529,6 +2531,127 @@ export function useListStudentReviews<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getListStudentReviewsQueryOptions(
+    studentId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get all decks from classes the student is enrolled in (research mode)
+ */
+export const getGetStudentResearchDecksUrl = (
+  studentId: number,
+  params?: GetStudentResearchDecksParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/students/${studentId}/research-decks?${stringifiedParams}`
+    : `/api/students/${studentId}/research-decks`;
+};
+
+export const getStudentResearchDecks = async (
+  studentId: number,
+  params?: GetStudentResearchDecksParams,
+  options?: RequestInit,
+): Promise<ResearchDeck[]> => {
+  return customFetch<ResearchDeck[]>(
+    getGetStudentResearchDecksUrl(studentId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetStudentResearchDecksQueryKey = (
+  studentId: number,
+  params?: GetStudentResearchDecksParams,
+) => {
+  return [
+    `/api/students/${studentId}/research-decks`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetStudentResearchDecksQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStudentResearchDecks>>,
+  TError = ErrorType<unknown>,
+>(
+  studentId: number,
+  params?: GetStudentResearchDecksParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStudentResearchDecks>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getGetStudentResearchDecksQueryKey(studentId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getStudentResearchDecks>>
+  > = ({ signal }) =>
+    getStudentResearchDecks(studentId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!studentId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStudentResearchDecks>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetStudentResearchDecksQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStudentResearchDecks>>
+>;
+export type GetStudentResearchDecksQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all decks from classes the student is enrolled in (research mode)
+ */
+
+export function useGetStudentResearchDecks<
+  TData = Awaited<ReturnType<typeof getStudentResearchDecks>>,
+  TError = ErrorType<unknown>,
+>(
+  studentId: number,
+  params?: GetStudentResearchDecksParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getStudentResearchDecks>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStudentResearchDecksQueryOptions(
     studentId,
     params,
     options,

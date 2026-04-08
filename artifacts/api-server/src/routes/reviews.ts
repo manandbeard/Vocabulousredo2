@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, and, lte, or, isNull, sql } from "drizzle-orm";
-import { db, reviewsTable, cardStatesTable, cardsTable, studentModelsTable, usersTable } from "@workspace/db";
+import { eq, and, lte, or, isNull, sql, inArray } from "drizzle-orm";
+import { db, reviewsTable, cardStatesTable, cardsTable, studentModelsTable, usersTable, enrollmentsTable, decksTable, classesTable } from "@workspace/db";
 import { checkAndIssueStudentAchievements } from "../lib/check-achievements";
 import {
   scheduleReview,
@@ -17,6 +17,9 @@ import {
   ListStudentReviewsParams,
   ListStudentReviewsQueryParams,
   ListStudentReviewsResponse,
+  GetStudentResearchDecksParams,
+  GetStudentResearchDecksQueryParams,
+  GetStudentResearchDecksResponse,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -253,6 +256,138 @@ router.get("/students/:studentId/reviews", async (req, res): Promise<void> => {
     .limit(query.data.limit ?? 100);
 
   res.json(ListStudentReviewsResponse.parse(reviews));
+});
+
+// ── GET /students/:studentId/research-decks ───────────────────────────────────
+router.get("/students/:studentId/research-decks", async (req, res): Promise<void> => {
+  const params = GetStudentResearchDecksParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const query = GetStudentResearchDecksQueryParams.safeParse(req.query);
+  if (!query.success) {
+    res.status(400).json({ error: query.error.message });
+    return;
+  }
+
+  const { studentId } = params.data;
+  const { tag, mastery } = query.data;
+
+  // Get all classIds the student is enrolled in
+  const enrollments = await db
+    .select({ classId: enrollmentsTable.classId })
+    .from(enrollmentsTable)
+    .where(eq(enrollmentsTable.studentId, studentId));
+
+  if (enrollments.length === 0) {
+    res.json(GetStudentResearchDecksResponse.parse([]));
+    return;
+  }
+
+  const classIds = enrollments.map((e) => e.classId);
+
+  // Get all decks for those classes with card count
+  const deckRows = await db
+    .select({
+      deckId: decksTable.id,
+      deckName: decksTable.name,
+      classId: decksTable.classId,
+      className: classesTable.name,
+      cardCount: sql<number>`cast(count(distinct ${cardsTable.id}) as int)`,
+    })
+    .from(decksTable)
+    .leftJoin(classesTable, eq(decksTable.classId, classesTable.id))
+    .leftJoin(cardsTable, eq(decksTable.id, cardsTable.deckId))
+    .where(inArray(decksTable.classId, classIds))
+    .groupBy(decksTable.id, classesTable.name);
+
+  if (deckRows.length === 0) {
+    res.json(GetStudentResearchDecksResponse.parse([]));
+    return;
+  }
+
+  const deckIds = deckRows.map((d) => d.deckId);
+
+  // Get all card states for this student across those decks
+  const cardStates = await db
+    .select({
+      deckId: cardStatesTable.deckId,
+      stability: cardStatesTable.stability,
+      reviewCount: cardStatesTable.reviewCount,
+    })
+    .from(cardStatesTable)
+    .where(and(eq(cardStatesTable.studentId, studentId), inArray(cardStatesTable.deckId, deckIds)));
+
+  // Get all tags for cards in those decks
+  const cardTagRows = await db
+    .select({ deckId: cardsTable.deckId, tags: cardsTable.tags })
+    .from(cardsTable)
+    .where(inArray(cardsTable.deckId, deckIds));
+
+  // Aggregate per-deck tag list (union of all card tags)
+  const deckTagMap = new Map<number, Set<string>>();
+  for (const row of cardTagRows) {
+    if (!row.deckId) continue;
+    let tagSet = deckTagMap.get(row.deckId);
+    if (!tagSet) { tagSet = new Set(); deckTagMap.set(row.deckId, tagSet); }
+    for (const t of row.tags ?? []) tagSet.add(t);
+  }
+
+  // Aggregate card states per deck
+  const deckStateMap = new Map<number, { masteredCount: number; learningCount: number; totalStated: number }>();
+  for (const state of cardStates) {
+    if (!state.deckId) continue;
+    let agg = deckStateMap.get(state.deckId);
+    if (!agg) { agg = { masteredCount: 0, learningCount: 0, totalStated: 0 }; deckStateMap.set(state.deckId, agg); }
+    agg.totalStated++;
+    if ((state.stability ?? 0) >= 21) agg.masteredCount++;
+    else agg.learningCount++;
+  }
+
+  // Build result
+  const result = deckRows.map((deck) => {
+    const states = deckStateMap.get(deck.deckId) ?? { masteredCount: 0, learningCount: 0, totalStated: 0 };
+    const newCount = Math.max(0, deck.cardCount - states.totalStated);
+    const masteredCount = states.masteredCount;
+    const learningCount = states.learningCount;
+    const total = deck.cardCount;
+
+    const masteryPct = total > 0 ? masteredCount / total : 0;
+
+    let masteryLevel: "new" | "learning" | "mastered";
+    if (masteredCount > 0 && masteredCount >= total * 0.8) {
+      masteryLevel = "mastered";
+    } else if (states.totalStated > 0) {
+      masteryLevel = "learning";
+    } else {
+      masteryLevel = "new";
+    }
+
+    const tags = Array.from(deckTagMap.get(deck.deckId) ?? []);
+
+    return {
+      deckId: deck.deckId,
+      deckName: deck.deckName,
+      classId: deck.classId,
+      className: deck.className ?? null,
+      tags,
+      cardCount: total,
+      masteryPct,
+      masteryLevel,
+    };
+  });
+
+  // Apply filters
+  let filtered = result;
+  if (tag) {
+    filtered = filtered.filter((d) => d.tags.includes(tag));
+  }
+  if (mastery) {
+    filtered = filtered.filter((d) => d.masteryLevel === mastery);
+  }
+
+  res.json(GetStudentResearchDecksResponse.parse(filtered));
 });
 
 // ── POST /students/:studentId/reset-progress ─────────────────────────────────

@@ -1,21 +1,25 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useGetDueCards, useSubmitReview, getGetDueCardsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRole } from "@/hooks/use-role";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, RotateCcw, Frown, Smile, ThumbsUp, Medal, ArrowLeft } from "lucide-react";
+import { CheckCircle2, RotateCcw, Frown, Smile, ThumbsUp, Medal, ArrowLeft, FlaskConical } from "lucide-react";
 
 export default function StudentStudy() {
   const { userId } = useRole();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
 
-  // userId is guaranteed non-null inside the StudentGuard, but we narrow the type here
+  const searchParams = new URLSearchParams(searchString);
+  const deckIdParam = searchParams.get("deckId");
+  const isResearchMode = searchParams.get("mode") === "research";
+
   const safeUserId = userId ?? 0;
 
-  const { data: cards, isLoading } = useGetDueCards(safeUserId);
+  const { data: cards, isLoading } = useGetDueCards(safeUserId, deckIdParam ? { deckId: Number(deckIdParam) } : undefined);
   const submitReviewMut = useSubmitReview();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -25,12 +29,24 @@ export default function StudentStudy() {
 
   useEffect(() => {
     if (!isFlipped && currentCard) {
-      // reset flip state when navigating to a new card
     }
   }, [currentIndex, isFlipped, currentCard]);
 
   const handleGrade = async (grade: number) => {
     if (!currentCard) return;
+
+    if (isResearchMode) {
+      setIsFlipped(false);
+      setTimeout(() => {
+        if (cards && currentIndex < cards.length - 1) {
+          setCurrentIndex(prev => prev + 1);
+        } else {
+          setLocation("/student/research");
+        }
+      }, 200);
+      return;
+    }
+
     try {
       await submitReviewMut.mutateAsync({
         data: {
@@ -38,9 +54,6 @@ export default function StudentStudy() {
           cardId: currentCard.cardId,
           deckId: currentCard.deckId,
           grade,
-          // elapsedDays is computed server-side from cardStatesTable.lastReviewedAt;
-          // the field is kept in the request body for API compatibility but ignored
-          // by the server when computing the actual inter-review interval.
           elapsedDays: 0,
         }
       });
@@ -69,6 +82,28 @@ export default function StudentStudy() {
   }
 
   if (!cards || cards.length === 0 || currentIndex >= cards.length) {
+    if (isResearchMode) {
+      return (
+        <AppLayout>
+          <div className="flex flex-col items-center justify-center h-[70vh] animate-in fade-in duration-700 font-['Inter']">
+            <div className="h-28 w-28 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-6">
+              <CheckCircle2 className="h-14 w-14" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Practice complete!</h2>
+            <p className="text-slate-500 mt-3 text-lg max-w-md text-center font-light">
+              You've reviewed all the cards in this deck. No progress was saved.
+            </p>
+            <button
+              onClick={() => setLocation("/student/research")}
+              className="mt-8 px-8 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-medium transition-colors"
+            >
+              Back to Research Library
+            </button>
+          </div>
+        </AppLayout>
+      );
+    }
+
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center h-[70vh] animate-in fade-in duration-700 font-['Inter']">
@@ -92,17 +127,23 @@ export default function StudentStudy() {
 
   const progress = ((currentIndex + 1) / cards.length) * 100;
 
-  // TypeScript narrowing: currentCard is guaranteed non-undefined here
-  // because we checked `currentIndex >= cards.length` above
   if (!currentCard) return null;
 
   return (
     <AppLayout>
       <div className="max-w-3xl mx-auto py-8 font-['Inter']">
+        {/* Research mode banner */}
+        {isResearchMode && (
+          <div className="mb-6 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-sm font-medium">
+            <FlaskConical className="h-4 w-4 flex-shrink-0" />
+            Practice Mode — no progress saved
+          </div>
+        )}
+
         {/* Nav bar */}
         <div className="flex items-center justify-between mb-8">
           <button
-            onClick={() => setLocation("/student")}
+            onClick={() => setLocation(isResearchMode ? "/student/research" : "/student")}
             className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" /> Exit Session
@@ -113,7 +154,7 @@ export default function StudentStudy() {
             </span>
             <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-full transition-all duration-500 ease-out"
+                className={`h-full rounded-full transition-all duration-500 ease-out ${isResearchMode ? "bg-gradient-to-r from-purple-500 to-violet-600" : "bg-gradient-to-r from-blue-600 to-purple-600"}`}
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -177,6 +218,15 @@ export default function StudentStudy() {
             >
               Show Answer
             </button>
+          ) : isResearchMode ? (
+            <div className="flex gap-3 w-full max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-300">
+              <button
+                onClick={() => handleGrade(1)}
+                className="flex-1 h-16 rounded-2xl border border-slate-200 hover:bg-slate-50 hover:border-slate-400 flex items-center justify-center text-sm font-bold text-slate-700 transition-all"
+              >
+                Next Card
+              </button>
+            </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full animate-in slide-in-from-bottom-4 fade-in duration-300">
               <button

@@ -645,6 +645,38 @@ paths:
                 items:
                   $ref: "#/components/schemas/Review"
 
+  /students/{studentId}/research-decks:
+    get:
+      operationId: getStudentResearchDecks
+      tags: [reviews]
+      summary: Get all decks from classes the student is enrolled in (research mode)
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: mastery
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [new, learning, mastered]
+      responses:
+        "200":
+          description: Research decks with mastery info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResearchDeck"
+
   # ─── Analytics ───────────────────────────────────────────────────────────────
   /analytics/teacher/{teacherId}:
     get:
@@ -1589,3 +1621,46 @@ components:
         - masteredCards
         - dueCards
         - masteryPercent
+
+    ResearchDeck:
+      type: object
+      properties:
+        deckId:
+          type: integer
+        deckName:
+          type: string
+        classId:
+          type: ["integer", "null"]
+        className:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        cardCount:
+          type: integer
+        masteryPct:
+          type: number
+        masteryLevel:
+          type: string
+          enum: [new, learning, mastered]
+      required:
+        - deckId
+        - deckName
+        - tags
+        - cardCount
+        - masteryPct
+        - masteryLevel
+
+    GetStudentResearchDecksParams:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        tag:
+          type: string
+        mastery:
+          type: string
+          enum: [new, learning, mastered]
+      required:
+        - studentId

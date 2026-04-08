@@ -503,6 +503,32 @@ export const ListStudentReviewsResponse = zod.array(
 );
 
 /**
+ * @summary Get all decks from classes the student is enrolled in (research mode)
+ */
+export const GetStudentResearchDecksParams = zod.object({
+  studentId: zod.coerce.number(),
+});
+
+export const GetStudentResearchDecksQueryParams = zod.object({
+  tag: zod.coerce.string().optional(),
+  mastery: zod.enum(["new", "learning", "mastered"]).optional(),
+});
+
+export const GetStudentResearchDecksResponseItem = zod.object({
+  deckId: zod.number(),
+  deckName: zod.string(),
+  classId: zod.number().nullish(),
+  className: zod.string().nullish(),
+  tags: zod.array(zod.string()),
+  cardCount: zod.number(),
+  masteryPct: zod.number(),
+  masteryLevel: zod.enum(["new", "learning", "mastered"]),
+});
+export const GetStudentResearchDecksResponse = zod.array(
+  GetStudentResearchDecksResponseItem,
+);
+
+/**
  * @summary Get teacher-level analytics across all classes
  */
 export const GetTeacherAnalyticsParams = zod.object({

@@ -408,6 +408,42 @@ export interface AtRiskStudent {
 export type Logout200 = {
   ok: boolean;
 };
+export type ResearchDeckMasteryLevel =
+  (typeof ResearchDeckMasteryLevel)[keyof typeof ResearchDeckMasteryLevel];
+
+export const ResearchDeckMasteryLevel = {
+  new: "new",
+  learning: "learning",
+  mastered: "mastered",
+} as const;
+
+export interface ResearchDeck {
+  deckId: number;
+  deckName: string;
+  /** @nullable */
+  classId?: number | null;
+  /** @nullable */
+  className?: string | null;
+  tags: string[];
+  cardCount: number;
+  masteryPct: number;
+  masteryLevel: ResearchDeckMasteryLevel;
+}
+
+export type GetStudentResearchDecksParamsMastery =
+  (typeof GetStudentResearchDecksParamsMastery)[keyof typeof GetStudentResearchDecksParamsMastery];
+
+export const GetStudentResearchDecksParamsMastery = {
+  new: "new",
+  learning: "learning",
+  mastered: "mastered",
+} as const;
+
+export interface GetStudentResearchDecksParams {
+  studentId: number;
+  tag?: string;
+  mastery?: GetStudentResearchDecksParamsMastery;
+}
 
 export interface StudentPersona {
   studentId: number;
