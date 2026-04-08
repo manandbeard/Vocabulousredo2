@@ -95,6 +95,10 @@ export interface Class {
   teacherId: number;
   /** @nullable */
   teacherName?: string | null;
+  /** @nullable */
+  icon?: string | null;
+  /** @nullable */
+  colorScheme?: string | null;
   enrollmentCount: number;
   deckCount: number;
   createdAt: string;
@@ -105,12 +109,16 @@ export interface CreateClassBody {
   description?: string;
   subject: string;
   teacherId: number;
+  icon?: string;
+  colorScheme?: string;
 }
 
 export interface UpdateClassBody {
   name?: string;
   description?: string;
   subject?: string;
+  icon?: string;
+  colorScheme?: string;
 }
 
 export interface Enrollment {
@@ -170,6 +178,14 @@ export const CardCardType = {
   brain_dump: "brain_dump",
 } as const;
 
+export type CardStatus = (typeof CardStatus)[keyof typeof CardStatus];
+
+export const CardStatus = {
+  active: "active",
+  archived: "archived",
+  deleted: "deleted",
+} as const;
+
 export interface Card {
   id: number;
   deckId: number;
@@ -188,6 +204,9 @@ export interface Card {
   /** @nullable */
   mcCorrectIndex?: number | null;
   importance: number;
+  status: CardStatus;
+  /** @nullable */
+  contextNote?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -553,6 +572,48 @@ export type Logout200 = {
   ok: boolean;
 };
 
+export interface GenerateCardsBody {
+  terms: string;
+  context?: string;
+  tags?: string[];
+  count?: number;
+}
+
+export type GeneratedCardCardType =
+  (typeof GeneratedCardCardType)[keyof typeof GeneratedCardCardType];
+
+export const GeneratedCardCardType = {
+  flashcard: "flashcard",
+  multiple_choice: "multiple_choice",
+  brain_dump: "brain_dump",
+} as const;
+
+export interface GeneratedCard {
+  front: string;
+  back: string;
+  /** @nullable */
+  hint?: string | null;
+  tags?: string[];
+  cardType: GeneratedCardCardType;
+}
+
+export type UpdateCardStatusBodyStatus =
+  (typeof UpdateCardStatusBodyStatus)[keyof typeof UpdateCardStatusBodyStatus];
+
+export const UpdateCardStatusBodyStatus = {
+  active: "active",
+  archived: "archived",
+  deleted: "deleted",
+} as const;
+
+export interface UpdateCardStatusBody {
+  status: UpdateCardStatusBodyStatus;
+}
+
+export interface AssignCardBody {
+  deckId: number;
+}
+
 export type ListClassesParams = {
   teacherId?: number;
 };
@@ -560,6 +621,29 @@ export type ListClassesParams = {
 export type ListDecksParams = {
   classId?: number;
   teacherId?: number;
+};
+
+export type ListAllCardsParams = {
+  teacherId?: number;
+  classId?: number;
+  tag?: string;
+  status?: ListAllCardsStatus;
+};
+
+export type ListAllCardsStatus =
+  (typeof ListAllCardsStatus)[keyof typeof ListAllCardsStatus];
+
+export const ListAllCardsStatus = {
+  active: "active",
+  archived: "archived",
+  deleted: "deleted",
+} as const;
+
+export type BulkGenerateCardsBody = {
+  file: Blob;
+  /** Comma-separated tags */
+  tags?: string;
+  count?: number;
 };
 
 export type GetDueCardsParams = {

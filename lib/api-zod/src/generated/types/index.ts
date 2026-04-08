@@ -6,12 +6,15 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./assignCardBody";
 export * from "./atRiskStudent";
 export * from "./atRiskStudentRiskLevel";
 export * from "./authUser";
 export * from "./authUserRole";
+export * from "./bulkGenerateCardsBody";
 export * from "./card";
 export * from "./cardCardType";
+export * from "./cardStatus";
 export * from "./class";
 export * from "./classAnalytics";
 export * from "./classSummary";
@@ -29,6 +32,9 @@ export * from "./dueCardCardType";
 export * from "./enrollment";
 export * from "./enrollStudentBody";
 export * from "./errorResponse";
+export * from "./generateCardsBody";
+export * from "./generatedCard";
+export * from "./generatedCardCardType";
 export * from "./getDueCardsParams";
 export * from "./getStudentDetailParams";
 export * from "./getStudentResearchDecksMastery";
@@ -38,6 +44,8 @@ export * from "./gradeBlurtBody";
 export * from "./gradeBlurtResult";
 export * from "./healthStatus";
 export * from "./knowledgeGraphTag";
+export * from "./listAllCardsParams";
+export * from "./listAllCardsStatus";
 export * from "./listClassesParams";
 export * from "./listDecksParams";
 export * from "./listStudentReviewsParams";
@@ -62,6 +70,8 @@ export * from "./teacherStudentRow";
 export * from "./teacherStudentRowRiskLevel";
 export * from "./updateCardBody";
 export * from "./updateCardBodyCardType";
+export * from "./updateCardStatusBody";
+export * from "./updateCardStatusBodyStatus";
 export * from "./updateClassBody";
 export * from "./updateDeckBody";
 export * from "./user";

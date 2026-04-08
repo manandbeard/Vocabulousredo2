@@ -15,6 +15,10 @@ export interface Class {
   teacherId: number;
   /** @nullable */
   teacherName?: string | null;
+  /** @nullable */
+  icon?: string | null;
+  /** @nullable */
+  colorScheme?: string | null;
   enrollmentCount: number;
   deckCount: number;
   createdAt: Date;

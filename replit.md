@@ -105,6 +105,10 @@ Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used b
 
 Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
 
+### `lib/integrations-openai-ai-server` (`@workspace/integrations-openai-ai-server`)
+
+OpenAI AI integration via Replit AI Integrations proxy. Used by the AI card generation routes in `artifacts/api-server/src/routes/ai.ts`. Provides `openai` client pre-configured with `AI_INTEGRATIONS_OPENAI_BASE_URL` and `AI_INTEGRATIONS_OPENAI_API_KEY`.
+
 ### `scripts` (`@workspace/scripts`)
 
 Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
@@ -127,3 +131,33 @@ Utility scripts package. Each script is a `.ts` file in `src/` with a correspond
 - Deck progress bento grid (mastery %, cards mastered/learning/due, retention per deck)
 - Recent review history table (last 20 reviews with card, deck, grade, recalled, timestamp)
 - API: `GET /api/analytics/students/:studentId/detail?teacherId=:teacherId`
+
+## Teacher Deploy Content
+
+`/teacher/content` — Teacher content management page with 3 tabs (controlled by `?tab=` query param):
+
+1. **Create Content** (`?tab=create`, default):
+   - Manual card creation form (deck, card type, front, back, hint, tags, importance)
+   - AI card generation panel (terms, context, tags, count → preview list with Accept/Reject per card)
+   - Bulk upload panel (drag-drop PDF/.txt → AI-extracted card preview)
+
+2. **Word Bank** (`?tab=wordbank`):
+   - Searchable table of all teacher's cards
+   - Filters: class, tag, status (active/archived/all)
+   - Per-row: edit inline, archive, delete
+   - Batch select + batch archive/delete
+
+3. **Class Creation** (`?tab=classes`):
+   - Class creation form with icon (emoji picker grid) and color scheme (swatches)
+   - Preview card showing class appearance
+   - Google Classroom import placeholder (coming in v2)
+   - Lists existing classes with quick nav to detail page
+
+## AI Endpoints
+
+- `POST /api/ai/generate-cards` — generates flashcards from terms/context using GPT-5.2
+- `POST /api/ai/bulk-generate` — accepts multipart PDF/.txt upload, extracts text, generates cards
+
+## Card Schema Notes
+
+Cards have a `status` column with values `active | archived | deleted`. Use `PATCH /api/cards/:id/status` to change status. The old `DELETE /api/cards/:id` physically removes rows.

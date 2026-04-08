@@ -17,8 +17,10 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AssignCardBody,
   AtRiskStudent,
   AuthUser,
+  BulkGenerateCardsBody,
   Card,
   Class,
   ClassAnalytics,
@@ -32,6 +34,8 @@ import type {
   EnrollStudentBody,
   Enrollment,
   ErrorResponse,
+  GenerateCardsBody,
+  GeneratedCard,
   GetDueCardsParams,
   GetStudentDetailParams,
   GetStudentResearchDecksParams,
@@ -39,6 +43,7 @@ import type {
   GradeBlurtResult,
   HealthStatus,
   KnowledgeGraphTag,
+  ListAllCardsParams,
   ListClassesParams,
   ListDecksParams,
   ListStudentReviewsParams,
@@ -55,6 +60,7 @@ import type {
   TeacherAnalytics,
   TeacherStudentRow,
   UpdateCardBody,
+  UpdateCardStatusBody,
   UpdateClassBody,
   UpdateDeckBody,
   User,
@@ -1986,6 +1992,100 @@ export const useCreateCard = <
 };
 
 /**
+ * @summary List cards with optional filters
+ */
+export const getListAllCardsUrl = (params?: ListAllCardsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/cards?${stringifiedParams}`
+    : `/api/cards`;
+};
+
+export const listAllCards = async (
+  params?: ListAllCardsParams,
+  options?: RequestInit,
+): Promise<Card[]> => {
+  return customFetch<Card[]>(getListAllCardsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAllCardsQueryKey = (params?: ListAllCardsParams) => {
+  return [`/api/cards`, ...(params ? [params] : [])] as const;
+};
+
+export const getListAllCardsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAllCards>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListAllCardsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAllCards>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAllCardsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listAllCards>>> = ({
+    signal,
+  }) => listAllCards(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAllCards>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAllCardsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAllCards>>
+>;
+export type ListAllCardsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List cards with optional filters
+ */
+
+export function useListAllCards<
+  TData = Awaited<ReturnType<typeof listAllCards>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListAllCardsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listAllCards>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAllCardsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * @summary Get a card by ID
  */
 export const getGetCardUrl = (id: number) => {
@@ -2231,6 +2331,360 @@ export const useDeleteCard = <
   TContext
 > => {
   return useMutation(getDeleteCardMutationOptions(options));
+};
+
+/**
+ * @summary Update card status (archive or delete)
+ */
+export const getUpdateCardStatusUrl = (id: number) => {
+  return `/api/cards/${id}/status`;
+};
+
+export const updateCardStatus = async (
+  id: number,
+  updateCardStatusBody: UpdateCardStatusBody,
+  options?: RequestInit,
+): Promise<Card> => {
+  return customFetch<Card>(getUpdateCardStatusUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateCardStatusBody),
+  });
+};
+
+export const getUpdateCardStatusMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateCardStatus>>,
+    TError,
+    { id: number; data: BodyType<UpdateCardStatusBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateCardStatus>>,
+  TError,
+  { id: number; data: BodyType<UpdateCardStatusBody> },
+  TContext
+> => {
+  const mutationKey = ["updateCardStatus"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateCardStatus>>,
+    { id: number; data: BodyType<UpdateCardStatusBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateCardStatus(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateCardStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateCardStatus>>
+>;
+export type UpdateCardStatusMutationBody = BodyType<UpdateCardStatusBody>;
+export type UpdateCardStatusMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update card status (archive or delete)
+ */
+export const useUpdateCardStatus = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateCardStatus>>,
+    TError,
+    { id: number; data: BodyType<UpdateCardStatusBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateCardStatus>>,
+  TError,
+  { id: number; data: BodyType<UpdateCardStatusBody> },
+  TContext
+> => {
+  return useMutation(getUpdateCardStatusMutationOptions(options));
+};
+
+/**
+ * @summary Reassign a card to a different deck
+ */
+export const getAssignCardUrl = (id: number) => {
+  return `/api/cards/${id}/assign`;
+};
+
+export const assignCard = async (
+  id: number,
+  assignCardBody: AssignCardBody,
+  options?: RequestInit,
+): Promise<Card> => {
+  return customFetch<Card>(getAssignCardUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(assignCardBody),
+  });
+};
+
+export const getAssignCardMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof assignCard>>,
+    TError,
+    { id: number; data: BodyType<AssignCardBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof assignCard>>,
+  TError,
+  { id: number; data: BodyType<AssignCardBody> },
+  TContext
+> => {
+  const mutationKey = ["assignCard"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof assignCard>>,
+    { id: number; data: BodyType<AssignCardBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return assignCard(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AssignCardMutationResult = NonNullable<
+  Awaited<ReturnType<typeof assignCard>>
+>;
+export type AssignCardMutationBody = BodyType<AssignCardBody>;
+export type AssignCardMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Reassign a card to a different deck
+ */
+export const useAssignCard = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof assignCard>>,
+    TError,
+    { id: number; data: BodyType<AssignCardBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof assignCard>>,
+  TError,
+  { id: number; data: BodyType<AssignCardBody> },
+  TContext
+> => {
+  return useMutation(getAssignCardMutationOptions(options));
+};
+
+/**
+ * @summary Generate flashcards using AI
+ */
+export const getGenerateCardsUrl = () => {
+  return `/api/ai/generate-cards`;
+};
+
+export const generateCards = async (
+  generateCardsBody: GenerateCardsBody,
+  options?: RequestInit,
+): Promise<GeneratedCard[]> => {
+  return customFetch<GeneratedCard[]>(getGenerateCardsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(generateCardsBody),
+  });
+};
+
+export const getGenerateCardsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateCards>>,
+    TError,
+    { data: BodyType<GenerateCardsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof generateCards>>,
+  TError,
+  { data: BodyType<GenerateCardsBody> },
+  TContext
+> => {
+  const mutationKey = ["generateCards"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof generateCards>>,
+    { data: BodyType<GenerateCardsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return generateCards(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GenerateCardsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof generateCards>>
+>;
+export type GenerateCardsMutationBody = BodyType<GenerateCardsBody>;
+export type GenerateCardsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Generate flashcards using AI
+ */
+export const useGenerateCards = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateCards>>,
+    TError,
+    { data: BodyType<GenerateCardsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof generateCards>>,
+  TError,
+  { data: BodyType<GenerateCardsBody> },
+  TContext
+> => {
+  return useMutation(getGenerateCardsMutationOptions(options));
+};
+
+/**
+ * @summary Generate cards from an uploaded document (PDF or txt)
+ */
+export const getBulkGenerateCardsUrl = () => {
+  return `/api/ai/bulk-generate`;
+};
+
+export const bulkGenerateCards = async (
+  bulkGenerateCardsBody: BulkGenerateCardsBody,
+  options?: RequestInit,
+): Promise<GeneratedCard[]> => {
+  const formData = new FormData();
+  formData.append(`file`, bulkGenerateCardsBody.file);
+  if (bulkGenerateCardsBody.tags !== undefined) {
+    formData.append(`tags`, bulkGenerateCardsBody.tags);
+  }
+  if (bulkGenerateCardsBody.count !== undefined) {
+    formData.append(`count`, bulkGenerateCardsBody.count.toString());
+  }
+
+  return customFetch<GeneratedCard[]>(getBulkGenerateCardsUrl(), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const getBulkGenerateCardsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bulkGenerateCards>>,
+    TError,
+    { data: BodyType<BulkGenerateCardsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof bulkGenerateCards>>,
+  TError,
+  { data: BodyType<BulkGenerateCardsBody> },
+  TContext
+> => {
+  const mutationKey = ["bulkGenerateCards"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof bulkGenerateCards>>,
+    { data: BodyType<BulkGenerateCardsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return bulkGenerateCards(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type BulkGenerateCardsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof bulkGenerateCards>>
+>;
+export type BulkGenerateCardsMutationBody = BodyType<BulkGenerateCardsBody>;
+export type BulkGenerateCardsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Generate cards from an uploaded document (PDF or txt)
+ */
+export const useBulkGenerateCards = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bulkGenerateCards>>,
+    TError,
+    { data: BodyType<BulkGenerateCardsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof bulkGenerateCards>>,
+  TError,
+  { data: BodyType<BulkGenerateCardsBody> },
+  TContext
+> => {
+  return useMutation(getBulkGenerateCardsMutationOptions(options));
 };
 
 /**

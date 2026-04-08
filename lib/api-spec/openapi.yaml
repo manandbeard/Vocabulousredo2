@@ -509,6 +509,43 @@ paths:
               schema:
                 $ref: "#/components/schemas/Card"
 
+  /cards:
+    get:
+      operationId: listAllCards
+      tags: [cards]
+      summary: List cards with optional filters
+      parameters:
+        - name: teacherId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: classId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, archived, deleted]
+      responses:
+        "200":
+          description: List of cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Card"
+
   /cards/{id}:
     get:
       operationId: getCard
@@ -569,6 +606,122 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /cards/{id}/status:
+    patch:
+      operationId: updateCardStatus
+      tags: [cards]
+      summary: Update card status (archive or delete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCardStatusBody"
+      responses:
+        "200":
+          description: Updated card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cards/{id}/assign:
+    patch:
+      operationId: assignCard
+      tags: [cards]
+      summary: Reassign a card to a different deck
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignCardBody"
+      responses:
+        "200":
+          description: Updated card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ─── AI ──────────────────────────────────────────────────────────────────────
+  /ai/generate-cards:
+    post:
+      operationId: generateCards
+      tags: [ai]
+      summary: Generate flashcards using AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateCardsBody"
+      responses:
+        "200":
+          description: Generated cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GeneratedCard"
+
+  /ai/bulk-generate:
+    post:
+      operationId: bulkGenerateCards
+      tags: [ai]
+      summary: Generate cards from an uploaded document (PDF or txt)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                tags:
+                  type: string
+                  description: Comma-separated tags
+                count:
+                  type: integer
+              required:
+                - file
+      responses:
+        "200":
+          description: Generated cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GeneratedCard"
 
   # ─── Reviews ─────────────────────────────────────────────────────────────────
   /reviews:
@@ -1031,6 +1184,10 @@ components:
           type: integer
         teacherName:
           type: ["string", "null"]
+        icon:
+          type: ["string", "null"]
+        colorScheme:
+          type: ["string", "null"]
         enrollmentCount:
           type: integer
         deckCount:
@@ -1058,6 +1215,10 @@ components:
           type: string
         teacherId:
           type: integer
+        icon:
+          type: string
+        colorScheme:
+          type: string
       required:
         - name
         - subject
@@ -1071,6 +1232,10 @@ components:
         description:
           type: string
         subject:
+          type: string
+        icon:
+          type: string
+        colorScheme:
           type: string
 
     Enrollment:
@@ -1213,6 +1378,11 @@ components:
           type: ["integer", "null"]
         importance:
           type: integer
+        status:
+          type: string
+          enum: [active, archived, deleted]
+        contextNote:
+          type: ["string", "null"]
         createdAt:
           type: string
           format: date-time
@@ -1227,6 +1397,7 @@ components:
         - tags
         - cardType
         - importance
+        - status
         - createdAt
         - updatedAt
 
@@ -1906,3 +2077,57 @@ components:
         - feedback
         - missedConcepts
         - correctConcepts
+
+    GenerateCardsBody:
+      type: object
+      properties:
+        terms:
+          type: string
+        context:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        count:
+          type: integer
+      required:
+        - terms
+
+    GeneratedCard:
+      type: object
+      properties:
+        front:
+          type: string
+        back:
+          type: string
+        hint:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        cardType:
+          type: string
+          enum: [flashcard, multiple_choice, brain_dump]
+      required:
+        - front
+        - back
+        - cardType
+
+    UpdateCardStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, archived, deleted]
+      required:
+        - status
+
+    AssignCardBody:
+      type: object
+      properties:
+        deckId:
+          type: integer
+      required:
+        - deckId

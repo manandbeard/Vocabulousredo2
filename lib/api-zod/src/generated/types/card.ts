@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CardCardType } from "./cardCardType";
+import type { CardStatus } from "./cardStatus";
 
 export interface Card {
   id: number;
@@ -25,6 +26,9 @@ export interface Card {
   /** @nullable */
   mcCorrectIndex?: number | null;
   importance: number;
+  status: CardStatus;
+  /** @nullable */
+  contextNote?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

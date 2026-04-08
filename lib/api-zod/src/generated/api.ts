@@ -118,6 +118,8 @@ export const ListClassesResponseItem = zod.object({
   subject: zod.string(),
   teacherId: zod.number(),
   teacherName: zod.string().nullish(),
+  icon: zod.string().nullish(),
+  colorScheme: zod.string().nullish(),
   enrollmentCount: zod.number(),
   deckCount: zod.number(),
   createdAt: zod.date(),
@@ -132,6 +134,8 @@ export const CreateClassBody = zod.object({
   description: zod.string().optional(),
   subject: zod.string(),
   teacherId: zod.number(),
+  icon: zod.string().optional(),
+  colorScheme: zod.string().optional(),
 });
 
 /**
@@ -148,6 +152,8 @@ export const GetClassResponse = zod.object({
   subject: zod.string(),
   teacherId: zod.number(),
   teacherName: zod.string().nullish(),
+  icon: zod.string().nullish(),
+  colorScheme: zod.string().nullish(),
   enrollmentCount: zod.number(),
   deckCount: zod.number(),
   createdAt: zod.date(),
@@ -164,6 +170,8 @@ export const UpdateClassBody = zod.object({
   name: zod.string().optional(),
   description: zod.string().optional(),
   subject: zod.string().optional(),
+  icon: zod.string().optional(),
+  colorScheme: zod.string().optional(),
 });
 
 export const UpdateClassResponse = zod.object({
@@ -173,6 +181,8 @@ export const UpdateClassResponse = zod.object({
   subject: zod.string(),
   teacherId: zod.number(),
   teacherName: zod.string().nullish(),
+  icon: zod.string().nullish(),
+  colorScheme: zod.string().nullish(),
   enrollmentCount: zod.number(),
   deckCount: zod.number(),
   createdAt: zod.date(),
@@ -230,6 +240,8 @@ export const ListStudentClassesResponseItem = zod.object({
   subject: zod.string(),
   teacherId: zod.number(),
   teacherName: zod.string().nullish(),
+  icon: zod.string().nullish(),
+  colorScheme: zod.string().nullish(),
   enrollmentCount: zod.number(),
   deckCount: zod.number(),
   createdAt: zod.date(),
@@ -337,6 +349,8 @@ export const ListCardsResponseItem = zod.object({
   mcOptions: zod.array(zod.string()).nullish(),
   mcCorrectIndex: zod.number().nullish(),
   importance: zod.number(),
+  status: zod.enum(["active", "archived", "deleted"]),
+  contextNote: zod.string().nullish(),
   createdAt: zod.date(),
   updatedAt: zod.date(),
 });
@@ -363,6 +377,36 @@ export const CreateCardBody = zod.object({
 });
 
 /**
+ * @summary List cards with optional filters
+ */
+export const ListAllCardsQueryParams = zod.object({
+  teacherId: zod.coerce.number().optional(),
+  classId: zod.coerce.number().optional(),
+  tag: zod.coerce.string().optional(),
+  status: zod.enum(["active", "archived", "deleted"]).optional(),
+});
+
+export const ListAllCardsResponseItem = zod.object({
+  id: zod.number(),
+  deckId: zod.number(),
+  createdBy: zod.number().nullish(),
+  front: zod.string(),
+  back: zod.string(),
+  hint: zod.string().nullish(),
+  tags: zod.array(zod.string()),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]),
+  imageUrl: zod.string().nullish(),
+  mcOptions: zod.array(zod.string()).nullish(),
+  mcCorrectIndex: zod.number().nullish(),
+  importance: zod.number(),
+  status: zod.enum(["active", "archived", "deleted"]),
+  contextNote: zod.string().nullish(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+export const ListAllCardsResponse = zod.array(ListAllCardsResponseItem);
+
+/**
  * @summary Get a card by ID
  */
 export const GetCardParams = zod.object({
@@ -382,6 +426,8 @@ export const GetCardResponse = zod.object({
   mcOptions: zod.array(zod.string()).nullish(),
   mcCorrectIndex: zod.number().nullish(),
   importance: zod.number(),
+  status: zod.enum(["active", "archived", "deleted"]),
+  contextNote: zod.string().nullish(),
   createdAt: zod.date(),
   updatedAt: zod.date(),
 });
@@ -418,6 +464,8 @@ export const UpdateCardResponse = zod.object({
   mcOptions: zod.array(zod.string()).nullish(),
   mcCorrectIndex: zod.number().nullish(),
   importance: zod.number(),
+  status: zod.enum(["active", "archived", "deleted"]),
+  contextNote: zod.string().nullish(),
   createdAt: zod.date(),
   updatedAt: zod.date(),
 });
@@ -428,6 +476,105 @@ export const UpdateCardResponse = zod.object({
 export const DeleteCardParams = zod.object({
   id: zod.coerce.number(),
 });
+
+/**
+ * @summary Update card status (archive or delete)
+ */
+export const UpdateCardStatusParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateCardStatusBody = zod.object({
+  status: zod.enum(["active", "archived", "deleted"]),
+});
+
+export const UpdateCardStatusResponse = zod.object({
+  id: zod.number(),
+  deckId: zod.number(),
+  createdBy: zod.number().nullish(),
+  front: zod.string(),
+  back: zod.string(),
+  hint: zod.string().nullish(),
+  tags: zod.array(zod.string()),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]),
+  imageUrl: zod.string().nullish(),
+  mcOptions: zod.array(zod.string()).nullish(),
+  mcCorrectIndex: zod.number().nullish(),
+  importance: zod.number(),
+  status: zod.enum(["active", "archived", "deleted"]),
+  contextNote: zod.string().nullish(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Reassign a card to a different deck
+ */
+export const AssignCardParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AssignCardBody = zod.object({
+  deckId: zod.number(),
+});
+
+export const AssignCardResponse = zod.object({
+  id: zod.number(),
+  deckId: zod.number(),
+  createdBy: zod.number().nullish(),
+  front: zod.string(),
+  back: zod.string(),
+  hint: zod.string().nullish(),
+  tags: zod.array(zod.string()),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]),
+  imageUrl: zod.string().nullish(),
+  mcOptions: zod.array(zod.string()).nullish(),
+  mcCorrectIndex: zod.number().nullish(),
+  importance: zod.number(),
+  status: zod.enum(["active", "archived", "deleted"]),
+  contextNote: zod.string().nullish(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Generate flashcards using AI
+ */
+export const GenerateCardsBody = zod.object({
+  terms: zod.string(),
+  context: zod.string().optional(),
+  tags: zod.array(zod.string()).optional(),
+  count: zod.number().optional(),
+});
+
+export const GenerateCardsResponseItem = zod.object({
+  front: zod.string(),
+  back: zod.string(),
+  hint: zod.string().nullish(),
+  tags: zod.array(zod.string()).optional(),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]),
+});
+export const GenerateCardsResponse = zod.array(GenerateCardsResponseItem);
+
+/**
+ * @summary Generate cards from an uploaded document (PDF or txt)
+ */
+export const BulkGenerateCardsBody = zod.object({
+  file: zod.instanceof(File),
+  tags: zod.string().optional().describe("Comma-separated tags"),
+  count: zod.number().optional(),
+});
+
+export const BulkGenerateCardsResponseItem = zod.object({
+  front: zod.string(),
+  back: zod.string(),
+  hint: zod.string().nullish(),
+  tags: zod.array(zod.string()).optional(),
+  cardType: zod.enum(["flashcard", "multiple_choice", "brain_dump"]),
+});
+export const BulkGenerateCardsResponse = zod.array(
+  BulkGenerateCardsResponseItem,
+);
 
 /**
  * @summary Submit a card review

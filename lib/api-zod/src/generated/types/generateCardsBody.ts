@@ -6,10 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UpdateClassBody {
-  name?: string;
-  description?: string;
-  subject?: string;
-  icon?: string;
-  colorScheme?: string;
+export interface GenerateCardsBody {
+  terms: string;
+  context?: string;
+  tags?: string[];
+  count?: number;
 }

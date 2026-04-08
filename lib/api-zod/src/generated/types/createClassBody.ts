@@ -11,4 +11,6 @@ export interface CreateClassBody {
   description?: string;
   subject: string;
   teacherId: number;
+  icon?: string;
+  colorScheme?: string;
 }
