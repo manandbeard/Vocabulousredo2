@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { db, cardsTable, decksTable } from "@workspace/db";
+import { requireAuth } from "../middlewares/auth";
 import {
   ListCardsParams,
   ListCardsResponse,
@@ -89,7 +90,7 @@ router.get("/decks/:deckId/cards", async (req, res): Promise<void> => {
   res.json(ListCardsResponse.parse(cards));
 });
 
-router.post("/decks/:deckId/cards", async (req, res): Promise<void> => {
+router.post("/decks/:deckId/cards", requireAuth, async (req, res): Promise<void> => {
   const params = CreateCardParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -100,7 +101,7 @@ router.post("/decks/:deckId/cards", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const createdBy = (req as any).user?.id ?? parsed.data.createdBy ?? null;
+  const createdBy = req.user!.id;
   const [card] = await db
     .insert(cardsTable)
     .values({ ...parsed.data, deckId: params.data.deckId, tags: parsed.data.tags ?? [], createdBy })
