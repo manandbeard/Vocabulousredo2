@@ -2,7 +2,6 @@ import { useGetTeacherBottlenecks } from "@workspace/api-client-react";
 import { useRole } from "@/hooks/use-role";
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
-  AlertTriangle,
   BookOpen,
   TrendingDown,
   Clock,
@@ -10,6 +9,7 @@ import {
   BarChart2,
   RefreshCw,
   CheckCircle2,
+  XCircle,
 } from "lucide-react";
 
 function pct(rate: number) {
@@ -82,7 +82,7 @@ export default function TeacherBottlenecks() {
   const { userId } = useRole();
   const safeUserId = userId ?? 0;
 
-  const { data, isLoading } = useGetTeacherBottlenecks(safeUserId, {
+  const { data, isLoading, isError } = useGetTeacherBottlenecks(safeUserId, {
     query: { enabled: safeUserId > 0 },
   });
 
@@ -174,8 +174,21 @@ export default function TeacherBottlenecks() {
           )}
         </div>
 
+        {/* Error state */}
+        {isError && (
+          <div className="bg-white rounded-3xl border border-red-100 shadow-sm py-16 text-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600 mb-4">
+              <XCircle className="h-7 w-7" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">Failed to load bottleneck data</h3>
+            <p className="text-slate-500 mt-2 text-sm max-w-sm mx-auto">
+              There was a problem fetching analytics. Please reload the page to try again.
+            </p>
+          </div>
+        )}
+
         {/* Empty state */}
-        {!isLoading && !hasData && (
+        {!isLoading && !isError && !hasData && (
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm py-20 text-center">
             <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-4">
               <CheckCircle2 className="h-8 w-8" />
