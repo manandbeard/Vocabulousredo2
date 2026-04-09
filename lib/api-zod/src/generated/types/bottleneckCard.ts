@@ -9,6 +9,7 @@
 export interface BottleneckCard {
   cardId: number;
   deckId: number;
+  deckName: string;
   front: string;
   back: string;
   tags: string[];
