@@ -1362,7 +1362,7 @@ components:
         description:
           type: string
         classId:
-          type: integer
+          type: ["integer", "null"]
 
     # ─── Cards ─────────────────────────────────────────────────────────────────
     Card:

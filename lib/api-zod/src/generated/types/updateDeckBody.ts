@@ -9,5 +9,5 @@
 export interface UpdateDeckBody {
   name?: string;
   description?: string;
-  classId?: number;
+  classId?: number | null;
 }

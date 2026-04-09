@@ -167,7 +167,7 @@ export interface CreateDeckBody {
 export interface UpdateDeckBody {
   name?: string;
   description?: string;
-  classId?: number;
+  classId?: number | null;
 }
 
 export type CardCardType = (typeof CardCardType)[keyof typeof CardCardType];

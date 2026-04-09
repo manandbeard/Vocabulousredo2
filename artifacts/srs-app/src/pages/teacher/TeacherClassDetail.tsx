@@ -6,6 +6,8 @@ import {
   useListDecks,
   useGetAtRiskStudents,
   useCreateDeck,
+  useUpdateDeck,
+  useListClasses,
   getListDecksQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,9 +15,26 @@ import { useRole } from "@/hooks/use-role";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, Users, Layers, ArrowLeft, Plus, ChevronRight, Brain } from "lucide-react";
+import {
+  AlertTriangle,
+  Users,
+  Layers,
+  ArrowLeft,
+  Plus,
+  Brain,
+  Search,
+  MoreVertical,
+  ExternalLink,
+  Unlink,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function TeacherClassDetail() {
@@ -29,11 +48,58 @@ export default function TeacherClassDetail() {
   const { data: cls, isLoading: clsLoading } = useGetClass(classId);
   const { data: students } = useListClassStudents(classId);
   const { data: decks } = useListDecks({ classId });
+  const { data: allTeacherDecks } = useListDecks({ teacherId: safeUserId });
+  const { data: classes } = useListClasses({ teacherId: safeUserId });
   const { data: atRisk } = useGetAtRiskStudents(classId);
 
   const createDeckMut = useCreateDeck();
+  const updateDeckMut = useUpdateDeck();
+
   const [isDeckOpen, setIsDeckOpen] = useState(false);
+  const [dialogTab, setDialogTab] = useState<"assign" | "create">("assign");
+  const [search, setSearch] = useState("");
   const [deckForm, setDeckForm] = useState({ name: "", description: "" });
+  const [assigningId, setAssigningId] = useState<number | null>(null);
+
+  const invalidateDecks = () => {
+    queryClient.invalidateQueries({ queryKey: getListDecksQueryKey({ classId }) });
+    queryClient.invalidateQueries({ queryKey: getListDecksQueryKey({ teacherId: safeUserId }) });
+  };
+
+  const classMap = new Map((classes ?? []).map((c) => [c.id, c.name]));
+
+  const assignableDecks = (allTeacherDecks ?? []).filter(
+    (d) => d.classId !== classId
+  );
+
+  const filteredAssignable = assignableDecks.filter((d) =>
+    d.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleAssignDeck = async (deckId: number) => {
+    setAssigningId(deckId);
+    try {
+      await updateDeckMut.mutateAsync({ id: deckId, data: { classId } });
+      toast({ title: "Deck assigned to class" });
+      setIsDeckOpen(false);
+      setSearch("");
+      invalidateDecks();
+    } catch {
+      toast({ title: "Failed to assign deck", variant: "destructive" });
+    } finally {
+      setAssigningId(null);
+    }
+  };
+
+  const handleRemoveDeck = async (deckId: number) => {
+    try {
+      await updateDeckMut.mutateAsync({ id: deckId, data: { classId: null } });
+      toast({ title: "Deck removed from class" });
+      invalidateDecks();
+    } catch {
+      toast({ title: "Failed to remove deck", variant: "destructive" });
+    }
+  };
 
   const handleCreateDeck = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +110,7 @@ export default function TeacherClassDetail() {
       toast({ title: "Deck created successfully" });
       setIsDeckOpen(false);
       setDeckForm({ name: "", description: "" });
-      queryClient.invalidateQueries({ queryKey: getListDecksQueryKey({ classId }) });
+      invalidateDecks();
     } catch {
       toast({ title: "Failed to create deck", variant: "destructive" });
     }
@@ -120,54 +186,200 @@ export default function TeacherClassDetail() {
           <TabsContent value="decks" className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Study Decks</p>
-              <Dialog open={isDeckOpen} onOpenChange={setIsDeckOpen}>
+              <Dialog open={isDeckOpen} onOpenChange={(open) => {
+                setIsDeckOpen(open);
+                if (!open) {
+                  setSearch("");
+                  setDeckForm({ name: "", description: "" });
+                  setDialogTab("assign");
+                }
+              }}>
                 <DialogTrigger asChild>
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors">
                     <Plus className="h-4 w-4" /> Add Deck
                   </button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px] rounded-3xl border border-slate-200">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl font-bold text-slate-900">Create New Deck</DialogTitle>
+                <DialogContent className="sm:max-w-[520px] rounded-3xl border border-slate-200 p-0 overflow-hidden">
+                  <DialogHeader className="px-6 pt-6 pb-0">
+                    <DialogTitle className="text-xl font-bold text-slate-900">Add Content to Class</DialogTitle>
+                    <p className="text-sm text-slate-500 mt-1">Assign an existing deck or create a new one.</p>
                   </DialogHeader>
-                  <form onSubmit={handleCreateDeck} className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label className="text-slate-700 font-medium">Deck Name</Label>
-                      <Input required value={deckForm.name}
-                        onChange={e => setDeckForm(p => ({ ...p, name: e.target.value }))}
-                        className="rounded-xl border-slate-200" placeholder="e.g. Chapter 5 Vocabulary" />
+
+                  {/* Inner tab switcher */}
+                  <div className="px-6 pt-4">
+                    <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
+                      <button
+                        onClick={() => setDialogTab("assign")}
+                        className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          dialogTab === "assign"
+                            ? "bg-white text-slate-900 shadow-sm"
+                            : "text-slate-500 hover:text-slate-700"
+                        }`}
+                      >
+                        Assign Existing
+                      </button>
+                      <button
+                        onClick={() => setDialogTab("create")}
+                        className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          dialogTab === "create"
+                            ? "bg-white text-slate-900 shadow-sm"
+                            : "text-slate-500 hover:text-slate-700"
+                        }`}
+                      >
+                        Create New
+                      </button>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-slate-700 font-medium">Description (Optional)</Label>
-                      <Input value={deckForm.description}
-                        onChange={e => setDeckForm(p => ({ ...p, description: e.target.value }))}
-                        className="rounded-xl border-slate-200" />
+                  </div>
+
+                  {dialogTab === "assign" ? (
+                    <div className="px-6 pb-6 pt-4 space-y-3">
+                      {/* Search */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          placeholder="Search decks..."
+                          className="pl-9 rounded-xl border-slate-200"
+                        />
+                      </div>
+
+                      {/* Deck list */}
+                      <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+                        {filteredAssignable.length === 0 ? (
+                          <div className="py-10 text-center">
+                            <Layers className="mx-auto h-8 w-8 text-slate-300 mb-3" />
+                            {assignableDecks.length === 0 ? (
+                              <>
+                                <p className="text-slate-500 text-sm font-medium">No available decks</p>
+                                <p className="text-slate-400 text-xs mt-1">All your decks are already in this class, or you haven't created any yet.</p>
+                                <Link href="/teacher/decks" onClick={() => setIsDeckOpen(false)}>
+                                  <span className="inline-block mt-3 text-xs text-blue-600 hover:underline font-medium">
+                                    Manage Decks →
+                                  </span>
+                                </Link>
+                              </>
+                            ) : (
+                              <p className="text-slate-400 text-sm">No decks match your search.</p>
+                            )}
+                          </div>
+                        ) : (
+                          filteredAssignable.map((deck) => {
+                            const currentClass = deck.classId ? classMap.get(deck.classId) : null;
+                            const isLoading = assigningId === deck.id;
+                            return (
+                              <button
+                                key={deck.id}
+                                onClick={() => handleAssignDeck(deck.id)}
+                                disabled={isLoading || assigningId !== null}
+                                className="w-full flex items-center justify-between bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-2xl px-4 py-3 transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed group"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center flex-shrink-0">
+                                    <Layers className="h-4 w-4 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-slate-900 text-sm group-hover:text-blue-700 transition-colors">{deck.name}</p>
+                                    <p className="text-xs text-slate-500">{deck.cardCount ?? 0} cards</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {currentClass ? (
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium shrink-0">
+                                      {currentClass}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-medium shrink-0">
+                                      Unassigned
+                                    </span>
+                                  )}
+                                  {isLoading ? (
+                                    <span className="text-xs text-blue-600 font-medium">Assigning…</span>
+                                  ) : (
+                                    <Plus className="h-4 w-4 text-slate-300 group-hover:text-blue-500 transition-colors shrink-0" />
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
                     </div>
-                    <button type="submit" disabled={createDeckMut.isPending}
-                      className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium transition-colors disabled:opacity-50 mt-2">
-                      {createDeckMut.isPending ? "Creating..." : "Create Deck"}
-                    </button>
-                  </form>
+                  ) : (
+                    <form onSubmit={handleCreateDeck} className="px-6 pb-6 pt-4 space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-slate-700 font-medium text-sm">
+                          Deck Name <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          required
+                          autoFocus
+                          value={deckForm.name}
+                          onChange={e => setDeckForm(p => ({ ...p, name: e.target.value }))}
+                          className="rounded-xl border-slate-200"
+                          placeholder="e.g. Chapter 5 Vocabulary"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-slate-700 font-medium text-sm">
+                          Description <span className="text-slate-400 font-normal">(optional)</span>
+                        </Label>
+                        <Input
+                          value={deckForm.description}
+                          onChange={e => setDeckForm(p => ({ ...p, description: e.target.value }))}
+                          className="rounded-xl border-slate-200"
+                          placeholder="A brief description of this deck..."
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={createDeckMut.isPending}
+                        className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium transition-colors disabled:opacity-50"
+                      >
+                        {createDeckMut.isPending ? "Creating…" : "Create & Assign Deck"}
+                      </button>
+                    </form>
+                  )}
                 </DialogContent>
               </Dialog>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {decks?.map(deck => (
-                <Link key={deck.id} href={`/teacher/decks/${deck.id}`}>
-                  <div className="bg-white border border-slate-200 rounded-3xl p-6 hover:border-slate-400 transition-colors cursor-pointer group shadow-sm flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center">
-                        <Layers className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{deck.name}</h3>
-                        <p className="text-sm text-slate-500">{deck.cardCount} cards</p>
-                      </div>
+                <div
+                  key={deck.id}
+                  className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex items-center justify-between group hover:border-slate-300 transition-colors"
+                >
+                  <Link href={`/teacher/decks/${deck.id}`} className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                      <Layers className="h-6 w-6" />
                     </div>
-                    <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-slate-700 transition-colors group-hover:translate-x-0.5" />
-                  </div>
-                </Link>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">{deck.name}</h3>
+                      <p className="text-sm text-slate-500">{deck.cardCount} cards</p>
+                    </div>
+                  </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100">
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-xl">
+                      <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                        <Link href={`/teacher/decks/${deck.id}`}>
+                          <ExternalLink className="h-4 w-4" /> View Cards
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleRemoveDeck(deck.id)}
+                        className="gap-2 cursor-pointer text-red-600 focus:text-red-600"
+                      >
+                        <Unlink className="h-4 w-4" /> Remove from Class
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ))}
               {decks?.length === 0 && (
                 <div className="col-span-full py-12 text-center bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm">

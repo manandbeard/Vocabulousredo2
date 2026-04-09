@@ -308,7 +308,7 @@ export const UpdateDeckParams = zod.object({
 export const UpdateDeckBody = zod.object({
   name: zod.string().optional(),
   description: zod.string().optional(),
-  classId: zod.number().optional(),
+  classId: zod.number().nullable().optional(),
 });
 
 export const UpdateDeckResponse = zod.object({
