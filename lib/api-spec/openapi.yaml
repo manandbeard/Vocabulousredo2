@@ -2158,6 +2158,8 @@ components:
           type: integer
         deckId:
           type: integer
+        deckName:
+          type: string
         front:
           type: string
         back:
@@ -2177,6 +2179,7 @@ components:
       required:
         - cardId
         - deckId
+        - deckName
         - front
         - back
         - tags

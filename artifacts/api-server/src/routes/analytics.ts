@@ -1094,6 +1094,7 @@ router.get("/analytics/teacher/:teacherId/bottlenecks", async (req, res): Promis
     .select({
       cardId: cardsTable.id,
       deckId: cardsTable.deckId,
+      deckName: decksTable.name,
       front: cardsTable.front,
       back: cardsTable.back,
       tags: cardsTable.tags,
@@ -1108,13 +1109,14 @@ router.get("/analytics/teacher/:teacherId/bottlenecks", async (req, res): Promis
     .innerJoin(decksTable, eq(cardsTable.deckId, decksTable.id))
     .innerJoin(classesTable, eq(decksTable.classId, classesTable.id))
     .where(eq(classesTable.teacherId, teacherId))
-    .groupBy(cardsTable.id)
+    .groupBy(cardsTable.id, decksTable.name)
     .orderBy(sql`avg(${reviewsTable.grade}) asc`)
     .limit(50);
 
   const struggleCards = struggleCardsRaw.map((c) => ({
     cardId: c.cardId,
     deckId: c.deckId,
+    deckName: c.deckName,
     front: c.front,
     back: c.back,
     tags: c.tags ?? [],

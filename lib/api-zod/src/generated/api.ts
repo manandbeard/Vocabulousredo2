@@ -958,6 +958,7 @@ export const GetTeacherBottlenecksResponse = zod.object({
     .object({
       cardId: zod.number(),
       deckId: zod.number(),
+      deckName: zod.string(),
       front: zod.string(),
       back: zod.string(),
       tags: zod.array(zod.string()),
@@ -971,6 +972,7 @@ export const GetTeacherBottlenecksResponse = zod.object({
     .object({
       cardId: zod.number(),
       deckId: zod.number(),
+      deckName: zod.string(),
       front: zod.string(),
       back: zod.string(),
       tags: zod.array(zod.string()),
@@ -998,6 +1000,7 @@ export const GetTeacherBottlenecksResponse = zod.object({
     zod.object({
       cardId: zod.number(),
       deckId: zod.number(),
+      deckName: zod.string(),
       front: zod.string(),
       back: zod.string(),
       tags: zod.array(zod.string()),
