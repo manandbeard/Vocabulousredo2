@@ -13,8 +13,8 @@ paths = ["/api"]
 run = "pnpm --filter @workspace/api-server run dev"
 
 [services.production]
-run = ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]
-build = ["sh", "scripts/build-production.sh"]
+run = "node --enable-source-maps artifacts/api-server/dist/index.mjs"
+build = "sh scripts/build-production.sh"
 
 [services.production.env]
 PORT = "8080"
