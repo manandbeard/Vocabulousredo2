@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { BookOpen, BarChart3, Settings, LogOut, Home, Rocket, Presentation, ChevronDown, Info, BrainCircuit, TrendingUp, LogIn, UserPlus, Users } from "lucide-react";
+import { BookOpen, BarChart3, Settings, LogOut, Home, Rocket, Presentation, ChevronDown, Info, BrainCircuit, TrendingUp, LogIn, UserPlus, Users, Upload, AlertTriangle, Trophy, FlaskConical } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useRole } from "@/hooks/use-role";
 
@@ -83,15 +83,18 @@ export function TopNav() {
   const navItems = role === "teacher"
     ? [
         { label: "Dashboard", href: "/teacher", icon: Home },
-        { label: "Classes", href: "/teacher/classes", icon: BookOpen },
-        { label: "Students", href: "/teacher/heatmap", icon: Users },
+        { label: "Deploy Content", href: "/teacher/content", icon: Upload },
+        { label: "Student Heatmap", href: "/teacher/heatmap", icon: Users },
+        { label: "Content Bottlenecks", href: "/teacher/bottlenecks", icon: AlertTriangle },
         { label: "Analytics", href: "/teacher/analytics", icon: BarChart3 },
       ]
     : [
         { label: "Dashboard", href: "/student", icon: Home },
         { label: "Study", href: "/student/study", icon: BrainCircuit },
         { label: "Learning Lab", href: "/student/learning-lab", icon: TrendingUp },
+        { label: "Research", href: "/student/research", icon: FlaskConical },
         { label: "Progress", href: "/student/progress", icon: BarChart3 },
+        { label: "Achievements", href: "/student/achievements", icon: Trophy },
       ];
 
   const infoItems = [

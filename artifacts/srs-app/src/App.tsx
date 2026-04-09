@@ -88,6 +88,7 @@ function Router() {
       <Route path="/teacher/decks/:id">{() => <RequireRole required="teacher" component={TeacherDeckDetail} />}</Route>
       <Route path="/teacher/analytics">{() => <RequireRole required="teacher" component={TeacherAnalytics} />}</Route>
       <Route path="/teacher/heatmap">{() => <RequireRole required="teacher" component={TeacherStudentHeatmap} />}</Route>
+      <Route path="/teacher/bottlenecks">{() => <RequireRole required="teacher" component={TeacherBottlenecks} />}</Route>
       <Route path="/teacher/students/:id">{() => <RequireRole required="teacher" component={TeacherStudentDetail} />}</Route>
       <Route path="/teacher/bottlenecks">{() => <RequireRole required="teacher" component={TeacherBottlenecks} />}</Route>
 
