@@ -6,12 +6,13 @@ import {
   Bell, Layers, Award, Star
 } from "lucide-react";
 import { SynapticWeb } from "@/components/ui/synaptic-web";
+import logo from "@/assets/vocabulous-logo.png";
 
 function LogoMark({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const dims: Record<string, string> = { sm: "w-6 h-6", md: "w-7 h-7", lg: "w-8 h-8" };
   return (
     <div className={`${dims[size]} rounded-lg overflow-hidden flex-shrink-0`}>
-      <img src="/src/assets/vocabulous-logo.png" alt="Vocabulous²" className="w-full h-full object-contain" />
+      <img src={logo} alt="Vocabulous²" className="w-full h-full object-contain" />
     </div>
   );
 }

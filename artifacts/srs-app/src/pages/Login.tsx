@@ -4,6 +4,7 @@ import { Eye, EyeOff, GraduationCap, Users, ArrowRight } from "lucide-react";
 import { SynapticWeb } from "@/components/ui/synaptic-web";
 import { useRole } from "@/hooks/use-role";
 import { login } from "@workspace/api-client-react";
+import logo from "@/assets/vocabulous-logo.png";
 
 export default function Login() {
   const [, navigate] = useLocation();
@@ -39,7 +40,7 @@ export default function Login() {
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="w-8 h-8 rounded-lg overflow-hidden">
-            <img src="/src/assets/vocabulous-logo.png" alt="Vocabulous²" className="w-full h-full object-contain" />
+            <img src={logo} alt="Vocabulous²" className="w-full h-full object-contain" />
           </div>
           <span className="font-bold text-xl tracking-tight text-slate-900">Vocabulous²</span>
         </div>

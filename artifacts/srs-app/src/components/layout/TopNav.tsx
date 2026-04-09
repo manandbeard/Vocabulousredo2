@@ -2,9 +2,10 @@ import { useLocation } from "wouter";
 import { BookOpen, BarChart3, Settings, LogOut, Home, Rocket, Presentation, ChevronDown, Info, BrainCircuit, TrendingUp, LogIn, UserPlus, Users, Upload, AlertTriangle, Trophy, FlaskConical } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useRole } from "@/hooks/use-role";
+import logo from "@/assets/vocabulous-logo.png";
 
 function LogoMark() {
-  return <img src="/src/assets/vocabulous-logo.png" alt="Vocabulous²" className="w-full h-full object-contain" />;
+  return <img src={logo} alt="Vocabulous²" className="w-full h-full object-contain" />;
 }
 
 export function TopNav() {
