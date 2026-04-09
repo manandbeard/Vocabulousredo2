@@ -10,7 +10,7 @@ import { ShadowCard } from "@/components/ui/ShadowCard";
 import { DAYS, getSceneImage } from "@/lib/dashboard-constants";
 
 export default function TeacherDashboard() {
-  const { userId } = useRole();
+  const { userId, user } = useRole();
   const { data: analytics, isLoading, error } = useGetTeacherAnalytics(userId || 1);
   const { data: milestones } = useGetTeacherMilestones(userId || 1);
 
@@ -71,7 +71,7 @@ export default function TeacherDashboard() {
             <h1 className="text-4xl font-light text-slate-900">
               Welcome back,{" "}
               <span className="font-bold text-transparent bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text">
-                Dr. Smith
+                {user?.name ?? "Teacher"}
               </span>
             </h1>
             <p className="mt-2 text-slate-500 font-light">
