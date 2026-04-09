@@ -3,6 +3,10 @@ import { BookOpen, BarChart3, Settings, LogOut, Home, Rocket, Presentation, Chev
 import { useRef, useState, useEffect } from "react";
 import { useRole } from "@/hooks/use-role";
 
+function LogoMark() {
+  return <img src="/src/assets/vocabulous-logo.png" alt="Vocabulous²" className="w-full h-full object-contain" />;
+}
+
 export function TopNav() {
   const { role, signOut } = useRole();
   const [location, navigate] = useLocation();
@@ -32,8 +36,8 @@ export function TopNav() {
             onClick={() => navigate("/")}
             className="flex items-center gap-2 font-bold text-slate-900 hover:opacity-80 transition-opacity"
           >
-            <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center">
-              <span className="text-white text-xs font-black">V</span>
+            <div className="w-6 h-6 rounded-lg overflow-hidden bg-white">
+              <LogoMark />
             </div>
             <span>Vocabulous²</span>
           </button>
@@ -110,8 +114,8 @@ export function TopNav() {
             onClick={() => navigate(role === "teacher" ? "/teacher" : "/student")}
             className="flex items-center gap-2 font-bold text-slate-900 hover:opacity-80 transition-opacity"
           >
-            <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center">
-              <span className="text-white text-xs font-black">V</span>
+            <div className="w-6 h-6 rounded-lg overflow-hidden bg-white">
+              <LogoMark />
             </div>
             <span>Vocabulous²</span>
           </button>

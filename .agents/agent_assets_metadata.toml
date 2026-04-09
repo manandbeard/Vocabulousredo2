@@ -108,3 +108,9 @@ id = "yKHAGFA_3UOvtkoi8Ykdv"
 uri = "file://artifacts/srs-app/public/images/card-bg-deep-reading.png"
 type = "image"
 title = "Student deep in reading"
+
+[[generated]]
+id = "hcVSQv2SmPAtC5dqp9kHl"
+uri = "file://artifacts/srs-app/src/assets/vocabulous-logo.png"
+type = "image"
+title = "Vocabulous logo mark"
