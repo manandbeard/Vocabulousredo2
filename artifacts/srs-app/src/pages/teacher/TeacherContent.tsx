@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useListDecks,
   useCreateCard,
+  useCreateDeck,
   useListAllCards,
   useUpdateCardStatus,
   useUpdateCard,
@@ -15,6 +16,7 @@ import {
   useUpdateClass,
   getListAllCardsQueryKey,
   getListClassesQueryKey,
+  getListDecksQueryKey,
 } from "@workspace/api-client-react";
 
 import { Button } from "@/components/ui/button";
@@ -179,6 +181,43 @@ function CreateContentTab({
 }) {
   const { data: decks } = useListDecks({ teacherId: userId });
   const createCardMut = useCreateCard();
+  const createDeckMut = useCreateDeck();
+
+  const [newDeckOpen, setNewDeckOpen] = useState(false);
+  const [newDeckForm, setNewDeckForm] = useState({ name: "", description: "" });
+  const [newDeckTarget, setNewDeckTarget] = useState<"manual" | "aibulk">("manual");
+
+  const handleQuickCreateDeck = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDeckForm.name.trim()) return;
+    try {
+      const created = await createDeckMut.mutateAsync({
+        data: {
+          name: newDeckForm.name.trim(),
+          description: newDeckForm.description.trim() || undefined,
+          teacherId: userId,
+        },
+      });
+      toast({ title: `Deck "${created.name}" created` });
+      queryClient.invalidateQueries({ queryKey: getListDecksQueryKey({ teacherId: userId }) });
+      const newId = String(created.id);
+      if (newDeckTarget === "manual") {
+        setForm((p) => ({ ...p, deckId: newId }));
+      } else {
+        setAiForm((p) => ({ ...p, deckId: newId }));
+      }
+      setNewDeckOpen(false);
+      setNewDeckForm({ name: "", description: "" });
+    } catch {
+      toast({ title: "Failed to create deck", variant: "destructive" });
+    }
+  };
+
+  const openNewDeckDialog = (target: "manual" | "aibulk") => {
+    setNewDeckTarget(target);
+    setNewDeckForm({ name: "", description: "" });
+    setNewDeckOpen(true);
+  };
 
   const [form, setForm] = useState({
     front: "",
@@ -370,6 +409,13 @@ function CreateContentTab({
                   ))}
                 </SelectContent>
               </Select>
+              <button
+                type="button"
+                onClick={() => openNewDeckDialog("manual")}
+                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium mt-1"
+              >
+                <Plus className="h-3 w-3" /> New Deck
+              </button>
             </div>
             <div className="space-y-1.5">
               <Label className="text-slate-700 font-medium text-sm">Card Type</Label>
@@ -497,6 +543,7 @@ function CreateContentTab({
               decks={decks ?? []}
               onSave={handleSaveBulkAccepted}
               isPending={createCardMut.isPending}
+              onNewDeck={() => openNewDeckDialog("aibulk")}
             />
           )}
         </div>
@@ -573,9 +620,52 @@ function CreateContentTab({
             decks={decks ?? []}
             onSave={handleSaveAccepted}
             isPending={createCardMut.isPending}
+            onNewDeck={() => openNewDeckDialog("aibulk")}
           />
         )}
       </div>
+
+      <Dialog open={newDeckOpen} onOpenChange={setNewDeckOpen}>
+        <DialogContent className="rounded-3xl sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900">New Deck</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleQuickCreateDeck} className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label className="text-slate-700 font-medium text-sm">Name <span className="text-red-500">*</span></Label>
+              <Input
+                required
+                value={newDeckForm.name}
+                onChange={(e) => setNewDeckForm((p) => ({ ...p, name: e.target.value }))}
+                className="rounded-xl border-slate-200"
+                placeholder="e.g. Chapter 4 — Cell Biology"
+                autoFocus
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-slate-700 font-medium text-sm">Description <span className="text-slate-400 font-normal">(optional)</span></Label>
+              <Input
+                value={newDeckForm.description}
+                onChange={(e) => setNewDeckForm((p) => ({ ...p, description: e.target.value }))}
+                className="rounded-xl border-slate-200"
+                placeholder="Brief description..."
+              />
+            </div>
+            <div className="flex gap-2 justify-end pt-1">
+              <Button type="button" variant="outline" onClick={() => setNewDeckOpen(false)} className="rounded-xl">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={createDeckMut.isPending}
+                className="rounded-xl bg-slate-900 hover:bg-slate-800"
+              >
+                {createDeckMut.isPending ? "Creating..." : "Create & Select"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -588,6 +678,7 @@ function CardPreviewList({
   decks,
   onSave,
   isPending,
+  onNewDeck,
 }: {
   cards: GeneratedCardPreview[];
   setCards: (cards: GeneratedCardPreview[]) => void;
@@ -596,6 +687,7 @@ function CardPreviewList({
   decks: { id: number; name: string }[];
   onSave: () => void;
   isPending: boolean;
+  onNewDeck?: () => void;
 }) {
   const acceptedCount = cards.filter((c) => c.accepted).length;
 
@@ -675,6 +767,15 @@ function CardPreviewList({
             ))}
           </SelectContent>
         </Select>
+        {onNewDeck && (
+          <button
+            type="button"
+            onClick={onNewDeck}
+            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
+          >
+            <Plus className="h-3 w-3" /> New Deck
+          </button>
+        )}
         <button
           onClick={onSave}
           disabled={isPending || acceptedCount === 0}

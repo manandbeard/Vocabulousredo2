@@ -16,6 +16,7 @@ import TeacherStudentHeatmap from "./pages/teacher/TeacherStudentHeatmap";
 import TeacherStudentDetail from "./pages/teacher/TeacherStudentDetail";
 import TeacherContent from "./pages/teacher/TeacherContent";
 import TeacherBottlenecks from "./pages/teacher/TeacherBottlenecks";
+import TeacherDecks from "./pages/teacher/TeacherDecks";
 
 // Student Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -88,9 +89,9 @@ function Router() {
       <Route path="/teacher/decks/:id">{() => <RequireRole required="teacher" component={TeacherDeckDetail} />}</Route>
       <Route path="/teacher/analytics">{() => <RequireRole required="teacher" component={TeacherAnalytics} />}</Route>
       <Route path="/teacher/heatmap">{() => <RequireRole required="teacher" component={TeacherStudentHeatmap} />}</Route>
+      <Route path="/teacher/decks">{() => <RequireRole required="teacher" component={TeacherDecks} />}</Route>
       <Route path="/teacher/bottlenecks">{() => <RequireRole required="teacher" component={TeacherBottlenecks} />}</Route>
       <Route path="/teacher/students/:id">{() => <RequireRole required="teacher" component={TeacherStudentDetail} />}</Route>
-      <Route path="/teacher/bottlenecks">{() => <RequireRole required="teacher" component={TeacherBottlenecks} />}</Route>
 
       {/* Student Routes */}
       <Route path="/student">{() => <RequireRole required="student" component={StudentDashboard} />}</Route>

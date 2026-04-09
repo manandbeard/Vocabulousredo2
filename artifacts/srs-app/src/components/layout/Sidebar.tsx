@@ -9,6 +9,7 @@ import {
   Library,
   Rocket,
   Presentation,
+  Layers,
 } from "lucide-react";
 import { useRole } from "@/hooks/use-role";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ export function Sidebar() {
   const teacherLinks = [
     { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
     { href: "/teacher/classes", label: "Classes & Decks", icon: BookOpen },
+    { href: "/teacher/decks", label: "Decks", icon: Layers },
     { href: "/teacher/analytics", label: "Analytics", icon: LineChart },
   ];
 
