@@ -100,9 +100,10 @@ router.post("/decks/:deckId/cards", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const createdBy = (req as any).user?.id ?? parsed.data.createdBy ?? null;
   const [card] = await db
     .insert(cardsTable)
-    .values({ ...parsed.data, deckId: params.data.deckId, tags: parsed.data.tags ?? [] })
+    .values({ ...parsed.data, deckId: params.data.deckId, tags: parsed.data.tags ?? [], createdBy })
     .returning();
   res.status(201).json(GetCardResponse.parse(card));
 });
