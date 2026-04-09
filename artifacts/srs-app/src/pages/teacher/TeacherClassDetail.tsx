@@ -60,6 +60,7 @@ export default function TeacherClassDetail() {
   const [search, setSearch] = useState("");
   const [deckForm, setDeckForm] = useState({ name: "", description: "" });
   const [assigningId, setAssigningId] = useState<number | null>(null);
+  const [removeId, setRemoveId] = useState<number | null>(null);
 
   const invalidateDecks = () => {
     queryClient.invalidateQueries({ queryKey: getListDecksQueryKey({ classId }) });
@@ -286,7 +287,7 @@ export default function TeacherClassDetail() {
                                 <div className="flex items-center gap-2">
                                   {currentClass ? (
                                     <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium shrink-0">
-                                      {currentClass}
+                                      Other Class: {currentClass}
                                     </span>
                                   ) : (
                                     <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-medium shrink-0">
@@ -372,7 +373,7 @@ export default function TeacherClassDetail() {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleRemoveDeck(deck.id)}
+                        onClick={() => setRemoveId(deck.id)}
                         className="gap-2 cursor-pointer text-red-600 focus:text-red-600"
                       >
                         <Unlink className="h-4 w-4" /> Remove from Class
@@ -480,6 +481,37 @@ export default function TeacherClassDetail() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Remove deck confirmation dialog */}
+      <Dialog open={removeId !== null} onOpenChange={(open) => { if (!open) setRemoveId(null); }}>
+        <DialogContent className="sm:max-w-[380px] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-900">Remove deck from class?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-500 mt-1">
+            The deck and its cards will not be deleted — it will just be unassigned from this class and returned to your deck library.
+          </p>
+          <div className="flex justify-end gap-2 mt-4">
+            <button
+              onClick={() => setRemoveId(null)}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              disabled={updateDeckMut.isPending}
+              onClick={async () => {
+                if (removeId === null) return;
+                await handleRemoveDeck(removeId);
+                setRemoveId(null);
+              }}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 transition-colors"
+            >
+              {updateDeckMut.isPending ? "Removing…" : "Remove"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
