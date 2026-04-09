@@ -13,10 +13,12 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function TeacherClasses() {
   const { userId } = useRole();
-  const safeUserId = userId ?? 0;
+  const numericUserId = userId ? Number(userId) : null;
+  const safeUserId = numericUserId ?? 0;
+  const queryEnabled = numericUserId !== null && !Number.isNaN(numericUserId);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { data: classes, isLoading } = useListClasses({ teacherId: safeUserId });
+  const { data: classes, isLoading } = useListClasses({ teacherId: safeUserId }, { query: { enabled: queryEnabled } });
   const createClassMut = useCreateClass();
 
   const [isOpen, setIsOpen] = useState(false);

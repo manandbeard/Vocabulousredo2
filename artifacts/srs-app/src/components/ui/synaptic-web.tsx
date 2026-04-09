@@ -18,10 +18,9 @@ interface Connection {
 }
 
 const COLORS = {
-  background: "#FFFFFF",
-  dotBase: "#E2E8F0",
+  dotBase: "#CBD5E1",
   lineBase: "#94A3B8",
-  dotHover: "#CBD5E1",
+  dotHover: "#94A3B8",
 };
 
 const CONFIG = {
@@ -104,9 +103,8 @@ export function SynapticWeb() {
       const width = canvas.width;
       const height = canvas.height;
 
-      // Clear canvas with white background
-      ctx.fillStyle = COLORS.background;
-      ctx.fillRect(0, 0, width, height);
+      // Clear canvas (transparent — background comes from the page)
+      ctx.clearRect(0, 0, width, height);
 
       // Update dots
       dotsRef.current.forEach((dot) => {
@@ -225,7 +223,8 @@ export function SynapticWeb() {
         width: "100%",
         height: "100%",
         display: "block",
-        zIndex: -1,
+        zIndex: 0,
+        pointerEvents: "none",
       }}
     />
   );
