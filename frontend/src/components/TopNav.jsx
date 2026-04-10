@@ -1,9 +1,11 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Home, BookOpen, BarChart3, Trophy, Users, LogOut, BrainCircuit, FlaskConical, Brain, Activity, AlertTriangle } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
+import { Home, BookOpen, BarChart3, Trophy, Users, LogOut, BrainCircuit, FlaskConical, Brain, Activity, AlertTriangle, Settings, Moon, Sun } from 'lucide-react';
 
 export default function TopNav() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -70,7 +72,18 @@ export default function TopNav() {
           })}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            data-testid="theme-toggle-btn"
+            className="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-all"
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          </button>
+          <Link to="/settings" data-testid="nav-settings-btn" className="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-all">
+            <Settings className="w-4 h-4" />
+          </Link>
           <span className="label-sm text-on-surface-variant hidden md:inline">{user.name}</span>
           <button
             onClick={handleLogout}

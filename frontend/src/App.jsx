@@ -14,6 +14,7 @@ import TeacherClasses from '@/pages/teacher/TeacherClasses';
 import TeacherDeckDetail from '@/pages/teacher/TeacherDeckDetail';
 import TeacherHeatmap from '@/pages/teacher/TeacherHeatmap';
 import TeacherBottlenecks from '@/pages/teacher/TeacherBottlenecks';
+import Settings from '@/pages/Settings';
 import TopNav from '@/components/TopNav';
 
 function RequireAuth({ role, children }) {
@@ -68,6 +69,9 @@ export default function App() {
       <Route path="/teacher/decks/:deckId" element={<RequireAuth role="teacher"><AppLayout><TeacherDeckDetail /></AppLayout></RequireAuth>} />
       <Route path="/teacher/heatmap" element={<RequireAuth role="teacher"><AppLayout><TeacherHeatmap /></AppLayout></RequireAuth>} />
       <Route path="/teacher/bottlenecks" element={<RequireAuth role="teacher"><AppLayout><TeacherBottlenecks /></AppLayout></RequireAuth>} />
+
+      {/* Shared Routes */}
+      <Route path="/settings" element={<RequireAuth><AppLayout><Settings /></AppLayout></RequireAuth>} />
 
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

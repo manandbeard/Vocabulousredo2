@@ -391,6 +391,113 @@ class VocabulousAPITester:
         
         return success and success2 and isinstance(sessions, list)
 
+    def test_settings_endpoints(self):
+        """Test settings endpoints"""
+        if not self.student_user:
+            self.log("❌ Settings - No student user available")
+            return False
+        
+        # Set authorization header for student
+        auth_headers = {"Authorization": f"Bearer {self.student_user.get('token', '')}"}
+        
+        # Test get settings
+        success1, settings = self.run_test(
+            "Get Settings",
+            "GET",
+            "settings",
+            200,
+            headers=auth_headers
+        )
+        
+        if not success1 or 'name' not in settings:
+            return False
+        
+        # Test update settings (name and theme)
+        success2, updated_settings = self.run_test(
+            "Update Settings",
+            "PATCH",
+            "settings",
+            200,
+            {"name": "Updated Test Name", "theme": "dark"},
+            headers=auth_headers
+        )
+        
+        if not success2 or updated_settings.get('theme') != 'dark':
+            return False
+        
+        # Test change password with wrong current password
+        success3, _ = self.run_test(
+            "Change Password (Wrong Current)",
+            "POST",
+            "settings/password",
+            400,
+            {"current_password": "wrongpassword", "new_password": "newpass123"},
+            headers=auth_headers
+        )
+        
+        # Test change password with correct current password
+        success4, _ = self.run_test(
+            "Change Password (Correct)",
+            "POST",
+            "settings/password",
+            200,
+            {"current_password": "student123", "new_password": "newpass123"},
+            headers=auth_headers
+        )
+        
+        # Change password back
+        success5, _ = self.run_test(
+            "Change Password Back",
+            "POST",
+            "settings/password",
+            200,
+            {"current_password": "newpass123", "new_password": "student123"},
+            headers=auth_headers
+        )
+        
+        return success1 and success2 and success3 and success4 and success5
+
+    def test_ai_persona(self):
+        """Test AI persona endpoint"""
+        if not self.student_user:
+            self.log("❌ AI Persona - No student user available")
+            return False
+        
+        success, persona = self.run_test(
+            "Student AI Persona",
+            "GET",
+            f"students/{self.student_user['id']}/persona",
+            200
+        )
+        
+        # Check if persona has required fields
+        if success and persona:
+            required_fields = ['persona_type', 'persona_label', 'grit_score', 'flow_state']
+            has_required = all(field in persona for field in required_fields)
+            if has_required:
+                self.log(f"   Persona: {persona.get('persona_label')} (Grit: {persona.get('grit_score')})")
+            return has_required
+        
+        return False
+
+    def test_auth_with_token(self):
+        """Test authentication using token from login response"""
+        if not self.student_user or 'token' not in self.student_user:
+            self.log("❌ Auth with Token - No token available")
+            return False
+        
+        # Test auth/me with Authorization header
+        auth_headers = {"Authorization": f"Bearer {self.student_user['token']}"}
+        success, response = self.run_test(
+            "Auth Me with Token",
+            "GET",
+            "auth/me",
+            200,
+            headers=auth_headers
+        )
+        
+        return success and response.get('id') == self.student_user['id']
+
 def main():
     print("🚀 Starting Vocabulous API Tests")
     print("=" * 50)
@@ -402,7 +509,10 @@ def main():
         ("Health Check", tester.test_health_check),
         ("Teacher Login", tester.test_teacher_login),
         ("Student Login", tester.test_student_login),
+        ("Auth with Token", tester.test_auth_with_token),
         ("Auth Me", tester.test_auth_me),
+        ("Settings Endpoints", tester.test_settings_endpoints),
+        ("AI Persona", tester.test_ai_persona),
         ("Teacher Analytics", tester.test_teacher_analytics),
         ("Student Analytics", tester.test_student_analytics),
         ("Classes List", tester.test_classes_list),

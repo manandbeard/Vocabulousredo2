@@ -4,12 +4,16 @@ import hashlib
 import secrets
 import random
 import string
+import json
+import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from contextlib import asynccontextmanager
 
 import bcrypt
 import jwt
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI, HTTPException, Request, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -390,6 +394,14 @@ class BlurtingSessionBody(BaseModel):
     student_id: int
     deck_id: int
     content: str
+
+class UpdateSettingsBody(BaseModel):
+    name: str = ""
+    theme: str = ""
+
+class ChangePasswordBody(BaseModel):
+    current_password: str
+    new_password: str
 
 
 # ── App Setup ───────────────────────────────────────────────────────────────────
@@ -977,39 +989,161 @@ def get_teacher_milestones(teacher_id: int):
 
 
 @app.get("/api/students/{student_id}/persona")
-def get_student_persona(student_id: int):
+async def get_student_persona(student_id: int):
+    # Check for cached persona (refresh weekly)
+    ai_personas_col = db["ai_personas"]
+    existing = ai_personas_col.find_one({"student_id": student_id})
+    now = datetime.now(timezone.utc)
+    
+    if existing:
+        updated = datetime.fromisoformat(existing.get("updated_at", "2020-01-01").replace("Z", "+00:00"))
+        if (now - updated).days < 7:
+            return serialize_doc(existing)
+    
+    # Gather stats for AI prompt
     reviews = list(reviews_col.find({"student_id": student_id}))
     total = len(reviews)
     recalled = sum(1 for r in reviews if r.get("recalled"))
     avg_retention = recalled / total if total > 0 else 0
+    avg_grade = sum(r.get("grade", 0) for r in reviews) / total if total > 0 else 0
     
     card_states = list(card_states_col.find({"student_id": student_id}))
     mastered = sum(1 for s in card_states if (s.get("stability", 0) or 0) >= 21)
+    total_states = len(card_states)
+    avg_reviews_per_card = sum(s.get("review_count", 0) for s in card_states) / total_states if total_states else 0
     
-    if total >= 50 and avg_retention >= 0.8:
-        persona_type, label, desc = "Deep Diver", "The Deep Diver", "You consistently demonstrate thorough understanding and strong recall. Your study patterns show deep engagement with the material."
-        grit, grit_label = 85, "High Persistence"
-        flow, flow_label = "in_flow", "In the Zone"
-    elif total >= 20:
-        persona_type, label, desc = "Marathoner", "The Marathoner", "You maintain a steady pace of learning with consistent practice sessions. Building strong foundations over time."
-        grit, grit_label = 65, "Steady Progress"
-        flow, flow_label = "approaching", "Building Momentum"
-    elif total >= 5:
-        persona_type, label, desc = "Explorer", "The Explorer", "You're actively discovering your learning patterns and building good study habits."
-        grit, grit_label = 45, "Building Momentum"
-        flow, flow_label = "warming_up", "Finding Your Rhythm"
+    student = users_col.find_one({"id": student_id})
+    student_name = student["name"] if student else "Student"
+    
+    # Try AI-powered persona generation
+    persona_data = None
+    llm_key = os.environ.get("EMERGENT_LLM_KEY", "")
+    
+    if llm_key and total >= 1:
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            prompt = f"""You are analyzing a student's spaced repetition learning data to generate a learning persona.
+
+Student: {student_name}
+Total reviews: {total}
+Average retention: {round(avg_retention * 100)}%
+Average grade (1=Again, 4=Easy): {round(avg_grade, 2)}
+Cards mastered (stability >= 21 days): {mastered} of {total_states}
+Average review count per card: {round(avg_reviews_per_card, 1)}
+
+Generate a learning persona with the following JSON format. Respond with ONLY valid JSON, no markdown:
+{{
+  "persona_type": "one of: Sprinter, Marathoner, Deep Diver, Juggler, Perfectionist, Explorer",
+  "persona_label": "a short catchy label like 'The Deep Diver'",
+  "persona_description": "2-3 sentences describing this student's learning style based on the data",
+  "grit_score": "integer from 1-100 representing persistence",
+  "grit_label": "short label like 'High Persistence' or 'Building Momentum'",
+  "flow_state": "one of: in_flow, approaching, warming_up, starting_out",
+  "flow_label": "short label like 'In the Zone' or 'Finding Your Rhythm'"
+}}"""
+            
+            chat = LlmChat(
+                api_key=llm_key,
+                session_id=f"persona-{student_id}-{now.strftime('%Y%m%d')}",
+                system_message="You are a learning analytics AI. Always respond with valid JSON only."
+            ).with_model("openai", "gpt-4.1-mini")
+            
+            response = await chat.send_message(UserMessage(text=prompt))
+            
+            # Parse JSON from response
+            text = response.strip()
+            if text.startswith("```"):
+                text = text.split("```")[1]
+                if text.startswith("json"):
+                    text = text[4:]
+            persona_data = json.loads(text)
+            persona_data["grit_score"] = int(persona_data.get("grit_score", 50))
+        except Exception as e:
+            print(f"AI persona generation failed: {e}")
+            persona_data = None
+    
+    # Fallback to rule-based
+    if not persona_data:
+        if total >= 50 and avg_retention >= 0.8:
+            persona_data = {"persona_type": "Deep Diver", "persona_label": "The Deep Diver", "persona_description": "You consistently demonstrate thorough understanding and strong recall. Your study patterns show deep engagement with the material.", "grit_score": 85, "grit_label": "High Persistence", "flow_state": "in_flow", "flow_label": "In the Zone"}
+        elif total >= 20:
+            persona_data = {"persona_type": "Marathoner", "persona_label": "The Marathoner", "persona_description": "You maintain a steady pace of learning with consistent practice sessions. Building strong foundations over time.", "grit_score": 65, "grit_label": "Steady Progress", "flow_state": "approaching", "flow_label": "Building Momentum"}
+        elif total >= 5:
+            persona_data = {"persona_type": "Explorer", "persona_label": "The Explorer", "persona_description": "You're actively discovering your learning patterns and building good study habits.", "grit_score": 45, "grit_label": "Building Momentum", "flow_state": "warming_up", "flow_label": "Finding Your Rhythm"}
+        else:
+            persona_data = {"persona_type": "Sprinter", "persona_label": "The Sprinter", "persona_description": "You're just getting started on your learning journey. Every review counts!", "grit_score": 25, "grit_label": "Getting Started", "flow_state": "starting_out", "flow_label": "Taking First Steps"}
+    
+    # Upsert into cache
+    doc = {"student_id": student_id, **persona_data, "updated_at": now.isoformat()}
+    if existing:
+        ai_personas_col.update_one({"student_id": student_id}, {"$set": doc})
     else:
-        persona_type, label, desc = "Sprinter", "The Sprinter", "You're just getting started on your learning journey. Every review counts!"
-        grit, grit_label = 25, "Getting Started"
-        flow, flow_label = "starting_out", "Taking First Steps"
+        ai_personas_col.insert_one(doc)
     
+    return {**doc, "_id": None} if "_id" in doc else doc
+
+
+# ── Settings Endpoints ──────────────────────────────────────────────────────────
+@app.get("/api/settings")
+def get_settings(request: Request):
+    user_jwt = get_current_user(request)
+    if not user_jwt:
+        raise HTTPException(401, "Authentication required")
+    user = users_col.find_one({"id": user_jwt["id"]})
+    if not user:
+        raise HTTPException(404, "User not found")
     return {
-        "student_id": student_id,
-        "persona_type": persona_type, "persona_label": label,
-        "persona_description": desc,
-        "grit_score": grit, "grit_label": grit_label,
-        "flow_state": flow, "flow_label": flow_label,
+        "id": user["id"],
+        "name": user["name"],
+        "email": user["email"],
+        "role": user["role"],
+        "theme": user.get("theme", "light"),
     }
+
+@app.patch("/api/settings")
+def update_settings(body: UpdateSettingsBody, request: Request):
+    user_jwt = get_current_user(request)
+    if not user_jwt:
+        raise HTTPException(401, "Authentication required")
+    
+    update = {}
+    if body.name:
+        update["name"] = body.name
+    if body.theme in ("light", "dark"):
+        update["theme"] = body.theme
+    
+    if update:
+        users_col.update_one({"id": user_jwt["id"]}, {"$set": update})
+    
+    user = users_col.find_one({"id": user_jwt["id"]})
+    return {
+        "id": user["id"],
+        "name": user["name"],
+        "email": user["email"],
+        "role": user["role"],
+        "theme": user.get("theme", "light"),
+    }
+
+@app.post("/api/settings/password")
+def change_password(body: ChangePasswordBody, request: Request):
+    user_jwt = get_current_user(request)
+    if not user_jwt:
+        raise HTTPException(401, "Authentication required")
+    
+    user = users_col.find_one({"id": user_jwt["id"]})
+    if not user:
+        raise HTTPException(404, "User not found")
+    
+    if not bcrypt.checkpw(body.current_password.encode(), user["password_hash"].encode()):
+        raise HTTPException(400, "Current password is incorrect")
+    
+    if len(body.new_password) < 6:
+        raise HTTPException(400, "New password must be at least 6 characters")
+    
+    new_hash = bcrypt.hashpw(body.new_password.encode(), bcrypt.gensalt()).decode()
+    users_col.update_one({"id": user_jwt["id"]}, {"$set": {"password_hash": new_hash}})
+    return {"message": "Password updated successfully"}
 
 
 

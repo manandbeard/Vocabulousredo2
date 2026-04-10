@@ -4,7 +4,6 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -88,6 +87,13 @@ export const analyticsApi = {
 export const blurtingApi = {
   create: (data) => api.post('/api/blurting-sessions', data).then(r => r.data),
   list: (studentId) => api.get(`/api/students/${studentId}/blurting-sessions`).then(r => r.data),
+};
+
+// Settings
+export const settingsApi = {
+  get: () => api.get('/api/settings').then(r => r.data),
+  update: (data) => api.patch('/api/settings', data).then(r => r.data),
+  changePassword: (data) => api.post('/api/settings/password', data).then(r => r.data),
 };
 
 export default api;
