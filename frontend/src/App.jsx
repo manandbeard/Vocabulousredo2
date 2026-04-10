@@ -7,8 +7,13 @@ import StudentDashboard from '@/pages/student/StudentDashboard';
 import StudentStudy from '@/pages/student/StudentStudy';
 import StudentProgress from '@/pages/student/StudentProgress';
 import StudentAchievements from '@/pages/student/StudentAchievements';
+import StudentResearch from '@/pages/student/StudentResearch';
+import StudentBlurting from '@/pages/student/StudentBlurting';
 import TeacherDashboard from '@/pages/teacher/TeacherDashboard';
 import TeacherClasses from '@/pages/teacher/TeacherClasses';
+import TeacherDeckDetail from '@/pages/teacher/TeacherDeckDetail';
+import TeacherHeatmap from '@/pages/teacher/TeacherHeatmap';
+import TeacherBottlenecks from '@/pages/teacher/TeacherBottlenecks';
 import TopNav from '@/components/TopNav';
 
 function RequireAuth({ role, children }) {
@@ -49,13 +54,20 @@ export default function App() {
       <Route path="/login" element={user ? <Navigate to={user.role === 'teacher' ? '/teacher' : '/student'} /> : <Login />} />
       <Route path="/signup" element={user ? <Navigate to={user.role === 'teacher' ? '/teacher' : '/student'} /> : <Signup />} />
 
+      {/* Student Routes */}
       <Route path="/student" element={<RequireAuth role="student"><AppLayout><StudentDashboard /></AppLayout></RequireAuth>} />
       <Route path="/student/study" element={<RequireAuth role="student"><AppLayout><StudentStudy /></AppLayout></RequireAuth>} />
       <Route path="/student/progress" element={<RequireAuth role="student"><AppLayout><StudentProgress /></AppLayout></RequireAuth>} />
       <Route path="/student/achievements" element={<RequireAuth role="student"><AppLayout><StudentAchievements /></AppLayout></RequireAuth>} />
+      <Route path="/student/research" element={<RequireAuth role="student"><AppLayout><StudentResearch /></AppLayout></RequireAuth>} />
+      <Route path="/student/blurting" element={<RequireAuth role="student"><AppLayout><StudentBlurting /></AppLayout></RequireAuth>} />
 
+      {/* Teacher Routes */}
       <Route path="/teacher" element={<RequireAuth role="teacher"><AppLayout><TeacherDashboard /></AppLayout></RequireAuth>} />
       <Route path="/teacher/classes" element={<RequireAuth role="teacher"><AppLayout><TeacherClasses /></AppLayout></RequireAuth>} />
+      <Route path="/teacher/decks/:deckId" element={<RequireAuth role="teacher"><AppLayout><TeacherDeckDetail /></AppLayout></RequireAuth>} />
+      <Route path="/teacher/heatmap" element={<RequireAuth role="teacher"><AppLayout><TeacherHeatmap /></AppLayout></RequireAuth>} />
+      <Route path="/teacher/bottlenecks" element={<RequireAuth role="teacher"><AppLayout><TeacherBottlenecks /></AppLayout></RequireAuth>} />
 
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

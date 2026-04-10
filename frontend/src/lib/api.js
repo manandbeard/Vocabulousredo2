@@ -23,6 +23,7 @@ export const classesApi = {
   create: (data) => api.post('/api/classes', data).then(r => r.data),
   enroll: (classId, studentId) => api.post(`/api/classes/${classId}/enroll`, { student_id: studentId }).then(r => r.data),
   students: (classId) => api.get(`/api/classes/${classId}/students`).then(r => r.data),
+  joinByCode: (classCode) => api.post('/api/classes/join', { class_code: classCode }).then(r => r.data),
 };
 
 // Decks
@@ -38,6 +39,7 @@ export const cardsApi = {
   listByDeck: (deckId) => api.get(`/api/decks/${deckId}/cards`).then(r => r.data),
   get: (id) => api.get(`/api/cards/${id}`).then(r => r.data),
   create: (deckId, data) => api.post(`/api/decks/${deckId}/cards`, data).then(r => r.data),
+  update: (id, data) => api.patch(`/api/cards/${id}`, data).then(r => r.data),
   delete: (id) => api.delete(`/api/cards/${id}`).then(r => r.data),
 };
 
@@ -58,6 +60,16 @@ export const analyticsApi = {
   achievements: (studentId) => api.get(`/api/students/${studentId}/achievements`).then(r => r.data),
   studentClasses: (studentId) => api.get(`/api/students/${studentId}/classes`).then(r => r.data),
   teacherMilestones: (teacherId) => api.get(`/api/teacher/${teacherId}/milestones`).then(r => r.data),
+  teacherHeatmap: (teacherId) => api.get(`/api/analytics/teacher/${teacherId}/heatmap`).then(r => r.data),
+  teacherBottlenecks: (teacherId) => api.get(`/api/analytics/teacher/${teacherId}/bottlenecks`).then(r => r.data),
+  researchDecks: (studentId) => api.get(`/api/students/${studentId}/research-decks`).then(r => r.data),
+  practiceCards: (studentId, deckId) => api.get(`/api/students/${studentId}/practice-cards/${deckId}`).then(r => r.data),
+};
+
+// Blurting
+export const blurtingApi = {
+  create: (data) => api.post('/api/blurting-sessions', data).then(r => r.data),
+  list: (studentId) => api.get(`/api/students/${studentId}/blurting-sessions`).then(r => r.data),
 };
 
 export default api;

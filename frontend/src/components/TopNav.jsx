@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Home, BookOpen, BarChart3, Trophy, Users, LogOut, Settings, GraduationCap, BrainCircuit } from 'lucide-react';
+import { Home, BookOpen, BarChart3, Trophy, Users, LogOut, BrainCircuit, FlaskConical, Brain, Activity, AlertTriangle } from 'lucide-react';
 
 export default function TopNav() {
   const { user, logout } = useAuth();
@@ -17,6 +17,8 @@ export default function TopNav() {
   const studentLinks = [
     { label: 'Dashboard', href: '/student', icon: Home },
     { label: 'Study', href: '/student/study', icon: BrainCircuit },
+    { label: 'Research', href: '/student/research', icon: FlaskConical },
+    { label: 'Blurting', href: '/student/blurting', icon: Brain },
     { label: 'Progress', href: '/student/progress', icon: BarChart3 },
     { label: 'Achievements', href: '/student/achievements', icon: Trophy },
   ];
@@ -24,6 +26,8 @@ export default function TopNav() {
   const teacherLinks = [
     { label: 'Dashboard', href: '/teacher', icon: Home },
     { label: 'Classes', href: '/teacher/classes', icon: Users },
+    { label: 'Heatmap', href: '/teacher/heatmap', icon: Activity },
+    { label: 'Bottlenecks', href: '/teacher/bottlenecks', icon: AlertTriangle },
   ];
 
   const links = user.role === 'teacher' ? teacherLinks : studentLinks;
@@ -43,30 +47,31 @@ export default function TopNav() {
           <span className="text-lg font-bold text-on-surface tracking-tight">Vocabulous</span>
         </Link>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {links.map((link) => {
             const Icon = link.icon;
-            const isActive = location.pathname === link.href;
+            const isActive = location.pathname === link.href ||
+              (link.href !== '/teacher' && link.href !== '/student' && location.pathname.startsWith(link.href));
             return (
               <Link
                 key={link.href}
                 to={link.href}
                 data-testid={`nav-link-${link.label.toLowerCase()}`}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                   isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/60'
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                {link.label}
+                <Icon className="w-3.5 h-3.5" />
+                <span className="hidden lg:inline">{link.label}</span>
               </Link>
             );
           })}
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="label-sm text-on-surface-variant">{user.name}</span>
+          <span className="label-sm text-on-surface-variant hidden md:inline">{user.name}</span>
           <button
             onClick={handleLogout}
             data-testid="logout-button"

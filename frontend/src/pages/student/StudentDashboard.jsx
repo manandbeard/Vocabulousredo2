@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { PlayCircle, Flame, Target, CheckCircle2, BarChart3, Clock, Award, Brain, Zap, Shield, BookOpen, ChevronRight } from 'lucide-react';
+import { PlayCircle, Flame, Target, CheckCircle2, BarChart3, Clock, Award, Brain, Zap, Shield, BookOpen, ChevronRight, Plus, KeyRound } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { analyticsApi } from '@/lib/api';
+import { analyticsApi, classesApi } from '@/lib/api';
 
 function DonutRing({ percent, size = 56 }) {
   const r = (size - 8) / 2;
@@ -27,6 +27,55 @@ function DonutRing({ percent, size = 56 }) {
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
+
+function JoinClassButton({ userId, onJoined }) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState('');
+  const [joining, setJoining] = useState(false);
+  const [msg, setMsg] = useState(null);
+  const [err, setErr] = useState(null);
+
+  const handleJoin = async (e) => {
+    e.preventDefault();
+    if (!code.trim()) return;
+    setJoining(true);
+    setErr(null);
+    setMsg(null);
+    try {
+      const res = await classesApi.joinByCode(code.trim());
+      setMsg(res.message || 'Enrolled successfully!');
+      setCode('');
+      onJoined?.();
+      setTimeout(() => { setOpen(false); setMsg(null); }, 1500);
+    } catch (error) {
+      setErr(error.response?.data?.detail || 'Invalid class code');
+    }
+    setJoining(false);
+  };
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="btn-secondary flex items-center gap-2 text-xs py-2 px-4" data-testid="join-class-btn">
+        <Plus className="w-3.5 h-3.5" /> Join Class
+      </button>
+    );
+  }
+
+  return (
+    <form onSubmit={handleJoin} className="flex items-center gap-2" data-testid="join-class-form">
+      <input type="text" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())}
+        placeholder="Class code" maxLength={6}
+        className="input-ethereal py-2 text-sm w-28 text-center tracking-widest font-bold" autoFocus
+        data-testid="join-class-code-input" />
+      <button type="submit" disabled={joining} className="btn-primary text-xs py-2 px-4" data-testid="join-class-submit">
+        {joining ? '...' : 'Join'}
+      </button>
+      <button type="button" onClick={() => { setOpen(false); setErr(null); setMsg(null); }} className="btn-ghost text-xs py-2 px-3">Cancel</button>
+      {msg && <span className="text-xs text-tertiary font-semibold">{msg}</span>}
+      {err && <span className="text-xs text-red-500 font-semibold">{err}</span>}
+    </form>
+  );
+}
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -260,9 +309,14 @@ export default function StudentDashboard() {
       )}
 
       {/* Enrolled Classes */}
-      {classes.length > 0 && (
-        <motion.div variants={fadeUp}>
-          <p className="label-md text-on-surface-variant mb-4">My Enrolled Classes</p>
+      <motion.div variants={fadeUp}>
+        <div className="flex items-center justify-between mb-4">
+          <p className="label-md text-on-surface-variant">My Enrolled Classes</p>
+          <JoinClassButton userId={user?.id} onJoined={() => {
+            analyticsApi.studentClasses(user.id).then(setClasses).catch(() => []);
+          }} />
+        </div>
+        {classes.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {classes.map((cls) => (
               <div key={cls.id} className="bg-surface-container-lowest rounded-[2rem] shadow-ambient overflow-hidden card-ethereal">
@@ -278,8 +332,14 @@ export default function StudentDashboard() {
               </div>
             ))}
           </div>
-        </motion.div>
-      )}
+        ) : (
+          <div className="bg-surface-container-lowest rounded-[2rem] shadow-ambient p-12 text-center">
+            <KeyRound className="w-10 h-10 text-on-surface-variant/30 mx-auto mb-3" />
+            <p className="font-bold text-on-surface">No classes yet</p>
+            <p className="body-md text-sm mt-1">Ask your teacher for a class code to get started!</p>
+          </div>
+        )}
+      </motion.div>
     </motion.div>
   );
 }

@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, RotateCcw, Frown, Smile, Medal, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, RotateCcw, Frown, Smile, Medal, ArrowLeft, FlaskConical } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { reviewsApi } from '@/lib/api';
+import { reviewsApi, analyticsApi } from '@/lib/api';
 
 export default function StudentStudy() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const deckIdParam = searchParams.get('deckId');
+  const isResearchMode = searchParams.get('mode') === 'research';
 
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -18,16 +19,36 @@ export default function StudentStudy() {
 
   useEffect(() => {
     if (!user) return;
-    reviewsApi.dueCards(user.id, deckIdParam ? Number(deckIdParam) : undefined)
-      .then(setCards)
-      .catch(() => setCards([]))
-      .finally(() => setLoading(false));
-  }, [user, deckIdParam]);
+    if (isResearchMode && deckIdParam) {
+      analyticsApi.practiceCards(user.id, Number(deckIdParam))
+        .then(setCards)
+        .catch(() => setCards([]))
+        .finally(() => setLoading(false));
+    } else {
+      reviewsApi.dueCards(user.id, deckIdParam ? Number(deckIdParam) : undefined)
+        .then(setCards)
+        .catch(() => setCards([]))
+        .finally(() => setLoading(false));
+    }
+  }, [user, deckIdParam, isResearchMode]);
 
   const currentCard = cards[currentIndex];
 
   const handleGrade = async (grade) => {
     if (!currentCard) return;
+
+    if (isResearchMode) {
+      setIsFlipped(false);
+      setTimeout(() => {
+        if (currentIndex < cards.length - 1) {
+          setCurrentIndex((i) => i + 1);
+        } else {
+          navigate('/student/research');
+        }
+      }, 200);
+      return;
+    }
+
     try {
       await reviewsApi.submit({
         student_id: user.id,
@@ -62,9 +83,15 @@ export default function StudentStudy() {
         <div className="w-28 h-28 rounded-full bg-tertiary/10 flex items-center justify-center mb-6">
           <CheckCircle2 className="w-14 h-14 text-tertiary" />
         </div>
-        <h2 className="headline-lg text-on-surface">You're all caught up!</h2>
-        <p className="body-lg mt-3 max-w-md text-center">All due reviews completed. Check back tomorrow or view your progress.</p>
-        <button onClick={() => navigate('/student/progress')} className="btn-primary mt-8" data-testid="view-progress-btn">View My Progress</button>
+        <h2 className="headline-lg text-on-surface">{isResearchMode ? 'Practice complete!' : "You're all caught up!"}</h2>
+        <p className="body-lg mt-3 max-w-md text-center">
+          {isResearchMode
+            ? "You've reviewed all the cards in this deck. No progress was saved."
+            : 'All due reviews completed. Check back tomorrow or view your progress.'}
+        </p>
+        <button onClick={() => navigate(isResearchMode ? '/student/research' : '/student/progress')} className="btn-primary mt-8" data-testid="view-progress-btn">
+          {isResearchMode ? 'Back to Research' : 'View My Progress'}
+        </button>
       </div>
     );
   }
@@ -73,9 +100,17 @@ export default function StudentStudy() {
 
   return (
     <div className="max-w-3xl mx-auto py-8" data-testid="study-session">
+      {/* Research mode banner */}
+      {isResearchMode && (
+        <div className="mb-6 flex items-center gap-2 px-5 py-3 rounded-full bg-primary/8 text-primary text-sm font-semibold" data-testid="research-mode-banner">
+          <FlaskConical className="w-4 h-4 shrink-0" />
+          Practice Mode — no progress saved
+        </div>
+      )}
+
       {/* Nav bar */}
       <div className="flex items-center justify-between mb-8">
-        <button onClick={() => navigate('/student')} className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors" data-testid="exit-session-btn">
+        <button onClick={() => navigate(isResearchMode ? '/student/research' : '/student')} className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface transition-colors" data-testid="exit-session-btn">
           <ArrowLeft className="w-4 h-4" /> Exit Session
         </button>
         <div className="flex items-center gap-3">
@@ -124,6 +159,12 @@ export default function StudentStudy() {
       <div className="mt-10 flex justify-center">
         {!isFlipped ? (
           <button onClick={() => setIsFlipped(true)} className="btn-primary text-lg py-4 px-12" data-testid="show-answer-btn">Show Answer</button>
+        ) : isResearchMode ? (
+          <div className="w-full max-w-sm animate-slide-up">
+            <button onClick={() => handleGrade(1)} className="w-full h-16 rounded-[2rem] bg-surface-container-lowest shadow-ambient hover:shadow-float flex items-center justify-center text-sm font-bold text-on-surface transition-all" data-testid="next-card-btn">
+              Next Card
+            </button>
+          </div>
         ) : (
           <div className="grid grid-cols-4 gap-3 w-full animate-slide-up" data-testid="grade-buttons">
             {[

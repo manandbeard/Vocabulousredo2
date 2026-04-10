@@ -35,6 +35,8 @@ class VocabulousAPITester:
                 response = self.session.get(url, headers=test_headers)
             elif method == 'POST':
                 response = self.session.post(url, json=data, headers=test_headers)
+            elif method == 'PATCH':
+                response = self.session.patch(url, json=data, headers=test_headers)
             elif method == 'DELETE':
                 response = self.session.delete(url, headers=test_headers)
 
@@ -182,13 +184,220 @@ class VocabulousAPITester:
         success, response = self.run_test("Logout", "POST", "auth/logout", 200)
         return success
 
+    # NEW FEATURE TESTS FOR ITERATION 2
+    def test_teacher_heatmap(self):
+        """Test teacher heatmap analytics endpoint"""
+        if not self.teacher_user:
+            self.log("❌ Teacher Heatmap - No teacher user available")
+            return False
+        
+        success, response = self.run_test(
+            "Teacher Heatmap",
+            "GET",
+            f"analytics/teacher/{self.teacher_user['id']}/heatmap",
+            200
+        )
+        return success and 'students' in response and 'dates' in response
+
+    def test_teacher_bottlenecks(self):
+        """Test teacher bottlenecks analytics endpoint"""
+        if not self.teacher_user:
+            self.log("❌ Teacher Bottlenecks - No teacher user available")
+            return False
+        
+        success, response = self.run_test(
+            "Teacher Bottlenecks",
+            "GET",
+            f"analytics/teacher/{self.teacher_user['id']}/bottlenecks",
+            200
+        )
+        return success and 'struggle_cards' in response and 'tag_retention' in response and 'class_overdue' in response
+
+    def test_student_research_decks(self):
+        """Test student research decks endpoint"""
+        if not self.student_user:
+            self.log("❌ Student Research Decks - No student user available")
+            return False
+        
+        success, response = self.run_test(
+            "Student Research Decks",
+            "GET",
+            f"students/{self.student_user['id']}/research-decks",
+            200
+        )
+        return success and isinstance(response, list)
+
+    def test_student_practice_cards(self):
+        """Test student practice cards endpoint"""
+        if not self.student_user:
+            self.log("❌ Student Practice Cards - No student user available")
+            return False
+        
+        # Use deck ID 1 (Cell Biology from seed data)
+        success, response = self.run_test(
+            "Student Practice Cards",
+            "GET",
+            f"students/{self.student_user['id']}/practice-cards/1",
+            200
+        )
+        return success and isinstance(response, list)
+
+    def test_join_class_by_code(self):
+        """Test joining class by code"""
+        if not self.student_user or not self.teacher_user:
+            self.log("❌ Join Class by Code - Missing user data")
+            return False
+        
+        # First create a new class as teacher to get a valid class code
+        success_create, new_class = self.run_test(
+            "Create Test Class for Join",
+            "POST",
+            "classes",
+            200,
+            {
+                "name": "Test Join Class",
+                "description": "For testing join functionality",
+                "subject": "Test",
+                "teacher_id": self.teacher_user['id']
+            }
+        )
+        
+        if not success_create or 'class_code' not in new_class:
+            self.log("❌ Failed to create test class or get class code")
+            return False
+        
+        test_class_code = new_class['class_code']
+        self.log(f"Created test class with code: {test_class_code}")
+        
+        # Test with invalid code first
+        success_invalid, response = self.run_test(
+            "Join Class by Code (Invalid)",
+            "POST",
+            "classes/join",
+            404,
+            {"class_code": "INVALID"}
+        )
+        
+        # Test with valid code
+        success_valid, response_valid = self.run_test(
+            "Join Class by Code (Valid)",
+            "POST",
+            "classes/join",
+            200,
+            {"class_code": test_class_code}
+        )
+        
+        # Test joining again (should return "Already enrolled")
+        success_already, response_already = self.run_test(
+            "Join Class by Code (Already Enrolled)",
+            "POST",
+            "classes/join",
+            200,
+            {"class_code": test_class_code}
+        )
+        
+        return (success_invalid and success_valid and success_already and 
+                'message' in response_valid and 'message' in response_already)
+
+    def test_deck_cards_crud(self):
+        """Test deck cards CRUD operations"""
+        if not self.teacher_user:
+            self.log("❌ Deck Cards CRUD - No teacher user available")
+            return False
+        
+        # Get cards from deck 1
+        success1, cards = self.run_test(
+            "Get Deck Cards",
+            "GET",
+            "decks/1/cards",
+            200
+        )
+        
+        if not success1 or not isinstance(cards, list) or len(cards) == 0:
+            self.log("❌ No cards found in deck 1")
+            return False
+        
+        # Create a new card
+        success2, new_card = self.run_test(
+            "Create Card",
+            "POST",
+            "decks/1/cards",
+            200,
+            {
+                "front": "Test Question",
+                "back": "Test Answer", 
+                "hint": "Test Hint",
+                "tags": ["test", "api"]
+            }
+        )
+        
+        if not success2 or 'id' not in new_card:
+            return False
+        
+        card_id = new_card['id']
+        
+        # Update the card
+        success3, updated_card = self.run_test(
+            "Update Card",
+            "PATCH",
+            f"cards/{card_id}",
+            200,
+            {
+                "front": "Updated Test Question",
+                "back": "Updated Test Answer",
+                "hint": "Updated Test Hint",
+                "tags": ["updated", "test"]
+            }
+        )
+        
+        # Delete the card
+        success4, _ = self.run_test(
+            "Delete Card",
+            "DELETE",
+            f"cards/{card_id}",
+            200
+        )
+        
+        return success1 and success2 and success3 and success4
+
+    def test_blurting_session(self):
+        """Test blurting session creation"""
+        if not self.student_user:
+            self.log("❌ Blurting Session - No student user available")
+            return False
+        
+        success, response = self.run_test(
+            "Create Blurting Session",
+            "POST",
+            "blurting-sessions",
+            200,
+            {
+                "student_id": self.student_user['id'],
+                "deck_id": 1,
+                "content": "Mitochondria is the powerhouse of the cell. DNA contains genetic information. Cells have membranes that control what enters and exits."
+            }
+        )
+        
+        if not success or 'coverage' not in response:
+            return False
+        
+        # Test getting blurting sessions
+        success2, sessions = self.run_test(
+            "Get Blurting Sessions",
+            "GET",
+            f"students/{self.student_user['id']}/blurting-sessions",
+            200
+        )
+        
+        return success and success2 and isinstance(sessions, list)
+
 def main():
     print("🚀 Starting Vocabulous API Tests")
     print("=" * 50)
     
     tester = VocabulousAPITester()
     
-    # Core tests
+    # Core tests + New Feature tests
     tests = [
         ("Health Check", tester.test_health_check),
         ("Teacher Login", tester.test_teacher_login),
@@ -201,6 +410,14 @@ def main():
         ("Student Achievements", tester.test_student_achievements),
         ("Student Classes", tester.test_student_classes),
         ("Decks List", tester.test_decks_list),
+        # NEW FEATURE TESTS
+        ("Teacher Heatmap", tester.test_teacher_heatmap),
+        ("Teacher Bottlenecks", tester.test_teacher_bottlenecks),
+        ("Student Research Decks", tester.test_student_research_decks),
+        ("Student Practice Cards", tester.test_student_practice_cards),
+        ("Join Class by Code", tester.test_join_class_by_code),
+        ("Deck Cards CRUD", tester.test_deck_cards_crud),
+        ("Blurting Session", tester.test_blurting_session),
         ("Logout", tester.test_logout),
     ]
     

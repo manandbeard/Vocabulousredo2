@@ -2,6 +2,8 @@ import os
 import math
 import hashlib
 import secrets
+import random
+import string
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from contextlib import asynccontextmanager
@@ -35,6 +37,7 @@ user_achievements_col = db["user_achievements"]
 
 # Counters for auto-increment IDs
 counters_col = db["counters"]
+blurting_col = db["blurting_sessions"]
 
 def next_id(collection_name: str) -> int:
     result = counters_col.find_one_and_update(
@@ -44,6 +47,9 @@ def next_id(collection_name: str) -> int:
         return_document=True,
     )
     return result["seq"]
+
+def generate_class_code() -> str:
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 
 # ── FSRS-6 Implementation ──────────────────────────────────────────────────────
@@ -128,6 +134,7 @@ def seed_data():
     classes_col.insert_one({
         "id": class_id, "name": "AP Biology", "description": "Advanced Placement Biology",
         "subject": "Biology", "teacher_id": teacher_id,
+        "class_code": "APBIO1",
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
     
@@ -136,6 +143,7 @@ def seed_data():
     classes_col.insert_one({
         "id": class2_id, "name": "World History", "description": "Modern World History",
         "subject": "History", "teacher_id": teacher_id,
+        "class_code": "WHIST2",
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
     
@@ -366,8 +374,22 @@ class SubmitReviewBody(BaseModel):
     deck_id: int
     grade: int
 
+class UpdateCardBody(BaseModel):
+    front: str = ""
+    back: str = ""
+    hint: str = ""
+    tags: list = []
+
 class EnrollBody(BaseModel):
     student_id: int
+
+class JoinClassByCodeBody(BaseModel):
+    class_code: str
+
+class BlurtingSessionBody(BaseModel):
+    student_id: int
+    deck_id: int
+    content: str
 
 
 # ── App Setup ───────────────────────────────────────────────────────────────────
@@ -479,9 +501,11 @@ def list_classes(teacher_id: Optional[int] = None):
 @app.post("/api/classes")
 def create_class(body: CreateClassBody):
     cls_id = next_id("classes")
+    code = generate_class_code()
     doc = {
         "id": cls_id, "name": body.name, "description": body.description,
         "subject": body.subject, "teacher_id": body.teacher_id,
+        "class_code": code,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     classes_col.insert_one(doc)
@@ -986,3 +1010,349 @@ def get_student_persona(student_id: int):
         "grit_score": grit, "grit_label": grit_label,
         "flow_state": flow, "flow_label": flow_label,
     }
+
+
+
+# ── Join Class by Code (Student Enrollment) ─────────────────────────────────────
+@app.post("/api/classes/join")
+def join_class_by_code(body: JoinClassByCodeBody, request: Request):
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(401, "Authentication required")
+    if user.get("role") != "student":
+        raise HTTPException(403, "Only students can join classes")
+    
+    cls = classes_col.find_one({"class_code": body.class_code.upper().strip()})
+    if not cls:
+        raise HTTPException(404, "Invalid class code. Please check with your teacher.")
+    
+    existing = enrollments_col.find_one({"class_id": cls["id"], "student_id": user["id"]})
+    if existing:
+        return {"message": "Already enrolled", "class": serialize_doc(cls)}
+    
+    enroll_id = next_id("enrollments")
+    enrollments_col.insert_one({
+        "id": enroll_id, "class_id": cls["id"], "student_id": user["id"],
+        "enrolled_at": datetime.now(timezone.utc).isoformat(),
+    })
+    teacher = users_col.find_one({"id": cls["teacher_id"]})
+    return {
+        "message": "Successfully enrolled!",
+        "class": {**serialize_doc(cls), "teacher_name": teacher["name"] if teacher else None},
+    }
+
+
+# ── Update Card ─────────────────────────────────────────────────────────────────
+@app.patch("/api/cards/{card_id}")
+def update_card(card_id: int, body: UpdateCardBody):
+    card = cards_col.find_one({"id": card_id})
+    if not card:
+        raise HTTPException(404, "Card not found")
+    
+    update_data = {}
+    if body.front:
+        update_data["front"] = body.front
+    if body.back:
+        update_data["back"] = body.back
+    if body.hint is not None:
+        update_data["hint"] = body.hint
+    if body.tags is not None:
+        update_data["tags"] = body.tags
+    
+    if update_data:
+        cards_col.update_one({"id": card_id}, {"$set": update_data})
+    
+    updated = cards_col.find_one({"id": card_id})
+    return serialize_doc(updated)
+
+
+# ── Teacher Student Heatmap ─────────────────────────────────────────────────────
+@app.get("/api/analytics/teacher/{teacher_id}/heatmap")
+def get_teacher_heatmap(teacher_id: int):
+    now = datetime.now(timezone.utc)
+    thirty_days_ago = now - timedelta(days=30)
+    
+    teacher_classes = list(classes_col.find({"teacher_id": teacher_id}))
+    class_ids = [c["id"] for c in teacher_classes]
+    if not class_ids:
+        return {"students": [], "dates": []}
+    
+    enrollments = list(enrollments_col.find({"class_id": {"$in": class_ids}}))
+    student_ids = list(set(e["student_id"] for e in enrollments))
+    if not student_ids:
+        return {"students": [], "dates": []}
+    
+    students = list(users_col.find({"id": {"$in": student_ids}}))
+    student_map = {s["id"]: s["name"] for s in students}
+    
+    reviews = list(reviews_col.find({
+        "student_id": {"$in": student_ids},
+        "reviewed_at": {"$gte": thirty_days_ago.isoformat()},
+    }))
+    
+    dates = []
+    for i in range(30):
+        d = (now - timedelta(days=29 - i)).strftime("%Y-%m-%d")
+        dates.append(d)
+    
+    heatmap_students = []
+    for sid in student_ids:
+        student_reviews = [r for r in reviews if r["student_id"] == sid]
+        activity = {}
+        for r in student_reviews:
+            day = r["reviewed_at"][:10]
+            if day not in activity:
+                activity[day] = {"count": 0, "recalled": 0}
+            activity[day]["count"] += 1
+            if r.get("recalled"):
+                activity[day]["recalled"] += 1
+        
+        days_data = []
+        for d in dates:
+            if d in activity:
+                cnt = activity[d]["count"]
+                rec = activity[d]["recalled"]
+                retention = rec / cnt if cnt > 0 else 0
+                days_data.append({"date": d, "reviews": cnt, "retention": round(retention, 2)})
+            else:
+                days_data.append({"date": d, "reviews": 0, "retention": 0})
+        
+        total = len(student_reviews)
+        recalled = sum(1 for r in student_reviews if r.get("recalled"))
+        
+        heatmap_students.append({
+            "student_id": sid,
+            "student_name": student_map.get(sid, ""),
+            "total_reviews": total,
+            "avg_retention": round(recalled / total, 2) if total > 0 else 0,
+            "days": days_data,
+        })
+    
+    heatmap_students.sort(key=lambda x: x["avg_retention"], reverse=True)
+    return {"students": heatmap_students, "dates": dates}
+
+
+# ── Teacher Bottleneck Analysis ─────────────────────────────────────────────────
+@app.get("/api/analytics/teacher/{teacher_id}/bottlenecks")
+def get_teacher_bottlenecks(teacher_id: int):
+    teacher_classes = list(classes_col.find({"teacher_id": teacher_id}))
+    class_ids = [c["id"] for c in teacher_classes]
+    if not class_ids:
+        return {"struggle_cards": [], "tag_retention": [], "class_overdue": []}
+    
+    decks = list(decks_col.find({"class_id": {"$in": class_ids}}))
+    deck_ids = [d["id"] for d in decks]
+    deck_map = {d["id"]: d["name"] for d in decks}
+    
+    if not deck_ids:
+        return {"struggle_cards": [], "tag_retention": [], "class_overdue": []}
+    
+    all_cards = list(cards_col.find({"deck_id": {"$in": deck_ids}, "status": "active"}))
+    card_ids = [c["id"] for c in all_cards]
+    card_map = {c["id"]: c for c in all_cards}
+    
+    reviews = list(reviews_col.find({"card_id": {"$in": card_ids}})) if card_ids else []
+    
+    card_stats = {}
+    for r in reviews:
+        cid = r["card_id"]
+        if cid not in card_stats:
+            card_stats[cid] = {"total": 0, "recalled": 0, "grade_sum": 0}
+        card_stats[cid]["total"] += 1
+        if r.get("recalled"):
+            card_stats[cid]["recalled"] += 1
+        card_stats[cid]["grade_sum"] += r.get("grade", 0)
+    
+    struggle_cards = []
+    for cid, stats in card_stats.items():
+        card = card_map.get(cid)
+        if not card:
+            continue
+        recall_rate = stats["recalled"] / stats["total"] if stats["total"] > 0 else 0
+        avg_grade = stats["grade_sum"] / stats["total"] if stats["total"] > 0 else 0
+        struggle_cards.append({
+            "card_id": cid,
+            "deck_id": card["deck_id"],
+            "deck_name": deck_map.get(card["deck_id"], ""),
+            "front": card["front"],
+            "back": card["back"],
+            "tags": card.get("tags", []),
+            "recall_rate": round(recall_rate, 2),
+            "avg_grade": round(avg_grade, 2),
+            "review_count": stats["total"],
+        })
+    
+    struggle_cards.sort(key=lambda x: x["recall_rate"])
+    
+    tag_retention = {}
+    for card in all_cards:
+        cid = card["id"]
+        stats = card_stats.get(cid)
+        if not stats:
+            continue
+        for tag in (card.get("tags") or []):
+            if tag not in tag_retention:
+                tag_retention[tag] = {"total": 0, "recalled": 0, "card_count": 0}
+            tag_retention[tag]["total"] += stats["total"]
+            tag_retention[tag]["recalled"] += stats["recalled"]
+            tag_retention[tag]["card_count"] += 1
+    
+    tag_list = []
+    for tag, data in tag_retention.items():
+        tag_list.append({
+            "tag": tag,
+            "avg_recall": round(data["recalled"] / data["total"], 2) if data["total"] > 0 else 0,
+            "card_count": data["card_count"],
+        })
+    tag_list.sort(key=lambda x: x["avg_recall"])
+    
+    now = datetime.now(timezone.utc)
+    class_overdue = []
+    for cls in teacher_classes:
+        class_decks = [d for d in decks if d["class_id"] == cls["id"]]
+        class_deck_ids = [d["id"] for d in class_decks]
+        overdue = 0
+        if class_deck_ids:
+            states = list(card_states_col.find({
+                "deck_id": {"$in": class_deck_ids},
+                "next_review_at": {"$lte": now.isoformat()},
+            }))
+            overdue = len(states)
+        class_overdue.append({
+            "class_id": cls["id"],
+            "class_name": cls["name"],
+            "overdue_count": overdue,
+        })
+    class_overdue.sort(key=lambda x: x["overdue_count"], reverse=True)
+    
+    return {
+        "struggle_cards": struggle_cards[:20],
+        "tag_retention": tag_list,
+        "class_overdue": class_overdue,
+    }
+
+
+# ── Student Research Decks (Practice Mode) ──────────────────────────────────────
+@app.get("/api/students/{student_id}/research-decks")
+def get_research_decks(student_id: int):
+    enrollments = list(enrollments_col.find({"student_id": student_id}))
+    class_ids = [e["class_id"] for e in enrollments]
+    if not class_ids:
+        return []
+    
+    decks = list(decks_col.find({"class_id": {"$in": class_ids}}))
+    result = []
+    for deck in decks:
+        card_count = cards_col.count_documents({"deck_id": deck["id"], "status": "active"})
+        cls = classes_col.find_one({"id": deck["class_id"]})
+        
+        states = list(card_states_col.find({"student_id": student_id, "deck_id": deck["id"]}))
+        mastered = sum(1 for s in states if (s.get("stability", 0) or 0) >= 21)
+        mastery_pct = round(mastered / card_count, 2) if card_count > 0 else 0
+        
+        if mastered >= card_count * 0.8 and card_count > 0:
+            mastery_level = "mastered"
+        elif len(states) > 0:
+            mastery_level = "learning"
+        else:
+            mastery_level = "new"
+        
+        all_tags = set()
+        for card in cards_col.find({"deck_id": deck["id"]}):
+            for t in (card.get("tags") or []):
+                all_tags.add(t)
+        
+        result.append({
+            "deck_id": deck["id"],
+            "deck_name": deck["name"],
+            "class_id": deck["class_id"],
+            "class_name": cls["name"] if cls else None,
+            "card_count": card_count,
+            "mastery_pct": mastery_pct,
+            "mastery_level": mastery_level,
+            "tags": list(all_tags),
+        })
+    
+    return result
+
+
+# ── All Cards for a Deck (for practice mode, returns all, ignoring due dates) ──
+@app.get("/api/students/{student_id}/practice-cards/{deck_id}")
+def get_practice_cards(student_id: int, deck_id: int):
+    cards = list(cards_col.find({"deck_id": deck_id, "status": "active"}))
+    result = []
+    for card in cards:
+        result.append({
+            "card_id": card["id"],
+            "deck_id": card["deck_id"],
+            "front": card["front"],
+            "back": card["back"],
+            "hint": card.get("hint", ""),
+            "tags": card.get("tags", []),
+            "is_new": False,
+            "review_count": 0,
+            "predicted_retention": None,
+        })
+    return result
+
+
+# ── Blurting Sessions ───────────────────────────────────────────────────────────
+@app.post("/api/blurting-sessions")
+def create_blurting_session(body: BlurtingSessionBody):
+    deck = decks_col.find_one({"id": body.deck_id})
+    if not deck:
+        raise HTTPException(404, "Deck not found")
+    
+    cards = list(cards_col.find({"deck_id": body.deck_id, "status": "active"}))
+    all_terms = set()
+    for card in cards:
+        for word in card["back"].lower().split():
+            clean = ''.join(c for c in word if c.isalnum())
+            if len(clean) > 3:
+                all_terms.add(clean)
+        for word in card["front"].lower().split():
+            clean = ''.join(c for c in word if c.isalnum())
+            if len(clean) > 3:
+                all_terms.add(clean)
+    
+    user_words = set()
+    for word in body.content.lower().split():
+        clean = ''.join(c for c in word if c.isalnum())
+        if len(clean) > 3:
+            user_words.add(clean)
+    
+    matched = user_words & all_terms
+    total_terms = len(all_terms) if all_terms else 1
+    coverage = round(len(matched) / total_terms, 2)
+    
+    missed_cards = []
+    for card in cards:
+        card_terms = set()
+        for word in (card["back"].lower() + " " + card["front"].lower()).split():
+            clean = ''.join(c for c in word if c.isalnum())
+            if len(clean) > 3:
+                card_terms.add(clean)
+        if not (card_terms & user_words):
+            missed_cards.append({"card_id": card["id"], "front": card["front"], "back": card["back"]})
+    
+    session_id = next_id("blurting_sessions")
+    doc = {
+        "id": session_id,
+        "student_id": body.student_id,
+        "deck_id": body.deck_id,
+        "deck_name": deck["name"],
+        "content": body.content,
+        "coverage": coverage,
+        "matched_terms": len(matched),
+        "total_terms": len(all_terms),
+        "missed_cards": missed_cards[:10],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    blurting_col.insert_one(doc)
+    return serialize_doc(doc)
+
+
+@app.get("/api/students/{student_id}/blurting-sessions")
+def list_blurting_sessions(student_id: int):
+    sessions = list(blurting_col.find({"student_id": student_id}).sort("created_at", -1).limit(20))
+    return serialize_list(sessions)
