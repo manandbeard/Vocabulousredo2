@@ -43,6 +43,7 @@ user_achievements_col = db["user_achievements"]
 counters_col = db["counters"]
 blurting_col = db["blurting_sessions"]
 ai_personas_col = db["ai_personas"]
+coach_conversations_col = db["coach_conversations"]
 
 def next_id(collection_name: str) -> int:
     result = counters_col.find_one_and_update(
@@ -403,6 +404,13 @@ class UpdateSettingsBody(BaseModel):
 class ChangePasswordBody(BaseModel):
     current_password: str
     new_password: str
+
+class CoachMessageBody(BaseModel):
+    student_id: int
+    conversation_id: Optional[int] = None
+    message: str
+    card_context: Optional[dict] = None
+    deck_context: Optional[dict] = None
 
 
 # ── App Setup ───────────────────────────────────────────────────────────────────
@@ -1489,3 +1497,163 @@ def create_blurting_session(body: BlurtingSessionBody):
 def list_blurting_sessions(student_id: int):
     sessions = list(blurting_col.find({"student_id": student_id}).sort("created_at", -1).limit(20))
     return serialize_list(sessions)
+
+
+
+# ── AI Study Coach ──────────────────────────────────────────────────────────────
+@app.post("/api/coach/message")
+async def coach_send_message(body: CoachMessageBody):
+    now = datetime.now(timezone.utc)
+    llm_key = os.environ.get("EMERGENT_LLM_KEY", "")
+    
+    # Load or create conversation
+    conversation = None
+    if body.conversation_id:
+        conversation = coach_conversations_col.find_one({"id": body.conversation_id, "student_id": body.student_id})
+    
+    if not conversation:
+        conv_id = next_id("coach_conversations")
+        # Build context from student's struggle data
+        card_states = list(card_states_col.find({"student_id": body.student_id}))
+        struggle_cards = []
+        for state in sorted(card_states, key=lambda s: s.get("stability", 0))[:5]:
+            card = cards_col.find_one({"id": state["card_id"]})
+            if card:
+                struggle_cards.append(f"Q: {card['front']} A: {card['back']}")
+        
+        context_text = ""
+        if body.card_context:
+            context_text = f"\nThe student is currently looking at this card:\nQ: {body.card_context.get('front', '')}\nA: {body.card_context.get('back', '')}\nHint: {body.card_context.get('hint', '')}"
+        if body.deck_context:
+            context_text += f"\nDeck: {body.deck_context.get('name', '')}"
+        if struggle_cards:
+            context_text += f"\n\nCards the student struggles with most:\n" + "\n".join(struggle_cards)
+        
+        conversation = {
+            "id": conv_id,
+            "student_id": body.student_id,
+            "messages": [],
+            "context": context_text,
+            "created_at": now.isoformat(),
+            "updated_at": now.isoformat(),
+        }
+        coach_conversations_col.insert_one(conversation)
+    else:
+        conv_id = conversation["id"]
+        # Update context if new card/deck info provided
+        if body.card_context:
+            new_ctx = f"\nThe student is now looking at:\nQ: {body.card_context.get('front', '')}\nA: {body.card_context.get('back', '')}\nHint: {body.card_context.get('hint', '')}"
+            coach_conversations_col.update_one({"id": conv_id}, {"$set": {"context": conversation.get("context", "") + new_ctx}})
+            conversation["context"] = conversation.get("context", "") + new_ctx
+    
+    # Add user message to history
+    user_msg = {"role": "user", "content": body.message, "timestamp": now.isoformat()}
+    
+    # Get student stats for system context
+    student = users_col.find_one({"id": body.student_id})
+    reviews = list(reviews_col.find({"student_id": body.student_id}))
+    total_reviews = len(reviews)
+    recalled = sum(1 for r in reviews if r.get("recalled"))
+    retention = round(recalled / total_reviews * 100) if total_reviews > 0 else 0
+    
+    system_message = f"""You are an AI Study Coach for Vocabulous, a spaced repetition learning app. You're helping {student['name'] if student else 'a student'} learn more effectively.
+
+Your capabilities:
+- Explain concepts in multiple ways using analogies, stories, and simple language
+- Generate memorable mnemonics and memory tricks
+- Create quiz variations (multiple choice, fill-in-blank, true/false)
+- Identify knowledge gaps and suggest focus areas
+- Provide encouragement and study strategies
+
+Student stats: {total_reviews} reviews completed, {retention}% average retention.
+{conversation.get('context', '')}
+
+Important rules:
+- Keep responses concise (2-4 paragraphs max)
+- Use markdown formatting for structure
+- When creating mnemonics, make them vivid and memorable
+- When quizzing, clearly mark correct answers
+- Be warm, encouraging, and never condescending"""
+
+    # Build message history for LLM (last 10 messages)
+    history = conversation.get("messages", [])[-10:]
+    
+    # Generate AI response
+    assistant_content = ""
+    if llm_key:
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            chat = LlmChat(
+                api_key=llm_key,
+                session_id=f"coach-{body.student_id}-{conv_id}",
+                system_message=system_message,
+            ).with_model("openai", "gpt-4.1-mini")
+            
+            # Feed history
+            for msg in history:
+                if msg["role"] == "user":
+                    await chat.send_message(UserMessage(text=msg["content"]))
+                # Assistant messages are auto-tracked by the library
+            
+            # Send the new message
+            response = await chat.send_message(UserMessage(text=body.message))
+            assistant_content = response.strip()
+        except Exception as e:
+            print(f"AI Coach error: {e}")
+            assistant_content = _fallback_coach_response(body.message, conversation.get("context", ""))
+    else:
+        assistant_content = _fallback_coach_response(body.message, conversation.get("context", ""))
+    
+    assistant_msg = {"role": "assistant", "content": assistant_content, "timestamp": now.isoformat()}
+    
+    # Save both messages
+    coach_conversations_col.update_one(
+        {"id": conv_id},
+        {"$push": {"messages": {"$each": [user_msg, assistant_msg]}}, "$set": {"updated_at": now.isoformat()}},
+    )
+    
+    return {
+        "conversation_id": conv_id,
+        "message": assistant_content,
+        "timestamp": now.isoformat(),
+    }
+
+
+def _fallback_coach_response(message: str, context: str) -> str:
+    msg_lower = message.lower()
+    if any(w in msg_lower for w in ["mnemonic", "remember", "memorize", "trick"]):
+        return "Great question! Here's a general memory strategy:\n\n**Create vivid mental images** - The more unusual and colorful, the better they stick. Try connecting the concept to something you already know well.\n\n**Use the first-letter technique** - Take the first letters of key terms and create a fun sentence or word.\n\nWould you like me to create a specific mnemonic for a card you're studying?"
+    elif any(w in msg_lower for w in ["quiz", "test", "practice", "question"]):
+        return "Let's practice! I can create different types of questions:\n\n1. **Multiple choice** - Pick the right answer from options\n2. **Fill in the blank** - Complete the statement\n3. **True/False** - Quick concept checks\n\nTell me which topic or card you'd like to be quizzed on, and I'll generate some questions!"
+    elif any(w in msg_lower for w in ["explain", "understand", "confused", "help", "what is", "how does"]):
+        return "I'd love to help explain! To give you the best explanation, could you:\n\n1. **Share the specific card or concept** you're struggling with\n2. **Tell me what part confuses you** - is it the terminology, the process, or how things connect?\n\nI can break it down with analogies, diagrams in words, or step-by-step explanations. What works best for you?"
+    else:
+        return f"I'm your AI Study Coach! Here's how I can help:\n\n- **Explain concepts** differently if something doesn't click\n- **Create mnemonics** to help you remember tricky material\n- **Quiz you** with varied question formats\n- **Suggest study strategies** based on your progress\n\nWhat would you like to work on today?"
+
+
+@app.get("/api/coach/conversations/{student_id}")
+def list_coach_conversations(student_id: int):
+    convos = list(coach_conversations_col.find(
+        {"student_id": student_id},
+        {"_id": 0, "id": 1, "created_at": 1, "updated_at": 1, "messages": {"$slice": -1}},
+    ).sort("updated_at", -1).limit(20))
+    
+    result = []
+    for c in convos:
+        last_msg = c.get("messages", [{}])[-1] if c.get("messages") else {}
+        result.append({
+            "id": c["id"],
+            "preview": last_msg.get("content", "New conversation")[:80],
+            "created_at": c.get("created_at"),
+            "updated_at": c.get("updated_at"),
+        })
+    return result
+
+
+@app.get("/api/coach/conversations/{student_id}/{conversation_id}")
+def get_coach_conversation(student_id: int, conversation_id: int):
+    convo = coach_conversations_col.find_one({"id": conversation_id, "student_id": student_id})
+    if not convo:
+        raise HTTPException(404, "Conversation not found")
+    return serialize_doc(convo)

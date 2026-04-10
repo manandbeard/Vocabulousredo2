@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, RotateCcw, Frown, Smile, Medal, ArrowLeft, FlaskConical } from 'lucide-react';
+import { CheckCircle2, RotateCcw, Frown, Smile, Medal, ArrowLeft, FlaskConical, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { reviewsApi, analyticsApi } from '@/lib/api';
 
@@ -156,9 +156,18 @@ export default function StudentStudy() {
       </div>
 
       {/* Actions */}
-      <div className="mt-10 flex justify-center">
+      <div className="mt-10 flex flex-col items-center gap-3">
         {!isFlipped ? (
-          <button onClick={() => setIsFlipped(true)} className="btn-primary text-lg py-4 px-12" data-testid="show-answer-btn">Show Answer</button>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsFlipped(true)} className="btn-primary text-lg py-4 px-12" data-testid="show-answer-btn">Show Answer</button>
+            <button
+              onClick={() => navigate(`/student/coach?cardFront=${encodeURIComponent(currentCard.front)}&cardBack=${encodeURIComponent(currentCard.back)}&cardHint=${encodeURIComponent(currentCard.hint || '')}`)}
+              className="btn-ghost flex items-center gap-2 py-4 px-5 text-sm"
+              data-testid="ask-coach-btn"
+            >
+              <Sparkles className="w-4 h-4" /> Ask Coach
+            </button>
+          </div>
         ) : isResearchMode ? (
           <div className="w-full max-w-sm animate-slide-up">
             <button onClick={() => handleGrade(1)} className="w-full h-16 rounded-[2rem] bg-surface-container-lowest shadow-ambient hover:shadow-float flex items-center justify-center text-sm font-bold text-on-surface transition-all" data-testid="next-card-btn">

@@ -498,13 +498,94 @@ class VocabulousAPITester:
         
         return success and response.get('id') == self.student_user['id']
 
+    def test_coach_send_message(self):
+        """Test AI Study Coach message sending"""
+        if not self.student_user:
+            self.log("❌ Coach Send Message - No student user available")
+            return False
+        
+        success, response = self.run_test(
+            "Coach Send Message",
+            "POST",
+            "coach/message",
+            200,
+            {
+                "student_id": self.student_user['id'],
+                "message": "Can you help me understand mitochondria?",
+                "card_context": {
+                    "front": "What is the powerhouse of the cell?",
+                    "back": "Mitochondria",
+                    "hint": "Think about energy production"
+                }
+            }
+        )
+        
+        if success and 'conversation_id' in response and 'message' in response:
+            self.conversation_id = response['conversation_id']
+            self.log(f"   Created conversation ID: {self.conversation_id}")
+            return True
+        return False
+
+    def test_coach_list_conversations(self):
+        """Test listing AI Study Coach conversations"""
+        if not self.student_user:
+            self.log("❌ Coach List Conversations - No student user available")
+            return False
+        
+        success, response = self.run_test(
+            "Coach List Conversations",
+            "GET",
+            f"coach/conversations/{self.student_user['id']}",
+            200
+        )
+        
+        return success and isinstance(response, list)
+
+    def test_coach_get_conversation(self):
+        """Test getting specific AI Study Coach conversation"""
+        if not self.student_user or not hasattr(self, 'conversation_id'):
+            self.log("❌ Coach Get Conversation - No student user or conversation ID available")
+            return False
+        
+        success, response = self.run_test(
+            "Coach Get Conversation",
+            "GET",
+            f"coach/conversations/{self.student_user['id']}/{self.conversation_id}",
+            200
+        )
+        
+        if success and 'messages' in response and isinstance(response['messages'], list):
+            self.log(f"   Found {len(response['messages'])} messages in conversation")
+            return True
+        return False
+
+    def test_coach_send_followup_message(self):
+        """Test sending a follow-up message in existing conversation"""
+        if not self.student_user or not hasattr(self, 'conversation_id'):
+            self.log("❌ Coach Send Follow-up - No student user or conversation ID available")
+            return False
+        
+        success, response = self.run_test(
+            "Coach Send Follow-up Message",
+            "POST",
+            "coach/message",
+            200,
+            {
+                "student_id": self.student_user['id'],
+                "conversation_id": self.conversation_id,
+                "message": "Can you create a mnemonic to help me remember this?"
+            }
+        )
+        
+        return success and 'message' in response
+
 def main():
     print("🚀 Starting Vocabulous API Tests")
     print("=" * 50)
     
     tester = VocabulousAPITester()
     
-    # Core tests + New Feature tests
+    # Core tests + New Feature tests + AI Coach tests
     tests = [
         ("Health Check", tester.test_health_check),
         ("Teacher Login", tester.test_teacher_login),
@@ -528,6 +609,11 @@ def main():
         ("Join Class by Code", tester.test_join_class_by_code),
         ("Deck Cards CRUD", tester.test_deck_cards_crud),
         ("Blurting Session", tester.test_blurting_session),
+        # AI COACH TESTS
+        ("Coach Send Message", tester.test_coach_send_message),
+        ("Coach List Conversations", tester.test_coach_list_conversations),
+        ("Coach Get Conversation", tester.test_coach_get_conversation),
+        ("Coach Send Follow-up Message", tester.test_coach_send_followup_message),
         ("Logout", tester.test_logout),
     ]
     

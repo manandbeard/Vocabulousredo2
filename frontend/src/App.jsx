@@ -9,6 +9,7 @@ import StudentProgress from '@/pages/student/StudentProgress';
 import StudentAchievements from '@/pages/student/StudentAchievements';
 import StudentResearch from '@/pages/student/StudentResearch';
 import StudentBlurting from '@/pages/student/StudentBlurting';
+import StudentCoach from '@/pages/student/StudentCoach';
 import TeacherDashboard from '@/pages/teacher/TeacherDashboard';
 import TeacherClasses from '@/pages/teacher/TeacherClasses';
 import TeacherDeckDetail from '@/pages/teacher/TeacherDeckDetail';
@@ -62,6 +63,7 @@ export default function App() {
       <Route path="/student/achievements" element={<RequireAuth role="student"><AppLayout><StudentAchievements /></AppLayout></RequireAuth>} />
       <Route path="/student/research" element={<RequireAuth role="student"><AppLayout><StudentResearch /></AppLayout></RequireAuth>} />
       <Route path="/student/blurting" element={<RequireAuth role="student"><AppLayout><StudentBlurting /></AppLayout></RequireAuth>} />
+      <Route path="/student/coach" element={<RequireAuth role="student"><AppLayout><StudentCoach /></AppLayout></RequireAuth>} />
 
       {/* Teacher Routes */}
       <Route path="/teacher" element={<RequireAuth role="teacher"><AppLayout><TeacherDashboard /></AppLayout></RequireAuth>} />

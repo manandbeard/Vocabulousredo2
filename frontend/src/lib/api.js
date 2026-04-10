@@ -96,4 +96,11 @@ export const settingsApi = {
   changePassword: (data) => api.post('/api/settings/password', data).then(r => r.data),
 };
 
+// AI Study Coach
+export const coachApi = {
+  sendMessage: (data) => api.post('/api/coach/message', data).then(r => r.data),
+  listConversations: (studentId) => api.get(`/api/coach/conversations/${studentId}`).then(r => r.data),
+  getConversation: (studentId, conversationId) => api.get(`/api/coach/conversations/${studentId}/${conversationId}`).then(r => r.data),
+};
+
 export default api;

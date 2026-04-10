@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
-import { Home, BookOpen, BarChart3, Trophy, Users, LogOut, BrainCircuit, FlaskConical, Brain, Activity, AlertTriangle, Settings, Moon, Sun } from 'lucide-react';
+import { Home, BookOpen, BarChart3, Trophy, Users, LogOut, BrainCircuit, FlaskConical, Brain, Activity, AlertTriangle, Settings, Moon, Sun, Sparkles } from 'lucide-react';
 
 export default function TopNav() {
   const { user, logout } = useAuth();
@@ -19,8 +19,8 @@ export default function TopNav() {
   const studentLinks = [
     { label: 'Dashboard', href: '/student', icon: Home },
     { label: 'Study', href: '/student/study', icon: BrainCircuit },
+    { label: 'Coach', href: '/student/coach', icon: Sparkles },
     { label: 'Research', href: '/student/research', icon: FlaskConical },
-    { label: 'Blurting', href: '/student/blurting', icon: Brain },
     { label: 'Progress', href: '/student/progress', icon: BarChart3 },
     { label: 'Achievements', href: '/student/achievements', icon: Trophy },
   ];
