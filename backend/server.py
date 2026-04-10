@@ -42,6 +42,7 @@ user_achievements_col = db["user_achievements"]
 # Counters for auto-increment IDs
 counters_col = db["counters"]
 blurting_col = db["blurting_sessions"]
+ai_personas_col = db["ai_personas"]
 
 def next_id(collection_name: str) -> int:
     result = counters_col.find_one_and_update(
@@ -991,7 +992,6 @@ def get_teacher_milestones(teacher_id: int):
 @app.get("/api/students/{student_id}/persona")
 async def get_student_persona(student_id: int):
     # Check for cached persona (refresh weekly)
-    ai_personas_col = db["ai_personas"]
     existing = ai_personas_col.find_one({"student_id": student_id})
     now = datetime.now(timezone.utc)
     
@@ -999,7 +999,6 @@ async def get_student_persona(student_id: int):
         updated = datetime.fromisoformat(existing.get("updated_at", "2020-01-01").replace("Z", "+00:00"))
         if (now - updated).days < 7:
             return serialize_doc(existing)
-    
     # Gather stats for AI prompt
     reviews = list(reviews_col.find({"student_id": student_id}))
     total = len(reviews)
@@ -1081,7 +1080,7 @@ Generate a learning persona with the following JSON format. Respond with ONLY va
     else:
         ai_personas_col.insert_one(doc)
     
-    return {**doc, "_id": None} if "_id" in doc else doc
+    return serialize_doc(ai_personas_col.find_one({"student_id": student_id}))
 
 
 # ── Settings Endpoints ──────────────────────────────────────────────────────────
