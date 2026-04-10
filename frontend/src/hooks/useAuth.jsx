@@ -8,10 +8,17 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const fetchUser = useCallback(async () => {
+    const token = localStorage.getItem('vocab_token');
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
     try {
       const data = await authApi.me();
       setUser(data);
     } catch {
+      localStorage.removeItem('vocab_token');
       setUser(null);
     } finally {
       setLoading(false);
@@ -35,7 +42,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    await authApi.logout();
+    try { await authApi.logout(); } catch {}
+    localStorage.removeItem('vocab_token');
     setUser(null);
   };
 

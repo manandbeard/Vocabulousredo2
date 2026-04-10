@@ -8,12 +8,30 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Attach token from localStorage to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('vocab_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Auth
 export const authApi = {
-  signup: (data) => api.post('/api/auth/signup', data).then(r => r.data),
-  login: (data) => api.post('/api/auth/login', data).then(r => r.data),
+  signup: (data) => api.post('/api/auth/signup', data).then(r => {
+    if (r.data.token) localStorage.setItem('vocab_token', r.data.token);
+    return r.data;
+  }),
+  login: (data) => api.post('/api/auth/login', data).then(r => {
+    if (r.data.token) localStorage.setItem('vocab_token', r.data.token);
+    return r.data;
+  }),
   me: () => api.get('/api/auth/me').then(r => r.data),
-  logout: () => api.post('/api/auth/logout').then(r => r.data),
+  logout: () => api.post('/api/auth/logout').then(r => {
+    localStorage.removeItem('vocab_token');
+    return r.data;
+  }),
 };
 
 // Classes

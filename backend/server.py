@@ -449,7 +449,7 @@ def signup(body: SignupBody, response: Response):
     
     token = create_token(user_doc)
     response.set_cookie("vocab_token", token, httponly=True, samesite="lax", max_age=7*24*3600, path="/")
-    return {"id": user_id, "name": body.name, "email": body.email, "role": body.role}
+    return {"id": user_id, "name": body.name, "email": body.email, "role": body.role, "token": token}
 
 @app.post("/api/auth/login")
 def login(body: LoginBody, response: Response):
@@ -462,7 +462,7 @@ def login(body: LoginBody, response: Response):
     
     token = create_token(user)
     response.set_cookie("vocab_token", token, httponly=True, samesite="lax", max_age=7*24*3600, path="/")
-    return {"id": user["id"], "name": user["name"], "email": user["email"], "role": user["role"]}
+    return {"id": user["id"], "name": user["name"], "email": user["email"], "role": user["role"], "token": token}
 
 @app.get("/api/auth/me")
 def get_me(request: Request):
