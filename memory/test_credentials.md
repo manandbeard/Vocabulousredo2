@@ -11,3 +11,7 @@
 - **Password**: student123
 - **Name**: Alex Rivera
 - **Role**: student
+
+## Class Codes (for student enrollment)
+- **APBIO1** - AP Biology (Dr. Sarah Chen)
+- **WHIST2** - World History (Dr. Sarah Chen)
