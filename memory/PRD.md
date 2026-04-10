@@ -11,8 +11,8 @@ Redesign and improve the Spaced Learning app. Identify where code can be improve
 - **SRS Algorithm**: FSRS-6 implementation
 
 ## User Personas
-- **Students**: Use the app to study flashcards with spaced repetition, track progress, earn achievements
-- **Teachers**: Create classes, manage decks of flashcards, view student analytics and retention data
+- **Students**: Study flashcards with spaced repetition, track progress, earn achievements, practice freely, do blurting exercises
+- **Teachers**: Create classes with join codes, manage decks of flashcards, add/edit/delete cards, view student heatmaps and bottleneck analysis
 
 ## Core Requirements
 - Full redesign with "The Ethereal Explorer" design system (lavender/peach/mint palette)
@@ -20,44 +20,49 @@ Redesign and improve the Spaced Learning app. Identify where code can be improve
 - Teacher & Student dashboards with analytics
 - Flashcard study sessions with 4-grade review system
 - Achievement system with badges
-- Class & deck management
+- Class & deck management with join-by-code enrollment
 - Knowledge graph per student
-- Learning persona AI insights
+- Learning persona insights
+- Card CRUD for teachers
+- Student heatmap for teachers
+- Content bottleneck analysis for teachers
+- Research/practice mode for students
+- Blurting exercise for students
 
-## What's Been Implemented (Jan 10, 2026)
+## What's Been Implemented
+
+### Phase 1 (Jan 10, 2026)
 - Complete backend port to FastAPI + MongoDB with all core APIs
 - Full frontend redesign with Ethereal Explorer design system
 - Auth flows (signup, login, logout) with JWT cookies
-- Student Dashboard with streak, retention, mastery, knowledge graph
-- Student Study page with 3D flip card animations and FSRS grading
-- Student Progress page with deck-level breakdowns
-- Student Achievements page with earned/locked badges
-- Teacher Dashboard with class analytics, engagement charts
-- Teacher Classes management with create functionality
+- Student Dashboard, Study, Progress, Achievements
+- Teacher Dashboard, Classes management
 - Landing page with glassmorphism, organic sections, pricing
-- Seeded demo data (teacher, student, 3 classes, 3 decks, 17 flashcards)
-- All tests passed (100% backend, frontend, integration)
+- Seeded demo data
+
+### Phase 2 (Jan 10, 2026)
+- **Card Creation UI**: Teachers can add/edit/delete cards within deck detail page with inline forms
+- **Student Enrollment Flow**: Join class by 6-character code, auto-generated codes on class creation, copy-to-clipboard class codes on teacher view
+- **Teacher Student Heatmap**: 30-day color-coded activity grid per student, showing review count and retention per day
+- **Teacher Bottleneck Analysis**: Lowest-recall cards, tag-level retention summary, overdue counts per class
+- **Research/Practice Mode**: Browse all enrolled decks, practice any deck freely without saving progress, "Next Card" flow
+- **Blurting Exercise**: Write-everything-you-know from memory, term-matching analysis showing coverage %, missed card highlights, session history
+- **New Navigation**: Research & Blurting links for students, Heatmap & Bottlenecks links for teachers
+- All tests passed (100% - 26 backend endpoints, all frontend flows)
 
 ## Prioritized Backlog
-### P0 (Critical)
-- None remaining
-
 ### P1 (High)
-- Card creation UI for teachers (deck detail page)
-- Student enrollment flow
-- Teacher student heatmap view
-- Research/practice mode for students
+- AI-powered learning persona via OpenAI integration
+- Teacher class detail page with student list and individual analytics
+- Dark mode support
 
 ### P2 (Medium)
-- Blurting exercise feature
-- Teacher bottleneck analysis page
-- Settings page
-- Dark mode support
+- Settings page (profile, password change)
 - Mobile responsive improvements
+- Email notifications for at-risk students
+- Leaderboard
 
 ### P3 (Nice to Have)
-- AI-powered learning persona (OpenAI integration)
-- Building in Public page
-- Pitch Deck page
-- Email notifications for teachers
-- Leaderboard
+- Building in Public / Pitch Deck pages
+- Export/import deck functionality
+- Social sharing for streaks
