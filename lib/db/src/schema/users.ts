@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -15,6 +15,12 @@ export const usersTable = pgTable("users", {
   schoolName: text("school_name"),
   gradeLevel: text("grade_level"),
   subject: text("subject"),
+  bio: text("bio"),
+  dailyGoal: integer("daily_goal").notNull().default(20),
+  difficultyLevel: text("difficulty_level").notNull().default("Intermediate"),
+  emailNotifications: boolean("email_notifications").notNull().default(true),
+  pushNotifications: boolean("push_notifications").notNull().default(false),
+  weeklyDigest: boolean("weekly_digest").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

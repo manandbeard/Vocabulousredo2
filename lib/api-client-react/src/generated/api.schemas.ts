@@ -67,7 +67,30 @@ export interface User {
   streakCount: number;
   /** @nullable */
   lastStudyDate?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  dailyGoal: number;
+  difficultyLevel: string;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  weeklyDigest: boolean;
   createdAt: string;
+}
+
+export interface PatchUserBody {
+  name?: string;
+  bio?: string;
+  dailyGoal?: number;
+  difficultyLevel?: string;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
+  weeklyDigest?: boolean;
+}
+
+export interface ChangePasswordBody {
+  currentPassword: string;
+  /** @minLength 6 */
+  newPassword: string;
 }
 
 export type CreateUserBodyRole =

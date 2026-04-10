@@ -19,5 +19,12 @@ export interface User {
   streakCount: number;
   /** @nullable */
   lastStudyDate?: Date | null;
+  /** @nullable */
+  bio?: string | null;
+  dailyGoal: number;
+  difficultyLevel: string;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  weeklyDigest: boolean;
   createdAt: Date;
 }

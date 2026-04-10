@@ -70,6 +70,12 @@ export const ListUsersResponseItem = zod.object({
   avatarUrl: zod.string().nullish(),
   streakCount: zod.number(),
   lastStudyDate: zod.date().nullish(),
+  bio: zod.string().nullish(),
+  dailyGoal: zod.number(),
+  difficultyLevel: zod.string(),
+  emailNotifications: zod.boolean(),
+  pushNotifications: zod.boolean(),
+  weeklyDigest: zod.boolean(),
   createdAt: zod.date(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
@@ -101,7 +107,42 @@ export const GetUserResponse = zod.object({
   avatarUrl: zod.string().nullish(),
   streakCount: zod.number(),
   lastStudyDate: zod.date().nullish(),
+  bio: zod.string().nullish(),
+  dailyGoal: zod.number(),
+  difficultyLevel: zod.string(),
+  emailNotifications: zod.boolean(),
+  pushNotifications: zod.boolean(),
+  weeklyDigest: zod.boolean(),
   createdAt: zod.date(),
+});
+
+/**
+ * @summary Update a user by ID
+ */
+export const PatchUserParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const PatchUserBody = zod.object({
+  name: zod.string().optional(),
+  bio: zod.string().optional(),
+  dailyGoal: zod.number().optional(),
+  difficultyLevel: zod.string().optional(),
+  emailNotifications: zod.boolean().optional(),
+  pushNotifications: zod.boolean().optional(),
+  weeklyDigest: zod.boolean().optional(),
+});
+
+/**
+ * @summary Change a user's password
+ */
+export const ChangePasswordParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ChangePasswordBody = zod.object({
+  currentPassword: zod.string(),
+  newPassword: zod.string().min(6),
 });
 
 /**
