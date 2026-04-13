@@ -290,3 +290,23 @@ html.dark .soft-glow-mint { background: rgba(124, 197, 168, 0.08); }
     grid-column: span 1 / span 1 !important;
   }
 }
+
+/* Sidebar dark mode */
+html.dark [data-testid="sidebar"] {
+  --sidebar-bg: rgba(26, 23, 32, 0.9);
+}
+
+html.dark [data-testid="sidebar"] .shadow-ambient {
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Bottom bar dark mode */
+html.dark [data-testid="bottom-bar"] {
+  background: rgba(26, 23, 32, 0.9);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+html.dark [data-testid="mobile-more-tray"] {
+  background: #262330;
+}

@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { Sidebar, BottomBar } from '@/components/TopNav';
+import { useSidebar } from '@/hooks/useSidebar';
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
@@ -16,7 +18,6 @@ import TeacherDeckDetail from '@/pages/teacher/TeacherDeckDetail';
 import TeacherHeatmap from '@/pages/teacher/TeacherHeatmap';
 import TeacherBottlenecks from '@/pages/teacher/TeacherBottlenecks';
 import Settings from '@/pages/Settings';
-import TopNav from '@/components/TopNav';
 
 function RequireAuth({ role, children }) {
   const { user, loading } = useAuth();
@@ -35,12 +36,16 @@ function LoadingScreen() {
 }
 
 function AppLayout({ children }) {
+  const { expanded } = useSidebar();
   return (
     <div className="min-h-screen bg-surface">
-      <TopNav />
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        {children}
-      </main>
+      <Sidebar />
+      <div className={`transition-all duration-300 ${expanded ? 'md:ml-56' : 'md:ml-[68px]'}`}>
+        <main className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8 pb-20 md:pb-8">
+          {children}
+        </main>
+      </div>
+      <BottomBar />
     </div>
   );
 }

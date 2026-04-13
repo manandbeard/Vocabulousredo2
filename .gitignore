@@ -48,3 +48,12 @@ Thumbs.db
 .cache/
 .local/
 artifacts/mockup-sandbox/src/.generated/
+-e 
+# Environment and credential files
+.env
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials
