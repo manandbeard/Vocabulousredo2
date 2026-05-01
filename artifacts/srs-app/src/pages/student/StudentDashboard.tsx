@@ -25,9 +25,12 @@ import {
   Zap,
   Shield,
   Network,
+  Coins,
 } from "lucide-react";
 import { ShadowCard } from "@/components/ui/ShadowCard";
 import { DAYS, SCENE_IMAGES, getSceneImage } from "@/lib/dashboard-constants";
+import { useMomentumStore, TIER_META } from "@/stores/momentum-store";
+import { useMemoryBankStore } from "@/stores/memory-bank-store";
 
 function DonutRing({ percent, size = 56 }: { percent: number; size?: number }) {
   const r = (size - 8) / 2;
@@ -103,6 +106,14 @@ export default function StudentDashboard() {
   const { data: studyTime, isLoading: studyTimeLoading } = useGetStudentStudyTime(studentId);
   const { data: knowledgeGraph, isLoading: kgLoading } = useGetStudentKnowledgeGraph(studentId);
 
+  // Momentum Vibe tier from Zustand
+  const { tier, multiplier, streakDays, hydrateStreak } = useMomentumStore();
+  const { totalPoints, spentPoints } = useMemoryBankStore();
+  const tierMeta = TIER_META[tier];
+
+  // Sync server streak into Zustand on load
+  const streak = analytics?.currentStreak || 0;
+
   if (classesLoading || statsLoading) {
     return (
       <AppLayout>
@@ -116,7 +127,6 @@ export default function StudentDashboard() {
   const dueTotal =
     analytics?.deckProgress.reduce((sum, d) => sum + d.dueToday, 0) || 0;
   const firstName = analytics?.studentName.split(" ")[0] || "Student";
-  const streak = analytics?.currentStreak || 0;
   const retention = analytics?.averageRetention
     ? Math.round(analytics.averageRetention * 100)
     : null;
@@ -124,7 +134,6 @@ export default function StudentDashboard() {
   const upNext =
     analytics?.deckProgress.find((d) => d.dueToday > 0) ||
     analytics?.deckProgress[0];
-
   const dueMaxForBars = Math.max(dueTotal, 10);
   const weekBars = [
     Math.round(dueMaxForBars * 0.6),
@@ -161,6 +170,21 @@ export default function StudentDashboard() {
               </span>{" "}
               due for review today.
             </p>
+            {/* Momentum Vibe Tier badge */}
+            <div className="mt-3 flex items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-sm font-semibold text-slate-700">
+                <span>{tierMeta.emoji}</span>
+                <span>{tierMeta.label}</span>
+                <span className="text-slate-400">·</span>
+                <span className={`text-xs font-bold ${tierMeta.color}`}>{multiplier}×</span>
+              </span>
+              <Link href="/student/profile">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-sm font-semibold text-amber-700 cursor-pointer hover:bg-amber-100 transition-colors">
+                  <Coins className="h-3.5 w-3.5" />
+                  {(totalPoints - spentPoints).toLocaleString()} pts
+                </span>
+              </Link>
+            </div>
           </div>
           <Link href="/student/study">
             <span className="mt-2 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 shadow-[0_4px_16px_-4px_rgba(15,23,42,0.30)] hover:shadow-[0_8px_24px_-4px_rgba(15,23,42,0.40)] transition-all duration-200 cursor-pointer">

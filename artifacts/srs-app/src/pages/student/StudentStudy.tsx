@@ -5,7 +5,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRole } from "@/hooks/use-role";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, RotateCcw, Frown, Smile, ThumbsUp, Medal, ArrowLeft, FlaskConical } from "lucide-react";
+import { CheckCircle2, RotateCcw, Frown, Smile, Medal, ArrowLeft, FlaskConical, Undo2, Zap } from "lucide-react";
+import { useCoyoteStore } from "@/stores/coyote-store";
+import { useMemoryBankStore, GRADE_POINTS } from "@/stores/memory-bank-store";
+import { useMomentumStore } from "@/stores/momentum-store";
 
 export default function StudentStudy() {
   const { userId } = useRole();
@@ -25,6 +28,12 @@ export default function StudentStudy() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
+  // Coyote Time: 500 ms undo buffer for grade=1 (Again) to prevent accidental taps
+  const { isPending: isCoyotePending, pendingGrade, remainingMs, startBuffer, cancelBuffer } = useCoyoteStore();
+  // Memory Bank: award points after each review
+  const { awardPoints, totalPoints } = useMemoryBankStore();
+  const { multiplier, tier, recordStudyDay } = useMomentumStore();
+
   const currentCard = cards?.[currentIndex];
 
   useEffect(() => {
@@ -32,20 +41,9 @@ export default function StudentStudy() {
     }
   }, [currentIndex, isFlipped, currentCard]);
 
-  const handleGrade = async (grade: number) => {
+  /** Commit a review grade to the server and advance to next card */
+  async function commitGrade(grade: number) {
     if (!currentCard) return;
-
-    if (isResearchMode) {
-      setIsFlipped(false);
-      setTimeout(() => {
-        if (cards && currentIndex < cards.length - 1) {
-          setCurrentIndex(prev => prev + 1);
-        } else {
-          setLocation("/student/research");
-        }
-      }, 200);
-      return;
-    }
 
     try {
       await submitReviewMut.mutateAsync({
@@ -55,12 +53,18 @@ export default function StudentStudy() {
           deckId: currentCard.deckId,
           grade,
           elapsedDays: 0,
-        }
+        },
       });
+
+      // Award Memory Bank points with current Momentum multiplier
+      const base = GRADE_POINTS[grade] ?? 1;
+      awardPoints(base, `Review grade ${grade}`, multiplier);
+      recordStudyDay();
+
       setIsFlipped(false);
       setTimeout(() => {
         if (cards && currentIndex < cards.length - 1) {
-          setCurrentIndex(prev => prev + 1);
+          setCurrentIndex((prev) => prev + 1);
         } else {
           queryClient.invalidateQueries({ queryKey: getGetDueCardsQueryKey(safeUserId) });
           setLocation("/student/progress");
@@ -69,6 +73,30 @@ export default function StudentStudy() {
     } catch (err) {
       console.error("Failed to submit review", err);
     }
+  }
+
+  const handleGrade = async (grade: number) => {
+    if (!currentCard) return;
+
+    if (isResearchMode) {
+      setIsFlipped(false);
+      setTimeout(() => {
+        if (cards && currentIndex < cards.length - 1) {
+          setCurrentIndex((prev) => prev + 1);
+        } else {
+          setLocation("/student/research");
+        }
+      }, 200);
+      return;
+    }
+
+    // Coyote Time: buffer grade=1 (Again) for 500 ms so accidental taps can be undone
+    if (grade === 1) {
+      startBuffer(() => commitGrade(1), grade);
+      return;
+    }
+
+    await commitGrade(grade);
   };
 
   if (isLoading) {
@@ -210,7 +238,52 @@ export default function StudentStudy() {
         </div>
 
         {/* Actions */}
-        <div className="mt-10 flex justify-center">
+        <div className="mt-10 flex flex-col items-center gap-4">
+          {/* Coyote Time undo banner */}
+          <AnimatePresence>
+            {isCoyotePending && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                className="w-full max-w-sm"
+              >
+                <div className="flex items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-red-50 border border-red-200">
+                  <div className="flex items-center gap-2 text-sm text-red-700 font-medium">
+                    <Frown className="h-4 w-4" />
+                    <span>Logging "Again"…</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Countdown bar */}
+                    <div className="w-16 h-1.5 bg-red-100 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-red-400 rounded-full"
+                        initial={{ width: "100%" }}
+                        animate={{ width: `${(remainingMs / 500) * 100}%` }}
+                        transition={{ ease: "linear" }}
+                      />
+                    </div>
+                    <button
+                      onClick={cancelBuffer}
+                      className="flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800 transition-colors"
+                    >
+                      <Undo2 className="h-3.5 w-3.5" />
+                      Undo
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Memory Bank points earned this session */}
+          {!isResearchMode && totalPoints > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+              <Zap className="h-3.5 w-3.5 text-yellow-400" />
+              <span>{totalPoints.toLocaleString()} pts · {multiplier}× {tier} multiplier</span>
+            </div>
+          )}
+
           {!isFlipped ? (
             <button
               onClick={() => setIsFlipped(true)}
@@ -229,9 +302,11 @@ export default function StudentStudy() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full animate-in slide-in-from-bottom-4 fade-in duration-300">
+              {/* Grade=1 (Again) triggers Coyote Time buffer */}
               <button
                 onClick={() => handleGrade(1)}
-                className="h-20 rounded-2xl border border-red-200 hover:bg-red-50 hover:border-red-400 flex flex-col gap-1 items-center justify-center text-sm transition-all group"
+                disabled={isCoyotePending}
+                className="h-20 rounded-2xl border border-red-200 hover:bg-red-50 hover:border-red-400 flex flex-col gap-1 items-center justify-center text-sm transition-all group disabled:opacity-50"
               >
                 <Frown className="h-5 w-5 text-red-400 group-hover:text-red-600" />
                 <span className="font-bold text-slate-900">Again</span>
@@ -239,7 +314,8 @@ export default function StudentStudy() {
               </button>
               <button
                 onClick={() => handleGrade(2)}
-                className="h-20 rounded-2xl border border-orange-200 hover:bg-orange-50 hover:border-orange-400 flex flex-col gap-1 items-center justify-center text-sm transition-all group"
+                disabled={isCoyotePending}
+                className="h-20 rounded-2xl border border-orange-200 hover:bg-orange-50 hover:border-orange-400 flex flex-col gap-1 items-center justify-center text-sm transition-all group disabled:opacity-50"
               >
                 <RotateCcw className="h-5 w-5 text-orange-400 group-hover:text-orange-600" />
                 <span className="font-bold text-slate-900">Hard</span>
@@ -247,7 +323,8 @@ export default function StudentStudy() {
               </button>
               <button
                 onClick={() => handleGrade(3)}
-                className="h-20 rounded-2xl border border-blue-200 hover:bg-blue-50 hover:border-blue-400 flex flex-col gap-1 items-center justify-center text-sm transition-all group"
+                disabled={isCoyotePending}
+                className="h-20 rounded-2xl border border-blue-200 hover:bg-blue-50 hover:border-blue-400 flex flex-col gap-1 items-center justify-center text-sm transition-all group disabled:opacity-50"
               >
                 <Smile className="h-5 w-5 text-blue-400 group-hover:text-blue-600" />
                 <span className="font-bold text-slate-900">Good</span>
@@ -255,7 +332,8 @@ export default function StudentStudy() {
               </button>
               <button
                 onClick={() => handleGrade(4)}
-                className="h-20 rounded-2xl border border-emerald-200 hover:bg-emerald-50 hover:border-emerald-400 flex flex-col gap-1 items-center justify-center text-sm transition-all group"
+                disabled={isCoyotePending}
+                className="h-20 rounded-2xl border border-emerald-200 hover:bg-emerald-50 hover:border-emerald-400 flex flex-col gap-1 items-center justify-center text-sm transition-all group disabled:opacity-50"
               >
                 <Medal className="h-5 w-5 text-emerald-400 group-hover:text-emerald-600" />
                 <span className="font-bold text-slate-900">Easy</span>

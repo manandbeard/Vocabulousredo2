@@ -17,6 +17,7 @@ import TeacherStudentDetail from "./pages/teacher/TeacherStudentDetail";
 import TeacherContent from "./pages/teacher/TeacherContent";
 import TeacherBottlenecks from "./pages/teacher/TeacherBottlenecks";
 import TeacherDecks from "./pages/teacher/TeacherDecks";
+import TeacherCurriculumBuilder from "./pages/teacher/TeacherCurriculumBuilder";
 
 // Student Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -26,6 +27,9 @@ import StudentLearningLab from "./pages/student/StudentLearningLab";
 import StudentAchievements from "./pages/student/StudentAchievements";
 import StudentResearch from "./pages/student/StudentResearch";
 import StudentBlurting from "./pages/student/StudentBlurting";
+import StudentFeed from "./pages/student/StudentFeed";
+import StudentProfile from "./pages/student/StudentProfile";
+import StudentBountyFlicks from "./pages/student/StudentBountyFlicks";
 
 // Public Pages
 import Landing from "./pages/Landing";
@@ -92,15 +96,19 @@ function Router() {
       <Route path="/teacher/decks">{() => <RequireRole required="teacher" component={TeacherDecks} />}</Route>
       <Route path="/teacher/bottlenecks">{() => <RequireRole required="teacher" component={TeacherBottlenecks} />}</Route>
       <Route path="/teacher/students/:id">{() => <RequireRole required="teacher" component={TeacherStudentDetail} />}</Route>
+      <Route path="/teacher/builder">{() => <RequireRole required="teacher" component={TeacherCurriculumBuilder} />}</Route>
 
       {/* Student Routes */}
       <Route path="/student">{() => <RequireRole required="student" component={StudentDashboard} />}</Route>
+      <Route path="/student/feed">{() => <RequireRole required="student" component={StudentFeed} />}</Route>
       <Route path="/student/study">{() => <RequireRole required="student" component={StudentStudy} />}</Route>
       <Route path="/student/learning-lab">{() => <RequireRole required="student" component={StudentLearningLab} />}</Route>
       <Route path="/student/progress">{() => <RequireRole required="student" component={StudentProgress} />}</Route>
       <Route path="/student/achievements">{() => <RequireRole required="student" component={StudentAchievements} />}</Route>
       <Route path="/student/research">{() => <RequireRole required="student" component={StudentResearch} />}</Route>
       <Route path="/student/blurting">{() => <RequireRole required="student" component={StudentBlurting} />}</Route>
+      <Route path="/student/profile">{() => <RequireRole required="student" component={StudentProfile} />}</Route>
+      <Route path="/student/bounty">{() => <RequireRole required="student" component={StudentBountyFlicks} />}</Route>
 
       {/* Public Pages */}
       <Route path="/build" component={BuildingInPublic} />
