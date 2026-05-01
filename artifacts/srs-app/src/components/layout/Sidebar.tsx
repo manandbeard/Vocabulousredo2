@@ -4,12 +4,15 @@ import {
   GraduationCap, 
   LayoutDashboard, 
   LineChart, 
-  LogOut, 
   BrainCircuit,
   Library,
   Rocket,
   Presentation,
   Layers,
+  Rss,
+  User,
+  Send,
+  GitFork,
 } from "lucide-react";
 import { useRole } from "@/hooks/use-role";
 import { cn } from "@/lib/utils";
@@ -23,12 +26,16 @@ export function Sidebar() {
     { href: "/teacher/classes", label: "Classes & Decks", icon: BookOpen },
     { href: "/teacher/decks", label: "Decks", icon: Layers },
     { href: "/teacher/analytics", label: "Analytics", icon: LineChart },
+    { href: "/teacher/builder", label: "Curriculum Builder", icon: GitFork },
   ];
 
   const studentLinks = [
     { href: "/student", label: "My Classes", icon: Library },
+    { href: "/student/feed", label: "Feed", icon: Rss },
     { href: "/student/study", label: "Study Session", icon: BrainCircuit },
     { href: "/student/progress", label: "Progress", icon: LineChart },
+    { href: "/student/bounty", label: "Bounty Flicks", icon: Send },
+    { href: "/student/profile", label: "Profile & Shop", icon: User },
   ];
 
   const links = role === "teacher" ? teacherLinks : studentLinks;
