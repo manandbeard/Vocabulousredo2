@@ -7,7 +7,8 @@
 -- ──────────────────────────────────────────────────────────────────────────────
 
 ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS alias              TEXT UNIQUE,
+  ADD COLUMN IF NOT EXISTS alias              TEXT UNIQUE
+                             CHECK (alias = UPPER(alias)),   -- enforce uppercase at DB level
   ADD COLUMN IF NOT EXISTS memory_bank_points INTEGER NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS memory_bank_spent  INTEGER NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS equipped_cosmetics JSONB   NOT NULL DEFAULT '{}';
@@ -87,9 +88,20 @@ CREATE OR REPLACE FUNCTION increment_memory_bank_points(
   p_student_id INTEGER,
   p_points     INTEGER
 ) RETURNS VOID
-LANGUAGE SQL
+LANGUAGE plpgsql
 AS $$
+BEGIN
+  -- Validate inputs: points must be non-negative, student must exist
+  IF p_points < 0 THEN
+    RAISE EXCEPTION 'p_points must be non-negative, got %', p_points;
+  END IF;
+
   UPDATE users
      SET memory_bank_points = memory_bank_points + p_points
    WHERE id = p_student_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Student with id % not found', p_student_id;
+  END IF;
+END;
 $$;

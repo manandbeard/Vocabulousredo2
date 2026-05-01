@@ -57,10 +57,12 @@ serve(async (req) => {
       }
 
       // Resolve defender alias → ID (COPPA: no real names exposed)
+      // Normalise to uppercase before querying — aliases are stored uppercase
+      const normalisedAlias = String(defender_alias).toUpperCase().trim();
       const { data: defender } = await supabase
         .from("users")
         .select("id")
-        .eq("alias", defender_alias)
+        .eq("alias", normalisedAlias)
         .maybeSingle();
 
       if (!defender) {
@@ -122,9 +124,9 @@ serve(async (req) => {
       }
 
       const recalled = grade >= 3; // Good or Easy counts as recalled
-      const cosmetic = recalled
-        ? DEFENDER_COSMETIC_POOL[Math.floor(Math.random() * DEFENDER_COSMETIC_POOL.length)]
-        : null;
+      // Deterministic cosmetic selection using a better hash to ensure uniform distribution
+      const deterministicIndex = ((bounty_id * 31 + defender_id) >>> 0) % DEFENDER_COSMETIC_POOL.length;
+      const cosmetic = recalled ? DEFENDER_COSMETIC_POOL[deterministicIndex] : null;
 
       await supabase
         .from("bounty_flicks")
@@ -147,7 +149,8 @@ serve(async (req) => {
 
     return json({ error: "Unknown action" }, 404);
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });

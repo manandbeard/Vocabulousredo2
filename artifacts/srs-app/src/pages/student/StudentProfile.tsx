@@ -63,7 +63,7 @@ export default function StudentProfile() {
               <h1 className="text-3xl font-bold text-slate-900">{user?.name ?? "Student"}</h1>
               {/* COPPA alias */}
               <p className="text-slate-500 text-sm mt-0.5">
-                Alias: <span className="font-mono font-bold text-slate-700">{(user as any)?.alias ?? "—"}</span>
+                Alias: <span className="font-mono font-bold text-slate-700">{user?.alias ?? "—"}</span>
               </p>
             </div>
 

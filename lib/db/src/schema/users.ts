@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  /** COPPA-safe alias shown to peers (e.g. "NeonFalcon"). Auto-generated on signup. */
+  /** COPPA-safe alias shown to peers (e.g. "NEONFALCON"). Always uppercase. Auto-generated on signup. */
   alias: text("alias").unique(),
   email: text("email").notNull().unique(),
   role: text("role").notNull().$type<"teacher" | "student">(),

@@ -3,11 +3,13 @@ import { getMe, logout } from "@workspace/api-client-react";
 
 export type Role = "teacher" | "student";
 
-interface AuthUser {
+export interface AuthUser {
   id: number;
   name: string;
   email: string;
   role: Role;
+  /** COPPA-safe alias (e.g. "NeonFalcon"). May be null for teachers or before alias generation. */
+  alias?: string | null;
 }
 
 interface RoleContextType {
@@ -29,7 +31,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const fetchUser = useCallback(async () => {
     try {
       const me = await getMe();
-      setUser({ id: me.id, name: me.name, email: me.email, role: me.role as Role });
+      setUser({ id: me.id, name: me.name, email: me.email, role: me.role as Role, alias: (me as Record<string, unknown>).alias as string | null | undefined });
     } catch {
       setUser(null);
     } finally {

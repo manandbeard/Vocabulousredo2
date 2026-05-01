@@ -176,7 +176,6 @@ export default function TeacherCurriculumBuilder() {
             onConnect={onConnect}
             nodeTypes={nodeTypes}
             fitView
-            proOptions={{ hideAttribution: true }}
           >
             <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#e2e8f0" />
             <Controls className="bg-white border border-slate-200 rounded-xl shadow-sm" />

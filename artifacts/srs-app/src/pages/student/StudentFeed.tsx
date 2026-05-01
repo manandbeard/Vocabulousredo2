@@ -44,13 +44,15 @@ export default function StudentFeed() {
 
   const [index, setIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
+  // Track whether the streak milestone card has already been shown this session
+  const [milestoneShown, setMilestoneShown] = useState(false);
 
   const tierMeta = TIER_META[tier];
   const balance  = totalPoints - spentPoints;
 
-  // Build a unified feed: milestone card first if streak is a milestone, then concepts
+  // Build a unified feed: milestone card first (once per session) if streak is a milestone
   const feed: FeedCard[] = [];
-  if (streakDays > 0 && streakDays % 5 === 0) {
+  if (!milestoneShown && streakDays > 0 && streakDays % 5 === 0) {
     feed.push({ type: "streak_milestone", streakDays });
   }
   (dueCards ?? []).slice(0, 20).forEach((c) =>
@@ -60,11 +62,13 @@ export default function StudentFeed() {
   const currentCard = feed[index];
 
   function advanceCard() {
+    // Mark milestone as shown so it doesn't reappear on re-render
+    if (currentCard?.type === "streak_milestone") setMilestoneShown(true);
     setIsRevealed(false);
     setTimeout(() => setIndex((i) => Math.min(i + 1, feed.length - 1)), 150);
   }
 
-  function handleSwipe(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
+  function handleSwipe(_event: unknown, info: PanInfo) {
     if (!isRevealed || currentCard?.type !== "concept") return;
     const grade = info.offset.y < -SWIPE_THRESHOLD ? 4 /* Easy */ : info.offset.y > SWIPE_THRESHOLD ? 1 /* Again */ : null;
     if (!grade) return;
