@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "verify-stage1": "tsx ./src/verify-stage1.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "ts-fsrs": "^5.3.2"
   },
   "devDependencies": {
     "@types/node": "catalog:",
