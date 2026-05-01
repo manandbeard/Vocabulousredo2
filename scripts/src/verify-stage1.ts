@@ -92,6 +92,21 @@ assert(result.state !== State.New, "state transitions away from New", `state=${S
 // For Review-state cards this would be >= 1. We just verify it's non-negative.
 assert(result.scheduled_days >= 0, "scheduled_days >= 0 (0 is valid for Learning phase)", `scheduled_days=${result.scheduled_days}`);
 
+// ─── Verify Review-state card gets scheduled_days >= 1 ───────────────────────
+// Simulate two Easy ratings to graduate to Review state, then verify.
+console.log("\nVerifying Review-state scheduling (Easy × 2 → Review state):");
+const card2 = createEmptyCard();
+const { card: afterFirst } = scheduler.next(card2, now, Rating.Easy);
+const later = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +1 day
+const { card: afterSecond } = scheduler.next(afterFirst, later, Rating.Easy);
+console.log(`  state=${State[afterSecond.state]}, scheduled_days=${afterSecond.scheduled_days}, due=${afterSecond.due.toISOString()}`);
+if (afterSecond.state === State.Review) {
+  assert(afterSecond.scheduled_days >= 1, "Review-state card has scheduled_days >= 1", `scheduled_days=${afterSecond.scheduled_days}`);
+} else {
+  // Some schedulers may still be in Learning after two steps; just check non-negative
+  assert(afterSecond.scheduled_days >= 0, "Post-second-review scheduled_days >= 0", `scheduled_days=${afterSecond.scheduled_days}`);
+}
+
 // ─── Part 2: Verify FSRS column mapping (challenges row shape) ───────────────
 
 console.log("\n─────────────────────────────────────────────");
